@@ -26,7 +26,7 @@ macro_rules! kernel_module {
         #[no_mangle]
         pub extern "C" fn module_exit() {
             unsafe {
-                __MOD.as_mut().unwrap().exit();
+                __MOD.take().unwrap().exit();
             }
         }
 
