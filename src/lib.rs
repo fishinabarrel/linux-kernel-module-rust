@@ -29,6 +29,19 @@ macro_rules! kernel_module {
                 __MOD.as_mut().unwrap().exit();
             }
         }
+
+        $(
+            kernel_module!(@attribute $name, $value);
+        )*
+    };
+
+    (@attribute $name:ident, $value:expr) => {
+        #[link_section = ".modinfo"]
+        #[allow(non_upper_case_globals)]
+        // TODO: Generate a name the same way the kernel's `__MODULE_INFO` does.
+        // TODO: This needs to be a `&'static [u8]`, since the kernel defines this as a
+        // `const char []`.
+        pub static $name: &'static str = concat!(stringify!($name), "=", $value);
     };
 }
 
