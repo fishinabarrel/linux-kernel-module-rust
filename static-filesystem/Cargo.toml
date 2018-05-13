@@ -1,6 +1,7 @@
 [package]
-name = "linux-kernel-module"
+name = "static-filesystem"
 version = "0.1.0"
 authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
 
 [dependencies]
+linux-kernel-module = { path = ".." }
