@@ -1,7 +1,15 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+#[macro_export]
+macro_rules! kernel_module {
+    ($module:ty, $($name:ident : $value:expr),* ) => (
+
+    );
+}
+
+pub enum Error {
+
+}
+
+pub trait KernelModule : Sized {
+    fn init() -> Result<Self, Error>;
+    fn exit(&mut self);
 }
