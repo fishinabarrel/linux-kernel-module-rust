@@ -11,10 +11,6 @@ impl linux_kernel_module::KernelModule for StaticFileSystem {
 
         Ok(StaticFileSystem)
     }
-
-    fn exit(&mut self) {
-
-    }
 }
 
 kernel_module!(

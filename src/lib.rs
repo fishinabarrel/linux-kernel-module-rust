@@ -6,7 +6,6 @@ pub mod types;
 #[macro_export]
 macro_rules! kernel_module {
     ($module:ty, $($name:ident : $value:expr),*) => {
-        use $crate::KernelModule;
         static mut __MOD: Option<$module> = None;
         #[no_mangle]
         pub extern "C" fn init_module() -> $crate::types::c_int {
@@ -26,7 +25,8 @@ macro_rules! kernel_module {
         #[no_mangle]
         pub extern "C" fn module_exit() {
             unsafe {
-                __MOD.take().unwrap().exit();
+                // Invokes drop() on __MOD, which should be used for cleanup.
+                __MOD = None;
             }
         }
 
@@ -56,7 +56,6 @@ impl Error {
 
 pub trait KernelModule: Sized {
     fn init() -> Result<Self, Error>;
-    fn exit(&mut self);
 }
 
 #[lang = "eh_personality"]
