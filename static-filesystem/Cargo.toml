@@ -3,5 +3,8 @@ name = "static-filesystem"
 version = "0.1.0"
 authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
 
+[lib]
+crate-type = ["staticlib"]
+
 [dependencies]
 linux-kernel-module = { path = ".." }
