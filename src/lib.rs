@@ -37,7 +37,7 @@ pub enum Error {
 
 impl Error {
     pub fn to_kernel_errno(&self) -> types::c_int {
-        return 0;
+        unimplemented!();
     }
 }
 
