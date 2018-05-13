@@ -1,0 +1,6 @@
+[package]
+name = "linux-kernel-module-rust"
+version = "0.1.0"
+authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
+
+[dependencies]
