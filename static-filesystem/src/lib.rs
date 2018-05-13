@@ -1,3 +1,5 @@
+#![no_std]
+
 #[macro_use]
 extern crate linux_kernel_module;
 

@@ -1,3 +1,6 @@
+#![no_std]
+#![feature(lang_items)]
+
 pub mod types;
 
 #[macro_export]
@@ -6,7 +9,7 @@ macro_rules! kernel_module {
         use $crate::KernelModule;
         static mut __MOD: Option<$module> = None;
         #[no_mangle]
-        pub fn init_module() -> $crate::types::c_int {
+        pub extern fn init_module() -> $crate::types::c_int {
             match <$module as $crate::KernelModule>::init() {
                 Ok(m) => {
                     unsafe {
@@ -21,7 +24,7 @@ macro_rules! kernel_module {
         }
 
         #[no_mangle]
-        pub fn module_exit() {
+        pub extern fn module_exit() {
             unsafe {
                 __MOD.as_mut().unwrap().exit();
             }
@@ -41,4 +44,13 @@ impl Error {
 pub trait KernelModule : Sized {
     fn init() -> Result<Self, Error>;
     fn exit(&mut self);
+}
+
+#[lang = "eh_personality"]
+extern fn eh_personality() {
+}
+
+#[lang = "panic_fmt"]
+extern fn panic_fmt() -> ! {
+    loop{}
 }
