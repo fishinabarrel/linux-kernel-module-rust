@@ -15,4 +15,9 @@ impl linux_kernel_module::KernelModule for StaticFileSystem {
     }
 }
 
-kernel_module!(StaticFileSystem, author: "Alex Gaynor and Geoffrey Thomas", description: "An example Rust kernel module that implements a static file system", license: "GPL");
+kernel_module!(
+    StaticFileSystem,
+    author: "Alex Gaynor and Geoffrey Thomas",
+    description: "An example Rust kernel module that implements a static file system",
+    license: "GPL"
+);
