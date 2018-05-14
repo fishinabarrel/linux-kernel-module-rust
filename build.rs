@@ -3,6 +3,7 @@ extern crate nix;
 
 use std::env;
 use std::path::PathBuf;
+use std::process::Command;
 
 const HEADERS: &[&str] = &["linux/fs.h"];
 const INCLUDED_TYPES: &[&str] = &["file_system_type"];
@@ -11,10 +12,30 @@ const INCLUDED_VARS: &[&str] = &[];
 
 fn main() {
     let kernel = nix::sys::utsname::uname();
-    let mut builder = bindgen::Builder::default().clang_arg(format!("-I/lib/modules/{}/build/include", kernel.release()));
+    let mut builder = bindgen::Builder::default();
+
+    let output = String::from_utf8(
+        Command::new("make")
+            .arg("-C")
+            .arg("kernel-cflags-finder")
+            .arg("-s")
+            .output()
+            .unwrap()
+            .stdout,
+    ).unwrap();
+    assert!(!output.contains('"'));
+    assert!(!output.contains('\''));
+
+    for arg in output.split(' ') {
+        builder = builder.clang_arg(arg);
+    }
 
     for h in HEADERS {
-        builder = builder.header(format!("/lib/modules/{}/build/include/{}", kernel.release(), h.to_string()));
+        builder = builder.header(format!(
+            "/lib/modules/{}/build/include/{}",
+            kernel.release(),
+            h.to_string()
+        ));
     }
 
     for t in INCLUDED_TYPES {
