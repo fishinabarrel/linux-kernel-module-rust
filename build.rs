@@ -1,5 +1,6 @@
 extern crate bindgen;
 extern crate nix;
+extern crate shlex;
 
 use std::env;
 use std::path::PathBuf;
@@ -23,11 +24,9 @@ fn main() {
             .unwrap()
             .stdout,
     ).unwrap();
-    assert!(!output.contains('"'));
-    assert!(!output.contains('\''));
 
-    for arg in output.split(' ') {
-        builder = builder.clang_arg(arg);
+    for arg in shlex::split(&output).unwrap() {
+        builder = builder.clang_arg(arg.to_string());
     }
 
     for h in HEADERS {
