@@ -2,8 +2,11 @@
 #![feature(lang_items)]
 
 pub mod bindings;
+mod error;
 pub mod filesystem;
-pub mod types;
+mod types;
+
+pub use error::{Error, KernelResult};
 
 #[macro_export]
 macro_rules! kernel_module {
@@ -45,24 +48,6 @@ macro_rules! kernel_module {
         // `const char []`.
         pub static $name: &'static str = concat!(stringify!($name), "=", $value);
     };
-}
-
-struct Error(c_int);
-
-impl Error {
-    pub fn from_kernel_errno(errno: types::c_int) -> Error {
-        return Error(errno);
-    }
-
-    pub fn to_kernel_errno(&self) -> types::c_int {
-        return self.0;
-    }
-}
-
-type Result<T> = ::Result<T, Error>;
-
-pub trait KernelModule: Sized {
-    fn init() -> Result<Self>;
 }
 
 #[lang = "eh_personality"]

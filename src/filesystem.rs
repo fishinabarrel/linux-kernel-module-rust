@@ -2,6 +2,7 @@ use core::marker;
 use core::mem;
 
 use bindings;
+use error;
 
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
@@ -17,7 +18,7 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
 
 pub trait FileSystem {}
 
-pub fn register<T: FileSystem>() -> Result<FileSystemRegistration<T>> {
+pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T>> {
     let mut fs_registration = FileSystemRegistration {
         ptr: /*bindings::file_system_type {},*/ unsafe {mem::zeroed() },
         _phantom: marker::PhantomData,

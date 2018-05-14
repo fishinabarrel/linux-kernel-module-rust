@@ -8,7 +8,7 @@ struct StaticFileSystemModule {
 }
 
 impl linux_kernel_module::KernelModule for StaticFileSystemModule {
-    fn init() -> Result<Self, linux_kernel_module::Error> {
+    fn init() -> linux_kernel_module::KernelResult<Self> {
         Ok(StaticFileSystemModule {
             _fs: linux_kernel_module::filesystem::register::<StaticFileSystem>()?,
         })
