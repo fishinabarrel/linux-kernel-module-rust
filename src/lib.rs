@@ -47,19 +47,15 @@ macro_rules! kernel_module {
     };
 }
 
-pub enum Error {
-    XXX(c_int),
-}
+struct Error(c_int);
 
 impl Error {
     pub fn from_kernel_errno(errno: types::c_int) -> Error {
-        return Error::XXX(errno);
+        return Error(errno);
     }
 
     pub fn to_kernel_errno(&self) -> types::c_int {
-        match self {
-            Error::XXX(errno) => return errno,
-        };
+        return self.0;
     }
 }
 
