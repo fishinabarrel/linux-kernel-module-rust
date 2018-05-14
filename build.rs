@@ -11,10 +11,10 @@ const INCLUDED_VARS: &[&str] = &[];
 
 fn main() {
     let kernel = nix::sys::utsname::uname();
-    let mut builder = bindgen::Builder::default();
+    let mut builder = bindgen::Builder::default().clang_arg(format!("-I/lib/modules/{}/build/include", kernel.release()));
 
     for h in HEADERS {
-        builder = builder.header(format!("/lib/modules/{}/build/include/{}", kernel.release(), h));
+        builder = builder.header(h);
     }
 
     for t in INCLUDED_TYPES {
