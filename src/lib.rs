@@ -48,16 +48,25 @@ macro_rules! kernel_module {
 }
 
 pub enum Error {
+    XXX(c_int),
 }
 
 impl Error {
+    pub fn from_kernel_errno(errno: types::c_int) -> Error {
+        return Error::XXX(errno);
+    }
+
     pub fn to_kernel_errno(&self) -> types::c_int {
-        unimplemented!();
+        match self {
+            Error::XXX(errno) => return errno,
+        };
     }
 }
 
+type Result<T> = ::Result<T, Error>;
+
 pub trait KernelModule: Sized {
-    fn init() -> Result<Self, Error>;
+    fn init() -> Result<Self>;
 }
 
 #[lang = "eh_personality"]

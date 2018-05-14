@@ -17,11 +17,15 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
 
 pub trait FileSystem {}
 
-pub fn register<T: FileSystem>() -> FileSystemRegistration<T> {
+pub fn register<T: FileSystem>() -> Result<FileSystemRegistration<T>> {
     let mut fs_registration = FileSystemRegistration {
         ptr: /*bindings::file_system_type {},*/ unsafe {mem::zeroed() },
         _phantom: marker::PhantomData,
     };
-    unsafe { bindings::register_filesystem(&mut fs_registration.ptr) };
-    return fs_registration;
+    let result = unsafe { bindings::register_filesystem(&mut fs_registration.ptr) };
+    if result != 0 {
+        return Err(Error::from_kernel_errno(result));
+    }
+
+    return Ok(fs_registration);
 }

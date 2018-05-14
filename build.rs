@@ -13,7 +13,10 @@ const INCLUDED_VARS: &[&str] = &[];
 
 fn main() {
     let kernel = nix::sys::utsname::uname();
-    let mut builder = bindgen::Builder::default().use_core().ctypes_prefix("types").no_copy(".*");
+    let mut builder = bindgen::Builder::default()
+        .use_core()
+        .ctypes_prefix("types")
+        .no_copy(".*");
 
     let output = String::from_utf8(
         Command::new("make")
