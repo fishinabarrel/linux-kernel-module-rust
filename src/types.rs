@@ -10,6 +10,8 @@ pub type c_uint = u16;
 pub type c_ulong = u64;
 pub type c_ulonglong = u64;
 pub type c_ushort = u16;
+// See explanation in rust/src/libstd/os/raw.rs
+#[repr(u8)]
 pub enum c_void {
     #[doc(hidden)]
     __nothing_to_see_here,
