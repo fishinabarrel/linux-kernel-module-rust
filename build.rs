@@ -14,7 +14,7 @@ fn main() {
     let mut builder = bindgen::Builder::default().clang_arg(format!("-I/lib/modules/{}/build/include", kernel.release()));
 
     for h in HEADERS {
-        builder = builder.header(h);
+        builder = builder.header(h.to_string());
     }
 
     for t in INCLUDED_TYPES {
