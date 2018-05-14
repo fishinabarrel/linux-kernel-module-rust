@@ -1,6 +1,7 @@
 #![no_std]
 #![feature(lang_items)]
 
+pub mod filesystem;
 pub mod types;
 
 #[macro_export]
