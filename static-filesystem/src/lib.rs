@@ -9,9 +9,16 @@ struct StaticFileSystemModule {
 
 impl linux_kernel_module::KernelModule for StaticFileSystemModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
+        println!("Hello kernel module!");
         Ok(StaticFileSystemModule {
             _fs: linux_kernel_module::filesystem::register::<StaticFileSystem>()?,
         })
+    }
+}
+
+impl Drop for StaticFileSystemModule {
+    fn drop(&mut self) {
+        println!("Goodbye kernel module!");
     }
 }
 
