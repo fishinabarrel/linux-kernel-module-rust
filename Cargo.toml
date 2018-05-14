@@ -7,3 +7,4 @@ authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
 
 [build-dependencies]
 bindgen = "*"
+nix = "0.10.0"
