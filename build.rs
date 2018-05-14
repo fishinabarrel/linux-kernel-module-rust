@@ -3,8 +3,8 @@ extern crate bindgen;
 use std::env;
 use std::path::PathBuf;
 
-const INCLUDED_TYPES: &[&str] = &[];
-const INCLUDED_FUNCTIONS: &[&str] = &[];
+const INCLUDED_TYPES: &[&str] = &["file_system_type"];
+const INCLUDED_FUNCTIONS: &[&str] = &["register_filesystem", "unregister_filesystem"];
 const INCLUDED_VARS: &[&str] = &[];
 
 fn main() {
@@ -21,9 +21,7 @@ fn main() {
     for v in INCLUDED_VARS {
         builder = builder.whitelist_var(v);
     }
-    let bindings = builder
-        .generate()
-        .expect("Unable to generate bindings");
+    let bindings = builder.generate().expect("Unable to generate bindings");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
