@@ -10,7 +10,7 @@ pub struct FileSystemRegistration<T: FileSystem> {
 
 impl<T: FileSystem> Drop for FileSystemRegistration<T> {
     fn drop(&mut self) {
-        bindings::unregister_filesystem(&self.ptr);
+        unsafe { bindings::unregister_filesystem(&mut self.ptr) };
         self.ptr = unsafe { mem::zeroed() };
     }
 }
@@ -18,10 +18,10 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
 pub trait FileSystem {}
 
 pub fn register<T: FileSystem>() -> FileSystemRegistration<T> {
-    let fs_registration = FileSystemRegistration {
-        ptr: bindings::file_system_type {},
+    let mut fs_registration = FileSystemRegistration {
+        ptr: /*bindings::file_system_type {},*/ unsafe {mem::zeroed() },
         _phantom: marker::PhantomData,
     };
-    bindings::register_filesystem(&fs_registration.ptr);
+    unsafe { bindings::register_filesystem(&mut fs_registration.ptr) };
     return fs_registration;
 }
