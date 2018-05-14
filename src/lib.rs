@@ -1,6 +1,7 @@
 #![no_std]
 #![feature(lang_items)]
 
+pub mod bindings;
 pub mod filesystem;
 pub mod types;
 
