@@ -1,6 +1,8 @@
 use core::marker;
 use core::mem;
 
+use bindings;
+
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
     ptr: bindings::file_system_type,
