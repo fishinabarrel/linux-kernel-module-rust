@@ -1,6 +1,9 @@
 #![no_std]
 #![feature(lang_items)]
 
+#[macro_use]
+extern crate bitflags;
+
 pub mod bindings;
 mod error;
 pub mod filesystem;

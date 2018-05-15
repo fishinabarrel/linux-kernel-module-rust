@@ -18,6 +18,17 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
 
 pub trait FileSystem {
     const NAME: &'static str;
+    const FLAGS: FileSystemFlags;
+}
+
+bitflags! {
+    struct FileSystemFlags: types::c_int {
+        const FS_REQUIRES_DEV = bindings::FS_REQUIRES_DEV;
+        const FS_BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA;
+        const FS_HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE;
+        const FS_USERNS_MOUNT = bindings::FS_USERNS_MOUNT;
+        const FS_RENAME_DOES_D_MOVE = bindings::FS_RENAME_DOES_D_MOVE;
+    }
 }
 
 pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T>> {
