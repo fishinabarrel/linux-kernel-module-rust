@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(lang_items)]
+#![feature(const_fn, lang_items)]
 
 #[macro_use]
 extern crate bitflags;

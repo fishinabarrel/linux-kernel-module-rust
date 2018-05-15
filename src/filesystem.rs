@@ -32,6 +32,12 @@ bitflags! {
     }
 }
 
+impl FileSystemFlags {
+    pub const fn const_empty() -> FileSystemFlags {
+        FileSystemFlags { bits: 0 }
+    }
+}
+
 pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T>> {
     if !T::NAME.ends_with('\x00') {
         return Err(error::Error::EINVAL);
