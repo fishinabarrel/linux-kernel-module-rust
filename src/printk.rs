@@ -20,14 +20,14 @@ impl fmt::Write for KernelConsole {
 macro_rules! println {
     () => ({
         use ::core::fmt::Write;
-        let _ = $crate::printk::KernelConsole.write_str("");
+        let _ = $crate::printk::KernelConsole.write_str("\x016\n");
     });
     ($fmt:expr) => ({
         use ::core::fmt::Write;
-        let _ = $crate::printk::KernelConsole.write_str($fmt);
+        let _ = $crate::printk::KernelConsole.write_str(concat!("\x016", $fmt, "\n"));
     });
     ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
-        let _ = $crate::printk::KernelConsole.write_fmt(format_args!($fmt, $($arg)*));
+        let _ = $crate::printk::KernelConsole.write_fmt(format_args!(concat!("\x016", $fmt, "\n"), $($arg)*));
     });
 }

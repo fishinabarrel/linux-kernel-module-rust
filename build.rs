@@ -21,6 +21,7 @@ const INCLUDED_VARS: &[&str] = &[
     "FS_USERNS_MOUNT",
     "FS_RENAME_DOES_D_MOVE",
     "BINDINGS_GFP_KERNEL",
+    "KERN_INFO",
 ];
 
 fn main() {
