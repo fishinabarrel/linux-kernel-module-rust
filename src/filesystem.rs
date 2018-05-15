@@ -40,6 +40,7 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
         ptr: bindings::file_system_type {
             name: T::NAME.as_ptr() as *const i8,
             owner: &mut bindings::__this_module,
+            fs_flags: T::FLAGS.bits(),
         },
         _phantom: marker::PhantomData,
     };
