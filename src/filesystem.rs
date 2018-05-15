@@ -3,6 +3,7 @@ use core::mem;
 
 use bindings;
 use error;
+use types;
 
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
