@@ -44,7 +44,7 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
     if !T::NAME.ends_with('\x00') {
         return Err(error::Error::EINVAL);
     }
-    let mut fs_registration = Box::new(FileSystemRegistration {
+    let mut fs_registration = FileSystemRegistration {
         ptr: Box::new(bindings::file_system_type {
             name: T::NAME.as_ptr() as *const i8,
             owner: unsafe { &mut bindings::__this_module },
@@ -53,7 +53,7 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
             ..Default::default()
         }),
         _phantom: marker::PhantomData,
-    });
+    };
     let result = unsafe { bindings::register_filesystem(&mut *fs_registration.ptr) };
     if result != 0 {
         return Err(error::Error::from_kernel_errno(result));
