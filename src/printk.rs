@@ -18,16 +18,16 @@ impl fmt::Write for KernelConsole {
 
 #[macro_export]
 macro_rules! println {
-    () => {
+    () => ({
         use ::core::fmt::Write;
         let _ = $crate::printk::KernelConsole.write_str("");
-    };
-    ($fmt:expr) => {
+    });
+    ($fmt:expr) => ({
         use ::core::fmt::Write;
         let _ = $crate::printk::KernelConsole.write_str($fmt);
-    };
-    ($fmt:expr, $($arg:tt)*) => {
+    });
+    ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
         let _ = $crate::printk::KernelConsole.write_args(format_args!($fmt, $($arg)*));
-    };
+    });
 }
