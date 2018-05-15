@@ -28,6 +28,6 @@ macro_rules! println {
     });
     ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
-        let _ = $crate::printk::KernelConsole.write_args(format_args!($fmt, $($arg)*));
+        let _ = $crate::printk::KernelConsole.write_fmt(format_args!($fmt, $($arg)*));
     });
 }
