@@ -1,6 +1,6 @@
 use types;
 
-struct Error(types::c_int);
+pub struct Error(types::c_int);
 
 impl Error {
     pub fn from_kernel_errno(errno: types::c_int) -> Error {
@@ -12,4 +12,4 @@ impl Error {
     }
 }
 
-type KernelResult<T> = Result<T, Error>;
+pub type KernelResult<T> = Result<T, Error>;

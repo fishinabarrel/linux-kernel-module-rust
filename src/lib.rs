@@ -4,7 +4,7 @@
 pub mod bindings;
 mod error;
 pub mod filesystem;
-mod types;
+pub mod types;
 pub mod printk;
 
 pub use error::{Error, KernelResult};
