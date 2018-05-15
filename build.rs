@@ -24,7 +24,8 @@ fn main() {
     let mut builder = bindgen::Builder::default()
         .use_core()
         .ctypes_prefix("types")
-        .no_copy(".*");
+        .no_copy(".*")
+        .derive_default(true);
 
     let output = String::from_utf8(
         Command::new("make")

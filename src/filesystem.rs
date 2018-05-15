@@ -1,3 +1,4 @@
+use core::default::Default;
 use core::marker;
 use core::mem;
 
@@ -47,6 +48,8 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
             name: T::NAME.as_ptr() as *const i8,
             owner: &mut bindings::__this_module,
             fs_flags: T::FLAGS.bits(),
+
+            ..Default::default()
         },
         _phantom: marker::PhantomData,
     };
