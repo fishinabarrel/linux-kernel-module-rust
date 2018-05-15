@@ -3,6 +3,7 @@
 
 extern crate alloc;
 use alloc::String;
+use alloc::borrow::ToOwned;
 
 #[macro_use]
 extern crate linux_kernel_module;
