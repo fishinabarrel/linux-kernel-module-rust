@@ -29,7 +29,7 @@ macro_rules! kernel_module {
         }
 
         #[no_mangle]
-        pub extern "C" fn module_exit() {
+        pub extern "C" fn cleanup_module() {
             unsafe {
                 // Invokes drop() on __MOD, which should be used for cleanup.
                 __MOD = None;
@@ -56,5 +56,10 @@ extern "C" fn eh_personality() {}
 
 #[lang = "panic_fmt"]
 extern "C" fn panic_fmt() -> ! {
+    loop {}
+}
+
+#[no_mangle]
+pub extern "C" fn _Unwind_Resume() -> ! {
     loop {}
 }
