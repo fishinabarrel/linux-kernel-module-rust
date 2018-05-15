@@ -1,6 +1,6 @@
 obj-m := staticfilesystem.o
 staticfilesystem-objs := target/debug/libstatic_filesystem.a ../src/printk_helper.o
-EXTRA_LDFLAGS += --entry=init_module --undefined=cleanup_module
+EXTRA_LDFLAGS += --gc-sections --entry=init_module --undefined=cleanup_module
 
 all:
 	$(MAKE) -C /lib/modules/$(shell uname -r)/build M=$(CURDIR)
