@@ -4,7 +4,7 @@ use types::c_int;
 
 pub struct KernelConsole;
 
-extern {
+extern "C" {
     fn printk_helper(s: *const u8, len: c_int) -> c_int;
 }
 
