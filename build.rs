@@ -6,7 +6,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const HEADERS: &[&str] = &["linux/fs.h", "linux/export.h"];
+const HEADERS: &[&str] = &["linux/fs.h", "linux/export.h", "linux/slab.h"];
 const INCLUDED_TYPES: &[&str] = &["file_system_type"];
 const INCLUDED_FUNCTIONS: &[&str] = &[
     "register_filesystem",
