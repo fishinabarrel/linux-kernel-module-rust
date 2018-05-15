@@ -8,9 +8,6 @@ struct StaticFileSystemModule {
 }
 
 impl linux_kernel_module::KernelModule for StaticFileSystemModule {
-    const NAME: &'static str = "rust_static_filesystem\x00";
-    const FLAGS: FileSystemFlags = FileSystemFlags::empty();
-
     fn init() -> linux_kernel_module::KernelResult<Self> {
         println!("Hello kernel module!");
         Ok(StaticFileSystemModule {
@@ -27,7 +24,11 @@ impl Drop for StaticFileSystemModule {
 
 struct StaticFileSystem;
 
-impl linux_kernel_module::filesystem::FileSystem for StaticFileSystem {}
+impl linux_kernel_module::filesystem::FileSystem for StaticFileSystem {
+    const NAME: &'static str = "rust_static_filesystem\x00";
+    const FLAGS: linux_kernel_module::filesystem::FileSystemFlags =
+        linux_kernel_module::filesystem::FileSystemFlags::empty();
+}
 
 kernel_module!(
     StaticFileSystemModule,

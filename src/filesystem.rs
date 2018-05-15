@@ -23,7 +23,7 @@ pub trait FileSystem {
 }
 
 bitflags! {
-    struct FileSystemFlags: types::c_int {
+    pub struct FileSystemFlags: types::c_int {
         const FS_REQUIRES_DEV = bindings::FS_REQUIRES_DEV as types::c_int;
         const FS_BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA as types::c_int;
         const FS_HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE as types::c_int;
