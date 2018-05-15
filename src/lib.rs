@@ -4,6 +4,7 @@
 #[macro_use]
 extern crate bitflags;
 
+mod allocator;
 pub mod bindings;
 mod error;
 pub mod filesystem;
