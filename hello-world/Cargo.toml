@@ -1,0 +1,13 @@
+[package]
+name = "hello-world"
+version = "0.1.0"
+authors = ["Geoffrey Thomas <geofft@ldpreload.com>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+linux-kernel-module = { path = ".." }
+
+[profile.dev]
+panic = "abort"
