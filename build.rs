@@ -8,7 +8,12 @@ use std::process::Command;
 
 const HEADERS: &[&str] = &["linux/fs.h", "linux/export.h"];
 const INCLUDED_TYPES: &[&str] = &["file_system_type"];
-const INCLUDED_FUNCTIONS: &[&str] = &["register_filesystem", "unregister_filesystem"];
+const INCLUDED_FUNCTIONS: &[&str] = &[
+    "register_filesystem",
+    "unregister_filesystem",
+    "krealloc",
+    "kfree",
+];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
     "__this_module",
@@ -17,6 +22,7 @@ const INCLUDED_VARS: &[&str] = &[
     "FS_HAS_SUBTYPE",
     "FS_USERNS_MOUNT",
     "FS_RENAME_DOES_D_MOVE",
+    "GFP_KERNEL",
 ];
 
 fn main() {
