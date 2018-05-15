@@ -7,6 +7,8 @@ pub struct KernelAllocator;
 
 unsafe impl GlobalAlloc for KernelAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut Opaque {
+        // krealloc is used instead of kmalloc because kmalloc is an inline function and can't be
+        // bound to as a result
         return bindings::krealloc(
             0 as *const types::c_void,
             layout.size(),
