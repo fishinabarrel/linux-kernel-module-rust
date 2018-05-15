@@ -1,19 +1,26 @@
 #![no_std]
+#![feature(alloc)]
+
+extern crate alloc;
+use alloc::String;
 
 #[macro_use]
 extern crate linux_kernel_module;
 
-struct HelloWorldModule {}
+struct HelloWorldModule {
+    message: String,
+}
 
 impl linux_kernel_module::KernelModule for HelloWorldModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         println!("Hello kernel module!");
-        Ok(HelloWorldModule {})
+        Ok(HelloWorldModule {message: "on the heap!".to_owned()})
     }
 }
 
 impl Drop for HelloWorldModule {
     fn drop(&mut self) {
+        println!("My message is {}", self.message);
         println!("Goodbye kernel module!");
     }
 }
