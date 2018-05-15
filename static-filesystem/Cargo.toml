@@ -8,7 +8,3 @@ crate-type = ["staticlib"]
 
 [dependencies]
 linux-kernel-module = { path = ".." }
-
-[profile.dev]
-# TODO: can be removed once we have a custom target.json
-panic = "abort"

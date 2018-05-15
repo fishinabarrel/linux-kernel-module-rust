@@ -68,11 +68,5 @@ extern "C" fn panic_fmt() -> ! {
     loop {}
 }
 
-// TODO: we expect this to go away once we have a target.json and we rebuild libcore.
-#[no_mangle]
-pub extern "C" fn _Unwind_Resume() -> ! {
-    loop {}
-}
-
 #[global_allocator]
 static ALLOCATOR: allocator::KernelAllocator = allocator::KernelAllocator;

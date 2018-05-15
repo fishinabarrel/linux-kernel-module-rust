@@ -1,0 +1,32 @@
+{
+  "arch": "x86_64",
+  "cpu": "x86-64",
+  "code-model": "kernel",
+  "data-layout": "e-m:e-i64:64-f80:128-n8:16:32:64-S128",
+  "disable-redzone": true,
+  "eliminate-frame-pointer": false,
+  "env": "gnu",
+  "features": "-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2,+soft-float",
+  "linker-flavor": "gcc",
+  "linker-is-gnu": true,
+  "llvm-target": "x86_64-unknown-linux-gnu",
+  "max-atomic-width": 64,
+  "no-compiler-rt": true,
+  "os": "none",
+  "panic-strategy": "abort",
+  "position-independent-executables": true,
+  "pre-link-args": {
+    "gcc": [
+      "-Wl,--as-needed",
+      "-Wl,-z,noexecstack",
+      "-m64"
+    ]
+  },
+  "relocation-model": "static",
+  "relro-level": "full",
+  "target-c-int-width": "32",
+  "target-endian": "little",
+  "target-family": "unix",
+  "target-pointer-width": "64",
+  "vendor": "unknown"
+}

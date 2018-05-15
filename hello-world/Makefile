@@ -1,5 +1,5 @@
 obj-m := helloworld.o
-helloworld-objs := target/debug/libhello_world.a ../src/printk_helper.o
+helloworld-objs := target/x86_64-linux-kernel-module/debug/libhello_world.a ../src/printk_helper.o
 EXTRA_LDFLAGS += --gc-sections --entry=init_module --undefined=cleanup_module
 
 all:
