@@ -1,12 +1,10 @@
 extern crate bindgen;
-extern crate nix;
 extern crate shlex;
 
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const HEADERS: &[&str] = &["linux/fs.h", "linux/export.h", "linux/slab.h"];
 const INCLUDED_TYPES: &[&str] = &["file_system_type"];
 const INCLUDED_FUNCTIONS: &[&str] = &[
     "register_filesystem",
@@ -22,11 +20,10 @@ const INCLUDED_VARS: &[&str] = &[
     "FS_HAS_SUBTYPE",
     "FS_USERNS_MOUNT",
     "FS_RENAME_DOES_D_MOVE",
-    "GFP_KERNEL",
+    "BINDINGS_GFP_KERNEL",
 ];
 
 fn main() {
-    let kernel = nix::sys::utsname::uname();
     let mut builder = bindgen::Builder::default()
         .use_core()
         .ctypes_prefix("types")
@@ -47,13 +44,8 @@ fn main() {
         builder = builder.clang_arg(arg.to_string());
     }
 
-    for h in HEADERS {
-        builder = builder.header(format!(
-            "/lib/modules/{}/build/include/{}",
-            kernel.release(),
-            h.to_string()
-        ));
-    }
+    println!("cargo:rerun-if-changed=src/bindings_helper.h");
+    builder = builder.header("src/bindings_helper.h");
 
     for t in INCLUDED_TYPES {
         builder = builder.whitelist_type(t);

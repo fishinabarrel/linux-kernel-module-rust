@@ -3,3 +3,5 @@
 use types;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+pub const GFP_KERNEL: gfp_t = BINDINGS_GFP_KERNEL;

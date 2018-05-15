@@ -10,6 +10,7 @@ pub type c_uint = u32;
 pub type c_ulong = u64;
 pub type c_ulonglong = u64;
 pub type c_ushort = u16;
+pub type c_schar = i8;
 // See explanation in rust/src/libstd/os/raw.rs
 #[repr(u8)]
 pub enum c_void {
