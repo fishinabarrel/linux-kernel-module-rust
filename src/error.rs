@@ -1,4 +1,6 @@
-struct Error(c_int);
+use types;
+
+struct Error(types::c_int);
 
 impl Error {
     pub fn from_kernel_errno(errno: types::c_int) -> Error {
@@ -11,7 +13,3 @@ impl Error {
 }
 
 type KernelResult<T> = Result<T, Error>;
-
-pub trait KernelModule: Sized {
-    fn init() -> KernelResult<Self>;
-}

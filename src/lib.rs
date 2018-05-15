@@ -51,6 +51,10 @@ macro_rules! kernel_module {
     };
 }
 
+pub trait KernelModule: Sized {
+    fn init() -> KernelResult<Self>;
+}
+
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
 
