@@ -26,6 +26,3 @@ unsafe impl<'a> Alloc for &'a KernelAllocator {
 extern "C" fn oom(err: AllocErr) -> ! {
     panic!("Out of memory {}", err.description());
 }
-
-#[global_allocator]
-static ALLOCATOR: KernelAllocator = KernelAllocator;

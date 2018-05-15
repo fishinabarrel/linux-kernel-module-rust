@@ -72,3 +72,6 @@ extern "C" fn panic_fmt() -> ! {
 pub extern "C" fn _Unwind_Resume() -> ! {
     loop {}
 }
+
+#[global_allocator]
+static ALLOCATOR: allocator::KernelAllocator = allocator::KernelAllocator;
