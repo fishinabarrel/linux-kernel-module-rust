@@ -46,13 +46,14 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
     let mut fs_registration = FileSystemRegistration {
         ptr: bindings::file_system_type {
             name: T::NAME.as_ptr() as *const i8,
-            owner: &mut bindings::__this_module,
+            owner: unsafe { &mut bindings::__this_module },
             fs_flags: T::FLAGS.bits(),
 
             ..Default::default()
         },
         _phantom: marker::PhantomData,
     };
+    // TODO: use-after-scope, don't pass ptr to stack to register_filesystem
     let result = unsafe { bindings::register_filesystem(&mut fs_registration.ptr) };
     if result != 0 {
         return Err(error::Error::from_kernel_errno(result));
