@@ -1,8 +1,11 @@
+use bindings;
 use types;
 
 pub struct Error(types::c_int);
 
 impl Error {
+    const EINVAL: Self = Error(-bindings::EINVAL);
+
     pub fn from_kernel_errno(errno: types::c_int) -> Error {
         return Error(errno);
     }

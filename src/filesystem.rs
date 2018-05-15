@@ -16,11 +16,18 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
     }
 }
 
-pub trait FileSystem {}
+pub trait FileSystem {
+    const NAME: &'static str;
+}
 
 pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T>> {
+    if !T::NAME.ends_with('\x00') {
+        return Err(error::Error::EINVAL);
+    }
     let mut fs_registration = FileSystemRegistration {
-        ptr: /*bindings::file_system_type {},*/ unsafe {mem::zeroed() },
+        ptr: bindings::file_system_type {
+            name: T::NAME.as_ptr(),
+        },
         _phantom: marker::PhantomData,
     };
     let result = unsafe { bindings::register_filesystem(&mut fs_registration.ptr) };

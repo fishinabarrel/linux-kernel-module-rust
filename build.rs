@@ -9,7 +9,7 @@ use std::process::Command;
 const HEADERS: &[&str] = &["linux/fs.h"];
 const INCLUDED_TYPES: &[&str] = &["file_system_type"];
 const INCLUDED_FUNCTIONS: &[&str] = &["register_filesystem", "unregister_filesystem"];
-const INCLUDED_VARS: &[&str] = &[];
+const INCLUDED_VARS: &[&str] = &["EINVAL"];
 
 fn main() {
     let kernel = nix::sys::utsname::uname();

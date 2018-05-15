@@ -8,6 +8,8 @@ struct StaticFileSystemModule {
 }
 
 impl linux_kernel_module::KernelModule for StaticFileSystemModule {
+    const NAME: &'static str = "rust_static_filesystem\x00";
+
     fn init() -> linux_kernel_module::KernelResult<Self> {
         println!("Hello kernel module!");
         Ok(StaticFileSystemModule {
