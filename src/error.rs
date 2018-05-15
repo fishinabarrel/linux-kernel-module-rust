@@ -4,7 +4,7 @@ use types;
 pub struct Error(types::c_int);
 
 impl Error {
-    const EINVAL: Self = Error(-bindings::EINVAL);
+    pub const EINVAL: Self = Error(-(bindings::EINVAL as i32));
 
     pub fn from_kernel_errno(errno: types::c_int) -> Error {
         return Error(errno);

@@ -26,7 +26,7 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
     }
     let mut fs_registration = FileSystemRegistration {
         ptr: bindings::file_system_type {
-            name: T::NAME.as_ptr(),
+            name: T::NAME.as_ptr() as *const i8,
         },
         _phantom: marker::PhantomData,
     };
