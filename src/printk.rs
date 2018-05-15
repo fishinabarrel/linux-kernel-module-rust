@@ -28,6 +28,8 @@ macro_rules! println {
     });
     ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
-        let _ = $crate::printk::KernelConsole.write_fmt(format_args!(concat!("\x016", $fmt, "\n"), $($arg)*));
+        // TODO: Don't allocate!
+        let s = format!(concat!("\x016", $fmt, "\n"), $($arg)*);
+        let _ = $crate::printk::KernelConsole.write_str(s);
     });
 }
