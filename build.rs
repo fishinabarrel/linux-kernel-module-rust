@@ -6,10 +6,10 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const HEADERS: &[&str] = &["linux/fs.h"];
+const HEADERS: &[&str] = &["linux/fs.h", "linux/export.h"];
 const INCLUDED_TYPES: &[&str] = &["file_system_type"];
 const INCLUDED_FUNCTIONS: &[&str] = &["register_filesystem", "unregister_filesystem"];
-const INCLUDED_VARS: &[&str] = &["EINVAL"];
+const INCLUDED_VARS: &[&str] = &["EINVAL", "__this_module"];
 
 fn main() {
     let kernel = nix::sys::utsname::uname();
