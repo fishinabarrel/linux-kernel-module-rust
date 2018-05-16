@@ -15,7 +15,7 @@ cd hello-world
 3. Build the static object with cargo xbuild, pointing it at our custom target
 
 ```
-RUST_TARGET_PATH=~/linux-kernel-module-rust cargo xbuild --target x86_64-linux-kernel-module
+RUST_TARGET_PATH=$(pwd)/.. cargo xbuild --target x86_64-linux-kernel-module
 
 ```
 
