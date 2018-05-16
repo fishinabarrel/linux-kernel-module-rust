@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(alloc, global_allocator, allocator_api, const_fn, lang_items)]
+#![feature(alloc, global_allocator, allocator_api, const_fn, lang_items, use_extern_macros)]
 
 extern crate alloc;
 #[macro_use]
@@ -11,6 +11,8 @@ mod error;
 pub mod filesystem;
 pub mod printk;
 pub mod types;
+
+pub use alloc::format;
 
 pub use error::{Error, KernelResult};
 
