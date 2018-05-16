@@ -40,6 +40,27 @@ impl FileSystemFlags {
     }
 }
 
+extern "C" fn fill_super_callback<T: FileSystem>(
+    sb: *mut bindings::super_block,
+    data: *mut types::c_void,
+    silent: types::c_int,
+) -> types::c_int {
+    // T::fill_super(...)
+    // This should actually create an object that gets dropped by
+    // file_system_registration::kill_sb. You can point to it with
+    // sb->s_fs_info.
+    unimplemented!();
+}
+
+extern "C" fn mount_callback<T: FileSystem>(
+    fs_type: *mut bindings::file_system_type,
+    flags: types::c_int,
+    _dev_name: *const types::c_char,
+    data: *mut types::c_void,
+) -> *mut bindings::dentry {
+    unsafe { bindings::mount_nodev(fs_type, flags, data, Some(fill_super_callback::<T>)) }
+}
+
 pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T>> {
     if !T::NAME.ends_with('\x00') {
         return Err(error::Error::EINVAL);
@@ -49,6 +70,8 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
             name: T::NAME.as_ptr() as *const i8,
             owner: unsafe { &mut bindings::__this_module },
             fs_flags: T::FLAGS.bits(),
+            mount: Some(mount_callback::<T>),
+            kill_sb: Some(bindings::kill_litter_super),
 
             ..Default::default()
         }),

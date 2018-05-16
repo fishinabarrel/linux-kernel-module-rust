@@ -11,6 +11,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "unregister_filesystem",
     "krealloc",
     "kfree",
+    "mount_nodev",
+    "kill_litter_super",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
