@@ -12,9 +12,11 @@ matrix:
 
 install:
     - cargo install cargo-xbuild
+    - rustup component add rust-src
 
 script:
-    - cd "$MODULE_DIR" && RUST_TARGET_PATH="$(pwd)/.." cargo xbuild --target x86_64-linux-kernel-module
-    - cd "$MODULE_DIR" && make
-    - cd "$MODULE_DIR" && sudo insmod "${MODULE}.ko"
+    - cd $MODULE_DIR
+    - RUST_TARGET_PATH="$(pwd)/.." cargo xbuild --target x86_64-linux-kernel-module
+    - make
+    - sudo insmod "${MODULE}.ko"
     - sudo rmmod "$MODULE"
