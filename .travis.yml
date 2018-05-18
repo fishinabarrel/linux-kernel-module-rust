@@ -4,9 +4,9 @@ language: rust
 rust:
     - nightly
 cache:
-    - cargo
+    - cargo: true
     # TODO: dedup this with the MODULE_DIR in env
-    - directories
+    - directories:
         - static-filesystem/target/
         - hello-world/target/
 
