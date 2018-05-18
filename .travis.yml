@@ -12,7 +12,8 @@ matrix:
 
 install:
     - type -p cargo-install-update || cargo install --force cargo-update
-    - if type -p cargo-xbuild; then
+    - |
+      if type -p cargo-xbuild; then
           cargo install-update -i cargo-xbuild
       else
           cargo install --force cargo-xbuild
