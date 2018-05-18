@@ -5,8 +5,10 @@ rust:
     - nightly
 cache:
     - cargo
+    # TODO: dedup this with the MODULE_DIR in env
     - directories
-        - "$MODULE_DIR/target/"
+        - static-filesystem/target/
+        - hello-world/target/
 
 matrix:
     include:
@@ -14,7 +16,7 @@ matrix:
         - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
 
 install:
-    - apt install -y "linux-headers-$(uname -r)"
+    - sudo apt install -y "linux-headers-$(uname -r)"
     - type -p cargo-install-update || cargo install --force cargo-update
     - |
       if type -p cargo-xbuild; then
