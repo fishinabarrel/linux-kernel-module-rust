@@ -11,7 +11,12 @@ matrix:
         - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
 
 install:
-    - cargo install cargo-xbuild
+    - type -p cargo-install-update || cargo install --force cargo-update
+    - if type -p cargo-xbuild; then
+          cargo install-update -i cargo-xbuild
+      else
+          cargo install --force cargo-xbuild
+      fi
     - rustup component add rust-src
 
 script:
