@@ -3,7 +3,10 @@ sudo: required
 language: rust
 rust:
     - nightly
-cache: cargo
+cache:
+    - cargo
+    - directories
+        - "$MODULE_DIR/target/"
 
 matrix:
     include:
