@@ -11,6 +11,7 @@ matrix:
         - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
 
 install:
+    - apt install -y "linux-headers-$(uname -r)"
     - type -p cargo-install-update || cargo install --force cargo-update
     - |
       if type -p cargo-xbuild; then
