@@ -1,0 +1,35 @@
+sudo: required
+
+language: rust
+rust:
+    - nightly
+cache:
+    - cargo: true
+    # TODO: dedup this with the MODULE_DIR in env
+    - directories:
+        - static-filesystem/target/
+        - hello-world/target/
+
+matrix:
+    include:
+        - env: MODULE_DIR=hello-world MODULE=helloworld
+        # TODO: currently the kernel module fails to load
+        # - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
+
+install:
+    - sudo apt-get install -y "linux-headers-$(uname -r)"
+    - type -p cargo-install-update || cargo install --force cargo-update
+    - |
+      if type -p cargo-xbuild; then
+          cargo install-update -i cargo-xbuild
+      else
+          cargo install --force cargo-xbuild
+      fi
+    - rustup component add rust-src
+
+script:
+    - cd $MODULE_DIR
+    - RUST_TARGET_PATH="$(pwd)/.." cargo xbuild --target x86_64-linux-kernel-module
+    - make
+    - sudo insmod "${MODULE}.ko"
+    - sudo rmmod "$MODULE"
