@@ -1,0 +1,20 @@
+sudo: required
+
+language: rust
+rust:
+    - nightly
+cache: cargo
+
+matrix:
+    include:
+        - env: MODULE_DIR=hello-world MODULE=helloworld
+        - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
+
+install:
+    - cargo install cargo-xbuild
+
+script:
+    - cd "$MODULE_DIR" && RUST_TARGET_PATH="$(pwd)/.." cargo xbuild --target x86_64-linux-kernel-module
+    - cd "$MODULE_DIR" && make
+    - cd "$MODULE_DIR" && sudo insmod "${MODULE}.ko"
+    - sudo rmmod "$MODULE"
