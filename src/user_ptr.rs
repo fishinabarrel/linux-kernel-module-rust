@@ -74,6 +74,7 @@ impl<T: Copy + ?Sized> WriteOnlyUserPtr<T> {
                 &src as *const T as *const types::c_void,
                 mem::size_of::<T>() as u32,
             );
+            // TODO: can an error happen here?
             assert!(res == mem::size_of::<T>() as u64);
         }
     }
