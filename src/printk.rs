@@ -36,12 +36,12 @@ impl LogLineWriter {
 
 impl fmt::Write for LogLineWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        let copy_len = if LOG_LINE_MAX - pos >= s.as_bytes().len() {
+        let copy_len = if LOG_LINE_MAX - self.pos >= s.as_bytes().len() {
             s.as_bytes().len()
         } else {
-            LOG_LINE_MAX - pos
+            LOG_LINE_MAX - self.pos
         };
-        self.data[self.pos..self.pos+copy_len].copy_from_slice(s.as_bytes()[..copy_len]);
+        self.data[self.pos..self.pos+copy_len].copy_from_slice(&s.as_bytes()[..copy_len]);
         self.pos += copy_len;
         return Ok(());
     }
