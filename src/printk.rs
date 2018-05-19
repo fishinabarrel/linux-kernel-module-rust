@@ -30,7 +30,7 @@ impl LogLineWriter {
     }
     
     pub fn as_bytes(&self) -> &[u8] {
-        return &self.data;
+        return &self.data[..self.pos];
     }
 }
 
