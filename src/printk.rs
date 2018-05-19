@@ -9,12 +9,12 @@ extern "C" {
     fn printk_cont_helper(s: *const u8, len: c_int) -> c_int;
 }
 
-fn printk_info(s: &str) {
+pub fn printk_info(s: &str) {
     // TODO: I believe printk never fails
     unsafe { printk_info_helper(s.as_ptr(), s.len() as c_int) };
 }
 
-fn printk_cont(s: &str) {
+pub fn printk_cont(s: &str) {
     // TODO: I believe printk never fails
     unsafe { printk_cont_helper(s.as_ptr(), s.len() as c_int) };
 }
@@ -37,6 +37,6 @@ macro_rules! println {
     ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
         $crate::printk::printk_info("");
-        let _ = $crate::printk::KernelConsole.write_fmt(format_args!(concat!($fmt, "\n"), $($args)*));
+        let _ = $crate::printk::KernelConsole.write_fmt(format_args!(concat!($fmt, "\n"), $($arg)*));
     });
 }
