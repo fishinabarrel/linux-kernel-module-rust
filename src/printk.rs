@@ -18,7 +18,7 @@ const LOG_LINE_MAX: usize = 1024 - 32;
 
 struct LogLineWriter {
     data: [u8; LOG_LINE_MAX],
-    pos: usize;
+    pos: usize,
 }
 
 impl LogLineWriter {
@@ -40,8 +40,9 @@ impl fmt::Write for LogLineWriter {
             s.as_bytes().len()
         } else {
             LOG_LINE_MAX - pos
-        }
-        self.data[pos..pos+copy_len].copy_from_slice(s.as_bytes()[..copy_len]);
+        };
+        self.data[self.pos..self.pos+copy_len].copy_from_slice(s.as_bytes()[..copy_len]);
+        self.pos += copy_len;
         return Ok(());
     }
 }
