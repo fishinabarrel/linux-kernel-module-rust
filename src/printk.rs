@@ -37,6 +37,6 @@ macro_rules! println {
     ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
         $crate::printk::printk_info("");
-        let _ = $crate::printk::KernelConsole.write_fmt(format_args!(concat!($fmt, "\n"), $($args)*);
+        let _ = $crate::printk::KernelConsole.write_fmt(format_args!(concat!($fmt, "\n"), $($args)*));
     });
 }
