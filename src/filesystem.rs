@@ -22,6 +22,7 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
 pub trait FileSystem {
     const NAME: &'static str;
     const FLAGS: FileSystemFlags;
+    const MAGIC: u32;
 }
 
 bitflags! {
@@ -49,7 +50,8 @@ extern "C" fn fill_super_callback<T: FileSystem>(
     // This should actually create an object that gets dropped by
     // file_system_registration::kill_sb. You can point to it with
     // sb->s_fs_info.
-    unimplemented!();
+    let no_files: [bindings::tree_descr; 1] = [bindings::tree_descr{name: b"\0" as *const _ as *const types::c_char, ..Default::default()}];
+    unsafe { bindings::simple_fill_super(sb, T::MAGIC as types::c_ulong, no_files.as_ptr() ) }
 }
 
 extern "C" fn mount_callback<T: FileSystem>(

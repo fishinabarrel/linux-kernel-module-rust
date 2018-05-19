@@ -21,6 +21,7 @@ impl linux_kernel_module::filesystem::FileSystem for StaticFileSystem {
     const NAME: &'static str = "rust_static_filesystem\x00";
     const FLAGS: linux_kernel_module::filesystem::FileSystemFlags =
         linux_kernel_module::filesystem::FileSystemFlags::const_empty();
+    const MAGIC: u32 = 0x52494952;
 }
 
 kernel_module!(

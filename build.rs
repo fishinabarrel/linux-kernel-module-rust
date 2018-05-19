@@ -5,13 +5,17 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const INCLUDED_TYPES: &[&str] = &["file_system_type"];
+const INCLUDED_TYPES: &[&str] = &[
+    "file_system_type",
+    "tree_descr",
+];
 const INCLUDED_FUNCTIONS: &[&str] = &[
     "register_filesystem",
     "unregister_filesystem",
     "krealloc",
     "kfree",
     "mount_nodev",
+    "simple_fill_super",
     "kill_litter_super",
 ];
 const INCLUDED_VARS: &[&str] = &[
