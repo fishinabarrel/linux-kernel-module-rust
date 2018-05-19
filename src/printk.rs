@@ -58,7 +58,7 @@ macro_rules! println {
         $crate::printk::printk(concat!("\x016", $fmt, "\n").as_bytes());
     });
     ($fmt:expr, $($arg:tt)*) => ({
-        use ::core::fmt::Write;
+        use ::core::fmt::{self, Write};
         let mut writer = $crate::printk::LogLineWriter::new();
         // TODO: Don't allocate!
         let _ = fmt::write(&mut writer, format_args!(concat!("\x016", $fmt, "\n"), $($arg)*)).unwrap();
