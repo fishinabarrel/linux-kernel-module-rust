@@ -11,10 +11,13 @@ mod error;
 pub mod filesystem;
 pub mod printk;
 pub mod types;
+mod user_ptr;
 
 pub use alloc::format;
 
 pub use error::{Error, KernelResult};
+
+pub use user_ptr::UserPtr;
 
 #[macro_export]
 macro_rules! kernel_module {

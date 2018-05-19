@@ -13,9 +13,15 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "kfree",
     "mount_nodev",
     "kill_litter_super",
+    "simple_fill_super",
+    "simple_statfs",
+    "access_ok",
+    "_copy_from_user",
+    "_copy_to_user",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
+    "EFAULT",
     "__this_module",
     "FS_REQUIRES_DEV",
     "FS_BINARY_MOUNTDATA",
@@ -24,6 +30,7 @@ const INCLUDED_VARS: &[&str] = &[
     "FS_RENAME_DOES_D_MOVE",
     "BINDINGS_GFP_KERNEL",
     "KERN_INFO",
+    "VERIFY_WRITE",
 ];
 
 fn main() {
