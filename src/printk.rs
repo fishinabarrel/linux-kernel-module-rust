@@ -16,20 +16,20 @@ pub fn printk(s: &[u8]) {
 // From kernel/print/printk.c 
 const LOG_LINE_MAX: usize = 1024 - 32;
 
-struct LogLineWriter {
+pub struct LogLineWriter {
     data: [u8; LOG_LINE_MAX],
     pos: usize,
 }
 
 impl LogLineWriter {
-    fn new() -> LogLineWriter {
+    pub fn new() -> LogLineWriter {
         LogLineWriter{
             data: [0u8; LOG_LINE_MAX],
             pos: 0,
         }
     }
     
-    fn as_bytes(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &[u8] {
         return &self.data;
     }
 }
@@ -61,7 +61,7 @@ macro_rules! println {
         use ::core::fmt::Write;
         let mut writer = LogLineWriter::new();
         // TODO: Don't allocate!
-        let _ = write!(&mut writer, format_args!(concat!("\x016", $fmt, "\n"), $($arg)*)).unwrap();
+        let _ = fmt::write(&mut writer, format_args!(concat!("\x016", $fmt, "\n"), $($arg)*)).unwrap();
         $crate::printk::printk(writer.as_bytes());
     });
 }
