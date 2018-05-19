@@ -31,7 +31,8 @@ fn main() {
         .use_core()
         .ctypes_prefix("types")
         .no_copy(".*")
-        .derive_default(true);
+        .derive_default(true)
+        .rustfmt_bindings(true);
 
     let output = String::from_utf8(
         Command::new("make")
