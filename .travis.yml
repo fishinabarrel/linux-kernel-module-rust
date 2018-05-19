@@ -13,8 +13,7 @@ cache:
 matrix:
     include:
         - env: MODULE_DIR=hello-world MODULE=helloworld
-        # TODO: currently the kernel module fails to load
-        # - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
+        - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
 
 install:
     - sudo apt-get install -y "linux-headers-$(uname -r)"
