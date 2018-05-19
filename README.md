@@ -1,9 +1,10 @@
 # Linux kernel modules in safe Rust
 
-1. Install [cargo-xbuild](https://github.com/rust-osdev/cargo-xbuild):
+1. Install [cargo-xbuild](https://github.com/rust-osdev/cargo-xbuild) and the `rust-src` `rustup` component:
 
 ```
 cargo install cargo-xbuild
+rustup component add --toolchain=nightly rust-src
 ```
 
 2. cd to one of the examples
