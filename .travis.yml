@@ -33,3 +33,7 @@ script:
     - make
     - sudo insmod "${MODULE}.ko"
     - sudo rmmod "$MODULE"
+
+
+notifications:
+    email: false
