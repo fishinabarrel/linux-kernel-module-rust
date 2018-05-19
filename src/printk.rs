@@ -13,7 +13,7 @@ pub fn printk(s: &[u8]) {
     unsafe { printk_helper(s.as_ptr(), s.len() as c_int) };
 }
 
-// From kernel/print/printk.c 
+// From kernel/print/printk.c
 const LOG_LINE_MAX: usize = 1024 - 32;
 
 pub struct LogLineWriter {
@@ -23,12 +23,12 @@ pub struct LogLineWriter {
 
 impl LogLineWriter {
     pub fn new() -> LogLineWriter {
-        LogLineWriter{
+        LogLineWriter {
             data: [0u8; LOG_LINE_MAX],
             pos: 0,
         }
     }
-    
+
     pub fn as_bytes(&self) -> &[u8] {
         return &self.data[..self.pos];
     }
@@ -41,7 +41,7 @@ impl fmt::Write for LogLineWriter {
         } else {
             LOG_LINE_MAX - self.pos
         };
-        self.data[self.pos..self.pos+copy_len].copy_from_slice(&s.as_bytes()[..copy_len]);
+        self.data[self.pos..self.pos + copy_len].copy_from_slice(&s.as_bytes()[..copy_len]);
         self.pos += copy_len;
         return Ok(());
     }
