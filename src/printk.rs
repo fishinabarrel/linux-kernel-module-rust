@@ -59,7 +59,7 @@ macro_rules! println {
     });
     ($fmt:expr, $($arg:tt)*) => ({
         use ::core::fmt::Write;
-        let mut writer = LogLineWriter::new();
+        let mut writer = $crate::printk::LogLineWriter::new();
         // TODO: Don't allocate!
         let _ = fmt::write(&mut writer, format_args!(concat!("\x016", $fmt, "\n"), $($arg)*)).unwrap();
         $crate::printk::printk(writer.as_bytes());
