@@ -13,7 +13,7 @@ extern "C" {
 }
 
 // Our goal is to protect against all possible memory unsafety specific to the
-// kernel's interaction with userland pointers (the sort of stuff covered into
+// kernel's interaction with userland pointers (the sort of stuff covered in
 // the bochspwn work). As a result:
 // 1) At the earliest possible moment, a ptr from userspace (__user in the
 //    kernel's C parlance) should be converted to a UserPtr<T>. If the value
