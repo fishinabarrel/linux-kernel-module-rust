@@ -50,11 +50,9 @@ impl fmt::Write for LogLineWriter {
 #[macro_export]
 macro_rules! println {
     () => ({
-        use ::core::fmt::Write;
         $crate::printk::printk("\x016\n".as_bytes());
     });
     ($fmt:expr) => ({
-        use ::core::fmt::Write;
         $crate::printk::printk(concat!("\x016", $fmt, "\n").as_bytes());
     });
     ($fmt:expr, $($arg:tt)*) => ({
