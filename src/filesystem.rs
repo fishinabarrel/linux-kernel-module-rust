@@ -41,9 +41,9 @@ impl FileSystemFlags {
 }
 
 extern "C" fn fill_super_callback<T: FileSystem>(
-    sb: *mut bindings::super_block,
-    data: *mut types::c_void,
-    silent: types::c_int,
+    _sb: *mut bindings::super_block,
+    _data: *mut types::c_void,
+    _silent: types::c_int,
 ) -> types::c_int {
     // T::fill_super(...)
     // This should actually create an object that gets dropped by
