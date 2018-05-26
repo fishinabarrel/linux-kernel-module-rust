@@ -9,11 +9,13 @@ cache:
     - directories:
         - static-filesystem/target/
         - hello-world/target/
+        - example-sysctl/target/
 
 matrix:
     include:
         - env: MODULE_DIR=hello-world MODULE=helloworld
         - env: MODULE_DIR=static-filesystem MODULE=staticfilesystem
+        - env: MODULE_DIR=example-sysctl MODULE=examplesysctl
 
 install:
     - sudo apt-get install -y "linux-headers-$(uname -r)"
