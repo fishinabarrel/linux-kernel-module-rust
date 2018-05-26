@@ -29,7 +29,7 @@ const INCLUDED_VARS: &[&str] = &[
 fn main() {
     let mut builder = bindgen::Builder::default()
         .use_core()
-        .ctypes_prefix("types")
+        .ctypes_prefix("c_types")
         .no_copy(".*")
         .derive_default(true)
         .rustfmt_bindings(true);

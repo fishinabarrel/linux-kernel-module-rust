@@ -10,18 +10,20 @@ pub mod bindings;
 mod error;
 pub mod filesystem;
 pub mod printk;
-pub mod types;
+mod c_types;
 
 pub use alloc::format;
 
 pub use error::{Error, KernelResult};
+
+pub type _InitResult = c_types::c_int;
 
 #[macro_export]
 macro_rules! kernel_module {
     ($module:ty, $($name:ident : $value:expr),*) => {
         static mut __MOD: Option<$module> = None;
         #[no_mangle]
-        pub extern "C" fn init_module() -> $crate::types::c_int {
+        pub extern "C" fn init_module() -> $crate::_InitResult {
             match <$module as $crate::KernelModule>::init() {
                 Ok(m) => {
                     unsafe {

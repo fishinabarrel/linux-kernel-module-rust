@@ -5,7 +5,7 @@ use core::mem;
 
 use bindings;
 use error;
-use types;
+use c_types;
 
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
@@ -25,12 +25,12 @@ pub trait FileSystem {
 }
 
 bitflags! {
-    pub struct FileSystemFlags: types::c_int {
-        const FS_REQUIRES_DEV = bindings::FS_REQUIRES_DEV as types::c_int;
-        const FS_BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA as types::c_int;
-        const FS_HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE as types::c_int;
-        const FS_USERNS_MOUNT = bindings::FS_USERNS_MOUNT as types::c_int;
-        const FS_RENAME_DOES_D_MOVE = bindings::FS_RENAME_DOES_D_MOVE as types::c_int;
+    pub struct FileSystemFlags: c_types::c_int {
+        const FS_REQUIRES_DEV = bindings::FS_REQUIRES_DEV as c_types::c_int;
+        const FS_BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA as c_types::c_int;
+        const FS_HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE as c_types::c_int;
+        const FS_USERNS_MOUNT = bindings::FS_USERNS_MOUNT as c_types::c_int;
+        const FS_RENAME_DOES_D_MOVE = bindings::FS_RENAME_DOES_D_MOVE as c_types::c_int;
     }
 }
 
@@ -42,9 +42,9 @@ impl FileSystemFlags {
 
 extern "C" fn fill_super_callback<T: FileSystem>(
     _sb: *mut bindings::super_block,
-    _data: *mut types::c_void,
-    _silent: types::c_int,
-) -> types::c_int {
+    _data: *mut c_types::c_void,
+    _silent: c_types::c_int,
+) -> c_types::c_int {
     // T::fill_super(...)
     // This should actually create an object that gets dropped by
     // file_system_registration::kill_sb. You can point to it with
@@ -54,9 +54,9 @@ extern "C" fn fill_super_callback<T: FileSystem>(
 
 extern "C" fn mount_callback<T: FileSystem>(
     fs_type: *mut bindings::file_system_type,
-    flags: types::c_int,
-    _dev_name: *const types::c_char,
-    data: *mut types::c_void,
+    flags: c_types::c_int,
+    _dev_name: *const c_types::c_char,
+    data: *mut c_types::c_void,
 ) -> *mut bindings::dentry {
     unsafe { bindings::mount_nodev(fs_type, flags, data, Some(fill_super_callback::<T>)) }
 }
