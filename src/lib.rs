@@ -64,12 +64,18 @@ pub trait KernelModule: Sized {
     fn init() -> KernelResult<Self>;
 }
 
+extern "C" {
+    fn bug_helper() -> !;
+}
+
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
 
 #[lang = "panic_fmt"]
 extern "C" fn panic_fmt() -> ! {
-    loop {}
+    unsafe {
+        bug_helper();
+    }
 }
 
 #[global_allocator]
