@@ -1,7 +1,7 @@
 use alloc::heap::{AllocErr, GlobalAlloc, Layout, Opaque};
 
 use bindings;
-use types;
+use c_types;
 
 pub struct KernelAllocator;
 
@@ -10,14 +10,14 @@ unsafe impl GlobalAlloc for KernelAllocator {
         // krealloc is used instead of kmalloc because kmalloc is an inline function and can't be
         // bound to as a result
         return bindings::krealloc(
-            0 as *const types::c_void,
+            0 as *const c_types::c_void,
             layout.size(),
             bindings::GFP_KERNEL,
         ) as *mut Opaque;
     }
 
     unsafe fn dealloc(&self, ptr: *mut Opaque, _layout: Layout) {
-        bindings::kfree(ptr as *const types::c_void);
+        bindings::kfree(ptr as *const c_types::c_void);
     }
 }
 
