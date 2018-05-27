@@ -2,8 +2,8 @@
 #![feature(alloc)]
 
 extern crate alloc;
-use alloc::String;
 use alloc::borrow::ToOwned;
+use alloc::String;
 
 #[macro_use]
 extern crate linux_kernel_module;
@@ -15,7 +15,9 @@ struct HelloWorldModule {
 impl linux_kernel_module::KernelModule for HelloWorldModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         println!("Hello kernel module!");
-        Ok(HelloWorldModule {message: "on the heap!".to_owned()})
+        Ok(HelloWorldModule {
+            message: "on the heap!".to_owned(),
+        })
     }
 }
 

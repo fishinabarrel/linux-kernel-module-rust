@@ -4,8 +4,8 @@ use core::marker;
 use core::mem;
 
 use bindings;
-use error;
 use c_types;
+use error;
 
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
