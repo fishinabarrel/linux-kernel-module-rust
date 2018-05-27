@@ -7,10 +7,10 @@ extern crate bitflags;
 
 mod allocator;
 pub mod bindings;
+mod c_types;
 mod error;
 pub mod filesystem;
 pub mod printk;
-mod c_types;
 
 pub use alloc::format;
 
