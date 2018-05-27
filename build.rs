@@ -1,4 +1,5 @@
 extern crate bindgen;
+extern crate cc;
 extern crate shlex;
 
 use std::env;
@@ -66,4 +67,13 @@ fn main() {
     bindings
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+
+    let mut builder = cc::Build::new();
+    println!("cargo:rerun-if-env-changed=CLANG");
+    builder.compiler(env::var("CLANG").unwrap_or("clang".to_string()));
+    builder.file("src/helpers.c");
+    for arg in shlex::split(&output).unwrap() {
+        builder.flag(&arg);
+    }
+    builder.compile("helpers");
 }
