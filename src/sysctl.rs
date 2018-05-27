@@ -31,7 +31,7 @@ impl<T: Sync> Sysctl<T> {
         storage: T,
         mode: types::Mode,
     ) -> error::KernelResult<Sysctl<T>> {
-        if !path.ends_with('\x00') || !name.ends_with('\x00') || name.contains('\x00') {
+        if !path.ends_with('\x00') || !name.ends_with('\x00') || name.contains('/') {
             return Err(error::Error::EINVAL);
         }
 
