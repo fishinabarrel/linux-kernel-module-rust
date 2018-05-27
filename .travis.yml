@@ -31,9 +31,12 @@ script:
     - cd $MODULE_DIR
     - RUST_TARGET_PATH="$(pwd)/.." cargo xbuild --target x86_64-linux-kernel-module
     - make
+    - sudo dmesg -C
     - sudo insmod "${MODULE}.ko"
     - sudo rmmod "$MODULE"
 
+after_failure:
+    - dmesg
 
 notifications:
     email: false
