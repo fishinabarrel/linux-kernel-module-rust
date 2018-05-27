@@ -8,4 +8,5 @@ bitflags = "1"
 
 [build-dependencies]
 bindgen = "*"
+cc = "1.0"
 shlex = "0.1"
