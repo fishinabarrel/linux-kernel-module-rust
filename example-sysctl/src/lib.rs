@@ -17,7 +17,7 @@ struct ExampleSysctlModule {
 impl linux_kernel_module::KernelModule for ExampleSysctlModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let a = Sysctl::register(
-            b"rust.example.a\x00",
+            "rust/example/a",
             AtomicBool::new(false),
             Mode::from_int(0o644),
         )?;
