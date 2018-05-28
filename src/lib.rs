@@ -16,6 +16,7 @@ pub mod filesystem;
 pub mod printk;
 pub mod sysctl;
 mod types;
+pub mod user_ptr;
 
 pub use error::{Error, KernelResult};
 pub use types::Mode;

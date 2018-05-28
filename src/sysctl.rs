@@ -7,6 +7,7 @@ use bindings;
 use c_types;
 use error;
 use types;
+use user_ptr::UserSlicePtr;
 
 pub struct Sysctl<T: Sync> {
     inner: Box<T>,
@@ -21,7 +22,20 @@ unsafe extern "C" fn proc_handler<T>(
     len: *mut usize,
     ppos: *mut bindings::loff_t,
 ) -> c_types::c_int {
-    unimplemented!();
+    let data = match UserSlicePtr::new(buffer, *len) {
+        Ok(ptr) => ptr,
+        Err(e) => return e.to_kernel_errno(),
+    };
+    let storage = (*ctl).data as *mut T as Box<T>;
+    let (bytes_processed, result) = if write != 0 {
+        let data = data.read_all()?;
+        storage.store_value(&data)
+    } else {
+        storage.read_value(&data)
+    };
+    *len -= bytes_processed;
+    *ppos += bytes_processed;
+    return result;
 }
 
 impl<T: Sync> Sysctl<T> {
