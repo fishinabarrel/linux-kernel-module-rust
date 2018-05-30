@@ -1,4 +1,5 @@
-use alloc::Vec;
+use alloc::vec;
+use alloc::vec::Vec;
 use core::u32;
 
 use bindings;
@@ -25,7 +26,13 @@ impl UserSlicePtr {
     }
 
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
-        unimplemented!();
+        let mut data = vec![0; self.1];
+        self.reader().read(&mut data)?;
+        return Ok(data)
+    }
+
+    pub fn reader(self) -> UserSlicePtrReader {
+        return UserSlicePtrReader(self.0, self.1);
     }
 
     pub fn write_all(self, data: &[u8]) -> error::KernelResult<()> {
@@ -34,6 +41,14 @@ impl UserSlicePtr {
 
     pub fn writer(self) -> UserSlicePtrWriter {
         return UserSlicePtrWriter(self.0, self.1);
+    }
+}
+
+pub struct UserSlicePtrReader(*mut c_types::c_void, usize);
+
+impl UserSlicePtrReader {
+    pub fn read(&self, data: &mut [u8]) -> error::KernelResult<()> {
+        unimplemented!();
     }
 }
 
