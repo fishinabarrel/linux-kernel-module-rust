@@ -9,13 +9,18 @@ use error;
 use types;
 use user_ptr::UserSlicePtr;
 
-pub struct Sysctl<T: Sync> {
+pub struct Sysctl<T: SysctlStorage> {
     inner: Box<T>,
     table: Box<[bindings::ctl_table]>,
     header: *mut bindings::ctl_table_header,
 }
 
-unsafe extern "C" fn proc_handler<T>(
+trait SysctlStorage: Sync {
+    fn store_value(&mut self, data: &[u8]) -> (usize, error::KernelResult<()>);
+    fn read_value(&self, data: &mut UserSlicePtr) -> (usize, error::KernelResult<()>);
+}
+
+unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     ctl: *mut bindings::ctl_table,
     write: c_types::c_int,
     buffer: *mut c_types::c_void,
@@ -26,19 +31,25 @@ unsafe extern "C" fn proc_handler<T>(
         Ok(ptr) => ptr,
         Err(e) => return e.to_kernel_errno(),
     };
-    let storage = (*ctl).data as *mut T as Box<T>;
+    let storage = (*ctl).data as *mut T as &mut T;
     let (bytes_processed, result) = if write != 0 {
-        let data = data.read_all()?;
+        let data = match data.read_all() {
+            Ok(r) => r,
+            Err(e) => return e.to_kernel_errno(),
+        };
         storage.store_value(&data)
     } else {
-        storage.read_value(&data)
+        storage.read_value(&mut data)
     };
     *len -= bytes_processed;
-    *ppos += bytes_processed;
-    return result;
+    *ppos += bytes_processed as bindings::loff_t;
+    match result {
+        Ok(()) => 0,
+        Err(e) => e.to_kernel_errno(),
+    }
 }
 
-impl<T: Sync> Sysctl<T> {
+impl<T: SysctlStorage> Sysctl<T> {
     pub fn register(
         path: &'static str,
         name: &'static str,
@@ -84,7 +95,7 @@ impl<T: Sync> Sysctl<T> {
     }
 }
 
-impl<T: Sync> Drop for Sysctl<T> {
+impl<T: SysctlStorage> Drop for Sysctl<T> {
     fn drop(&mut self) {
         unsafe {
             bindings::unregister_sysctl_table(self.header);
