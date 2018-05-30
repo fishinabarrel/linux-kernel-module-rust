@@ -1,4 +1,5 @@
 use alloc::Vec;
+use core::u32;
 
 use bindings;
 use c_types;
@@ -27,6 +28,10 @@ impl UserSlicePtr {
         unimplemented!();
     }
 
+    pub fn write_all(self, data: &[u8]) -> error::KernelResult<()> {
+        return self.writer().write(data);
+    }
+
     pub fn writer(self) -> UserSlicePtrWriter {
         return UserSlicePtrWriter(self.0, self.1);
     }
@@ -36,6 +41,15 @@ pub struct UserSlicePtrWriter(*mut c_types::c_void, usize);
 
 impl UserSlicePtrWriter {
     pub fn write(&mut self, data: &[u8]) -> error::KernelResult<()> {
-        unimplemented!();
+        if data.len() > self.1 || data.len() > u32::MAX as usize {
+            return Err(error::Error::EFAULT);
+        }
+        let res = unsafe {
+            bindings::_copy_to_user(self.0, data.as_ptr() as *const c_types::c_void, data.len() as u32)
+        };
+        if res != 0 {
+            return Err(error::Error::EFAULT);
+        }
+        Ok(())
     }
 }
