@@ -2,6 +2,7 @@ use alloc::boxed::Box;
 use alloc::vec;
 use core::mem;
 use core::ptr;
+use core::sync::atomic;
 
 use bindings;
 use c_types;
@@ -15,9 +16,19 @@ pub struct Sysctl<T: SysctlStorage> {
     header: *mut bindings::ctl_table_header,
 }
 
-trait SysctlStorage: Sync {
-    fn store_value(&mut self, data: &[u8]) -> (usize, error::KernelResult<()>);
+pub trait SysctlStorage: Sync {
+    fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
     fn read_value(&self, data: &mut UserSlicePtr) -> (usize, error::KernelResult<()>);
+}
+
+impl SysctlStorage for atomic::AtomicBool {
+    fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>) {
+        unimplemented!();
+    }
+
+    fn read_value(&self, data: &mut UserSlicePtr) -> (usize, error::KernelResult<()>) {
+        unimplemented!();
+    }
 }
 
 unsafe extern "C" fn proc_handler<T: SysctlStorage>(
@@ -27,11 +38,11 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     len: *mut usize,
     ppos: *mut bindings::loff_t,
 ) -> c_types::c_int {
-    let data = match UserSlicePtr::new(buffer, *len) {
+    let mut data = match UserSlicePtr::new(buffer, *len) {
         Ok(ptr) => ptr,
         Err(e) => return e.to_kernel_errno(),
     };
-    let storage = (*ctl).data as *mut T as &mut T;
+    let storage = &*((*ctl).data as *const T);
     let (bytes_processed, result) = if write != 0 {
         let data = match data.read_all() {
             Ok(r) => r,
@@ -60,12 +71,12 @@ impl<T: SysctlStorage> Sysctl<T> {
             return Err(error::Error::EINVAL);
         }
 
-        let mut storage = Box::new(storage);
+        let storage = Box::new(storage);
         let mut table = vec![
             bindings::ctl_table {
                 procname: name.as_ptr() as *const i8,
                 mode: mode.as_int(),
-                data: &mut *storage as *mut T as *mut c_types::c_void,
+                data: &*storage as *const T as *mut c_types::c_void,
                 proc_handler: Some(proc_handler::<T>),
 
                 maxlen: 0,
