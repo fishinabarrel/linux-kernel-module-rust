@@ -26,4 +26,16 @@ impl UserSlicePtr {
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
         unimplemented!();
     }
+
+    pub fn writer(self) -> UserSlicePtrWriter {
+        return UserSlicePtrWriter(self.0, self.1);
+    }
+}
+
+pub struct UserSlicePtrWriter(*mut c_types::c_void, usize);
+
+impl UserSlicePtrWriter {
+    pub fn write(&mut self, data: &[u8]) -> error::KernelResult<()> {
+        unimplemented!();
+    }
 }

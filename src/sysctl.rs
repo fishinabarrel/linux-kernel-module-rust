@@ -8,7 +8,7 @@ use bindings;
 use c_types;
 use error;
 use types;
-use user_ptr::UserSlicePtr;
+use user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
 pub struct Sysctl<T: SysctlStorage> {
     inner: Box<T>,
@@ -18,7 +18,7 @@ pub struct Sysctl<T: SysctlStorage> {
 
 pub trait SysctlStorage: Sync {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
-    fn read_value(&self, data: &mut UserSlicePtr) -> (usize, error::KernelResult<()>);
+    fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>);
 }
 
 impl SysctlStorage for atomic::AtomicBool {
@@ -26,8 +26,13 @@ impl SysctlStorage for atomic::AtomicBool {
         unimplemented!();
     }
 
-    fn read_value(&self, data: &mut UserSlicePtr) -> (usize, error::KernelResult<()>) {
-        unimplemented!();
+    fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>) {
+        let value = if self.load(atomic::Ordering::Relaxed) {
+            b"1"
+        } else {
+            b"0"
+        };
+        (1, data.write(value))
     }
 }
 
@@ -38,7 +43,7 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     len: *mut usize,
     ppos: *mut bindings::loff_t,
 ) -> c_types::c_int {
-    let mut data = match UserSlicePtr::new(buffer, *len) {
+    let data = match UserSlicePtr::new(buffer, *len) {
         Ok(ptr) => ptr,
         Err(e) => return e.to_kernel_errno(),
     };
@@ -50,7 +55,8 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         };
         storage.store_value(&data)
     } else {
-        storage.read_value(&mut data)
+        let mut writer = data.writer();
+        storage.read_value(&mut writer)
     };
     *len -= bytes_processed;
     *ppos += bytes_processed as bindings::loff_t;
