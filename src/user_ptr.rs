@@ -50,6 +50,10 @@ impl UserSlicePtrWriter {
         if res != 0 {
             return Err(error::Error::EFAULT);
         }
+        unsafe {
+            self.0 = self.0.add(data.len());
+        }
+        self.1 -= data.len();
         Ok(())
     }
 }
