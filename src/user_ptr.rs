@@ -28,7 +28,7 @@ impl UserSlicePtr {
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
         let mut data = vec![0; self.1];
         self.reader().read(&mut data)?;
-        return Ok(data)
+        return Ok(data);
     }
 
     pub fn reader(self) -> UserSlicePtrReader {
@@ -47,8 +47,25 @@ impl UserSlicePtr {
 pub struct UserSlicePtrReader(*mut c_types::c_void, usize);
 
 impl UserSlicePtrReader {
-    pub fn read(&self, data: &mut [u8]) -> error::KernelResult<()> {
-        unimplemented!();
+    pub fn read(&mut self, data: &mut [u8]) -> error::KernelResult<()> {
+        if data.len() > self.1 || data.len() > u32::MAX as usize {
+            return Err(error::Error::EFAULT);
+        }
+        let res = unsafe {
+            bindings::_copy_from_user(
+                data.as_mut_ptr() as *mut c_types::c_void,
+                self.0,
+                data.len() as u32,
+            )
+        };
+        if res != 0 {
+            return Err(error::Error::EFAULT);
+        }
+        unsafe {
+            self.0 = self.0.add(data.len());
+        }
+        self.1 -= data.len();
+        return Ok(());
     }
 }
 
@@ -60,7 +77,11 @@ impl UserSlicePtrWriter {
             return Err(error::Error::EFAULT);
         }
         let res = unsafe {
-            bindings::_copy_to_user(self.0, data.as_ptr() as *const c_types::c_void, data.len() as u32)
+            bindings::_copy_to_user(
+                self.0,
+                data.as_ptr() as *const c_types::c_void,
+                data.len() as u32,
+            )
         };
         if res != 0 {
             return Err(error::Error::EFAULT);

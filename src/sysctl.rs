@@ -25,7 +25,11 @@ fn trim_whitespace(mut data: &[u8]) -> &[u8] {
     while !data.is_empty() && (data[0] == b' ' || data[0] == b'\t' || data[0] == b'\n') {
         data = &data[1..];
     }
-    while !data.is_empty() && (data[data.len() - 1] == b' ' || data[data.len() -1] == b'\t' || data[data.len() - 1] == b'\n') {
+    while !data.is_empty()
+        && (data[data.len() - 1] == b' '
+            || data[data.len() - 1] == b'\t'
+            || data[data.len() - 1] == b'\n')
+    {
         data = &data[..data.len() - 2];
     }
     return data;
@@ -33,16 +37,16 @@ fn trim_whitespace(mut data: &[u8]) -> &[u8] {
 
 impl SysctlStorage for atomic::AtomicBool {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>) {
-         let result = match trim_whitespace(data) {
-             b"0" => {
-                 self.store(false, atomic::Ordering::Relaxed);
-                 Ok(())
-             },
-             b"1" => {
-                 self.store(true, atomic::Ordering::Relaxed);
-                 Ok(())
-             },
-             _ => Err(error::Error::EINVAL)
+        let result = match trim_whitespace(data) {
+            b"0" => {
+                self.store(false, atomic::Ordering::Relaxed);
+                Ok(())
+            }
+            b"1" => {
+                self.store(true, atomic::Ordering::Relaxed);
+                Ok(())
+            }
+            _ => Err(error::Error::EINVAL),
         };
         return (data.len(), result);
     }
