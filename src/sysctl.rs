@@ -68,6 +68,11 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     len: *mut usize,
     ppos: *mut bindings::loff_t,
 ) -> c_types::c_int {
+    if *ppos != 0 && write == 0 {
+        *len = 0;
+        return 0;
+    }
+
     let data = match UserSlicePtr::new(buffer, *len) {
         Ok(ptr) => ptr,
         Err(e) => return e.to_kernel_errno(),
@@ -83,8 +88,8 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         let mut writer = data.writer();
         storage.read_value(&mut writer)
     };
-    *len -= bytes_processed;
-    *ppos += bytes_processed as bindings::loff_t;
+    *len = bytes_processed;
+    *ppos += *len as bindings::loff_t;
     match result {
         Ok(()) => 0,
         Err(e) => e.to_kernel_errno(),
