@@ -18,7 +18,7 @@ pub struct UserSlicePtr(*mut c_types::c_void, usize);
 
 impl UserSlicePtr {
     pub fn new(ptr: *mut c_types::c_void, length: usize) -> error::KernelResult<UserSlicePtr> {
-        if unsafe { access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) } != 0
+        if unsafe { access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) } == 0
         {
             return Err(error::Error::EFAULT);
         }
