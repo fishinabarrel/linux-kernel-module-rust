@@ -53,11 +53,11 @@ impl SysctlStorage for atomic::AtomicBool {
 
     fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>) {
         let value = if self.load(atomic::Ordering::Relaxed) {
-            b"1"
+            b"1\n"
         } else {
-            b"0"
+            b"0\n"
         };
-        (1, data.write(value))
+        (value.len(), data.write(value))
     }
 }
 
