@@ -12,8 +12,6 @@ mod error;
 pub mod filesystem;
 pub mod printk;
 
-pub use alloc::format;
-
 pub use error::{Error, KernelResult};
 
 pub type _InitResult = c_types::c_int;
