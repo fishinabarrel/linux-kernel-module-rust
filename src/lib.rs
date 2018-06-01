@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(alloc, global_allocator, allocator_api, const_fn, lang_items, use_extern_macros)]
+#![feature(alloc, global_allocator, allocator_api, const_fn, lang_items)]
 
 extern crate alloc;
 #[macro_use]
