@@ -30,7 +30,7 @@ fn trim_whitespace(mut data: &[u8]) -> &[u8] {
             || data[data.len() - 1] == b'\t'
             || data[data.len() - 1] == b'\n')
     {
-        data = &data[..data.len() - 2];
+        data = &data[..data.len() - 1];
     }
     return data;
 }
