@@ -10,6 +10,7 @@ pub mod bindings;
 mod c_types;
 mod error;
 pub mod filesystem;
+#[macro_use]
 pub mod printk;
 
 pub use error::{Error, KernelResult};
