@@ -10,6 +10,10 @@ cache:
         - static-filesystem/target/
         - hello-world/target/
 
+branches:
+    only:
+        - master
+
 matrix:
     include:
         - env: MODULE_DIR=hello-world MODULE=helloworld
