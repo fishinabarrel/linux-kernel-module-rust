@@ -6,7 +6,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
-const INCLUDED_TYPES: &[&str] = &["file_system_type"];
+const INCLUDED_TYPES: &[&str] = &["file_system_type", "mode_t", "umode_t", "ctl_table"];
 const INCLUDED_FUNCTIONS: &[&str] = &[
     "register_filesystem",
     "unregister_filesystem",
@@ -14,9 +14,16 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "kfree",
     "mount_nodev",
     "kill_litter_super",
+    "register_sysctl",
+    "unregister_sysctl_table",
+    "access_ok",
+    "_copy_to_user",
+    "_copy_from_user",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
+    "ENOMEM",
+    "EFAULT",
     "__this_module",
     "FS_REQUIRES_DEV",
     "FS_BINARY_MOUNTDATA",
@@ -25,6 +32,7 @@ const INCLUDED_VARS: &[&str] = &[
     "FS_RENAME_DOES_D_MOVE",
     "BINDINGS_GFP_KERNEL",
     "KERN_INFO",
+    "VERIFY_WRITE",
 ];
 
 fn main() {
