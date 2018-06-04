@@ -1,9 +1,11 @@
 #![no_std]
-#![feature(alloc, global_allocator, allocator_api, const_fn, lang_items)]
+#![feature(alloc, global_allocator, allocator_api, const_fn, lang_items, panic_implementation)]
 
 extern crate alloc;
 #[macro_use]
 extern crate bitflags;
+
+use core::panic::PanicInfo;
 
 mod allocator;
 pub mod bindings;
@@ -67,8 +69,8 @@ extern "C" {
     fn bug_helper() -> !;
 }
 
-#[lang = "panic_fmt"]
-extern "C" fn panic_fmt() -> ! {
+#[panic_implementation]
+fn panic(_info: &PanicInfo) -> ! {
     unsafe {
         bug_helper();
     }
