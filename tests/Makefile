@@ -1,5 +1,5 @@
 obj-m := testmodule.o
-testmodule-objs := $(M)/target/x86_64-linux-kernel-module/debug/lib*.a
+testmodule-objs := $(TEST_DIR)/target/x86_64-linux-kernel-module/debug/lib*.a
 EXTRA_LDFLAGS += --entry=init_module
 
 all:

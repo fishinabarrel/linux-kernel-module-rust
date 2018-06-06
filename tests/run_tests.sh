@@ -11,7 +11,7 @@ for test_dir in $BASEDIR/*; do
 
     RUST_TARGET_PATH="$BASEDIR/.." \
         cargo xbuild --target x86_64-linux-kernel-module
-    make -C "$BASEDIR" M="$test_dir"
+    make -C "$BASEDIR" TEST_DIR="$(basename "$test_dir")"
     rustc --tests "$test_dir/tests.rs"
     # TODO: qemu stuff!
     ./lib
