@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import glob
 import os
 import subprocess
 
@@ -29,12 +30,15 @@ def main():
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(os.environ, RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir))
         )
+
+        [module] = glob.glob(os.path.join(BASE_DIR, path, "target/x86_64-linux-kernel-module/debug/lib*.a"))
         run(
-            "make", "-C", BASE_DIR, "TEST_DIR={}".format(path)
+            "make", "-C", BASE_DIR, "TEST_LIBRARY={}".format(os.path.join(path, "target/x86_64-linux-kernel-module/debug/", os.path.basename(module)))
         )
-        run("rustc", "--tests", os.path.join(BASE_DIR, path, "tests.rs"))
+        run("rustc", "--test", os.path.join(BASE_DIR, path, "tests.rs"))
         # TODO: qemu
         run("./lib")
+
 
 
 if __name__ == "__main__":
