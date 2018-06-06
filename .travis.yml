@@ -24,7 +24,7 @@ install:
     - rustup component add rust-src
 
 script:
-    - ./tests/run_tests.sh
+    - ./tests/run_tests.py
 
 after_failure:
     - dmesg
