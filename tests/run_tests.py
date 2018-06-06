@@ -28,12 +28,24 @@ def main():
         run(
             "cargo", "xbuild", "--target", "x86_64-linux-kernel-module",
             cwd=os.path.join(BASE_DIR, path),
-            environ=dict(os.environ, RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir))
+            environ=dict(
+                os.environ,
+                RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir)
+            )
         )
 
-        [module] = glob.glob(os.path.join(BASE_DIR, path, "target/x86_64-linux-kernel-module/debug/lib*.a"))
+        [module] = glob.glob(os.path.join(
+            BASE_DIR, path, "target/x86_64-linux-kernel-module/debug/lib*.a")
+        )
         run(
-            "make", "-C", BASE_DIR, "TEST_LIBRARY={}".format(os.path.join(path, "target/x86_64-linux-kernel-module/debug/", os.path.basename(module)))
+            "make", "-C", BASE_DIR,
+            "TEST_LIBRARY={}".format(
+                os.path.join(
+                    path,
+                    "target/x86_64-linux-kernel-module/debug/",
+                    os.path.basename(module)
+                )
+            )
         )
         run("rustc", "--test", os.path.join(BASE_DIR, path, "tests.rs"))
         # TODO: qemu
