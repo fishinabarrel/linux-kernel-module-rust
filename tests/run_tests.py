@@ -12,7 +12,9 @@ def run(*args, **kwargs):
     environ = kwargs.pop("environ", os.environ)
     assert not kwargs
 
+    print("+ [running] {}".format(list(args)))
     subprocess.check_call(list(args), cwd=cwd, env=environ)
+
 
 def main():
     for path in os.listdir(BASE_DIR):
