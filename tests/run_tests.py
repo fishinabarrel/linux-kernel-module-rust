@@ -49,7 +49,7 @@ def main():
         )
         run("rustc", "--test", os.path.join(BASE_DIR, path, "tests.rs"))
         # TODO: qemu
-        run("./lib")
+        run("./tests")
 
 
 

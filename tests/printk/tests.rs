@@ -1,3 +1,10 @@
+fn with_kernel_module<F: Fn()>(f: F) {
+    unimplemented!();
+}
+
+fn assert_dmesg_contains(msgs: &[&str]) {
+    unimplemented!();
+}
 
 #[test]
 fn test_printk() {
