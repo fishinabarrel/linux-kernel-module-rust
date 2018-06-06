@@ -6,4 +6,4 @@ all:
 	$(MAKE) -C /lib/modules/$(shell uname -r)/build M=$(CURDIR)
 
 clean:
-	$(MAKE) -C /lib/modules/$(shel uname -r)/build M=$(CURDIR) clean
+	$(MAKE) -C /lib/modules/$(shell uname -r)/build M=$(CURDIR) clean
