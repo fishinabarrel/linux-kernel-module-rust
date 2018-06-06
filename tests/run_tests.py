@@ -45,11 +45,16 @@ def main():
                     "target/x86_64-linux-kernel-module/debug/",
                     os.path.basename(module)
                 )
-            )
+            ),
         )
-        run("rustc", "--test", os.path.join(BASE_DIR, path, "tests.rs"))
+        run(
+            "rustc",
+            "--test",
+            "--out-dir", os.path.join(BASE_DIR, path),
+            os.path.join(BASE_DIR, path, "tests.rs"),
+        )
         # TODO: qemu
-        run("./tests")
+        run(os.path.join(BASE_DIR, path, "tests"))
 
 
 
