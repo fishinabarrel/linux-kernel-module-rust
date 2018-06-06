@@ -2,7 +2,7 @@
 
 BASEDIR=$(realpath "$(dirname "$0")")
 
-for test_dir in $BASEDIR/*; do
+for test_dir in $BASEDIR/*/; do
     if [ ! -d "$test_dir" ]; then
         continue
     fi
