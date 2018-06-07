@@ -10,7 +10,7 @@ impl LoadedModule {
         Command::new("sudo")
             .arg("insmod")
             .arg(&name)
-            .spawn()
+            .status()
             .unwrap();
         return LoadedModule { name };
     }
@@ -21,7 +21,7 @@ impl Drop for LoadedModule {
         Command::new("sudo")
             .arg("rmmod")
             .arg(&self.name)
-            .spawn()
+            .status()
             .unwrap();
     }
 }
