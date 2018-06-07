@@ -1,14 +1,15 @@
+use std::env;
 use std::process::Command;
 
 struct LoadedModule {
-    name: &'static str,
+    name: String,
 }
 
 impl LoadedModule {
-    fn load(name: &'static str) -> LoadedModule {
+    fn load(name: String) -> LoadedModule {
         Command::new("sudo")
             .arg("insmod")
-            .arg(name)
+            .arg(&name)
             .spawn()
             .unwrap();
         return LoadedModule { name };
@@ -19,14 +20,14 @@ impl Drop for LoadedModule {
     fn drop(&mut self) {
         Command::new("sudo")
             .arg("rmmod")
-            .arg(self.name)
+            .arg(&self.name)
             .spawn()
             .unwrap();
     }
 }
 
 fn with_kernel_module<F: Fn()>(f: F) {
-    let _m = LoadedModule::load("testmodule.ko");
+    let _m = LoadedModule::load(env::var("KERNEL_MODULE").unwrap());
     f();
 }
 

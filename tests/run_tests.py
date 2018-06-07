@@ -54,7 +54,13 @@ def main():
             os.path.join(BASE_DIR, path, "tests.rs"),
         )
         # TODO: qemu
-        run(os.path.join(BASE_DIR, path, "tests"))
+        run(
+            os.path.join(BASE_DIR, path, "tests"),
+            environ=dict(
+                os.environ,
+                KERNEL_MODULE=os.path.join(BASE_DIR, "testmodule.ko")
+            )
+        )
 
 
 
