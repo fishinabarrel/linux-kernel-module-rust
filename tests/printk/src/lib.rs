@@ -9,7 +9,7 @@ impl linux_kernel_module::KernelModule for PrintkTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         println!("Single element printk");
         println!();
-        println!("prink with {} parameters{}", 2, "!");
+        println!("printk with {} parameters{}", 2, "!");
 
         Ok(PrintkTestModule)
     }

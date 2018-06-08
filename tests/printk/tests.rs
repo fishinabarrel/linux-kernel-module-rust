@@ -27,17 +27,22 @@ impl Drop for LoadedModule {
 }
 
 fn with_kernel_module<F: Fn()>(f: F) {
+    Command::new("sudo").arg("dmesg").arg("-C").status().unwrap();
     let _m = LoadedModule::load(env::var("KERNEL_MODULE").unwrap());
     f();
 }
 
-fn assert_dmesg_contains(msgs: &[&str]) {
-    unimplemented!();
+fn assert_dmesg_contains(msgs: &[&[u8]]) {
+    let output = Command::new("dmesg").output().unwrap();
+    let lines = output.stdout.split(|x| *x == b'\n').collect::<Vec<_>>();
+    for msg in msgs {
+       assert!(lines.iter().find(|l| l.ends_with(msg)).is_some());
+    }
 }
 
 #[test]
 fn test_printk() {
     with_kernel_module(|| {
-        assert_dmesg_contains(&["Single element printk", "", "printk with 2 parameters!"]);
+        assert_dmesg_contains(&[b"Single element printk", b"", b"printk with 2 parameters!"]);
     });
 }
