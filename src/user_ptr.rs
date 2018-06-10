@@ -109,7 +109,7 @@ impl UserSlicePtrReader {
         // Since this is not a pointer to a valid object in our program,
         // we cannot use `add`, which has C-style rules for defined
         // behavior.
-        self.0 = self.0.wrapping_offset(data.len());
+        self.0 = self.0.wrapping_add(data.len());
         self.1 -= data.len();
         Ok(())
     }
@@ -135,7 +135,7 @@ impl UserSlicePtrWriter {
         // Since this is not a pointer to a valid object in our program,
         // we cannot use `add`, which has C-style rules for defined
         // behavior.
-        self.0 = self.0.wrapping_offset(data.len());
+        self.0 = self.0.wrapping_add(data.len());
         self.1 -= data.len();
         Ok(())
     }
