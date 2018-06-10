@@ -61,9 +61,10 @@ impl UserSlicePtrReader {
         if res != 0 {
             return Err(error::Error::EFAULT);
         }
-        unsafe {
-            self.0 = self.0.add(data.len());
-        }
+        // Since this is not a pointer to a valid object in our program,
+        // we cannot use `add`, which has C-style rules for defined
+        // behavior.
+        self.0 = self.0.wrapping_offset(data.len());
         self.1 -= data.len();
         return Ok(());
     }
@@ -86,9 +87,10 @@ impl UserSlicePtrWriter {
         if res != 0 {
             return Err(error::Error::EFAULT);
         }
-        unsafe {
-            self.0 = self.0.add(data.len());
-        }
+        // Since this is not a pointer to a valid object in our program,
+        // we cannot use `add`, which has C-style rules for defined
+        // behavior.
+        self.0 = self.0.wrapping_offset(data.len());
         self.1 -= data.len();
         Ok(())
     }
