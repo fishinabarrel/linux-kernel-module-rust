@@ -27,7 +27,11 @@ impl Drop for LoadedModule {
 }
 
 fn with_kernel_module<F: Fn()>(f: F) {
-    Command::new("sudo").arg("dmesg").arg("-C").status().unwrap();
+    Command::new("sudo")
+        .arg("dmesg")
+        .arg("-C")
+        .status()
+        .unwrap();
     let _m = LoadedModule::load(env::var("KERNEL_MODULE").unwrap());
     f();
 }
@@ -36,9 +40,9 @@ fn assert_dmesg_contains(msgs: &[&[u8]]) {
     let output = Command::new("dmesg").output().unwrap();
     let mut lines = output.stdout.split(|x| *x == b'\n').collect::<Vec<_>>();
     for msg in msgs {
-       let pos = lines.iter().position(|l| l.ends_with(msg));
-       assert!(pos.is_some());
-       lines = lines[pos.unwrap()..].to_vec();
+        let pos = lines.iter().position(|l| l.ends_with(msg));
+        assert!(pos.is_some());
+        lines = lines[pos.unwrap()..].to_vec();
     }
 }
 
