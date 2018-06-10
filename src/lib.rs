@@ -1,6 +1,7 @@
 #![no_std]
 #![feature(alloc, global_allocator, allocator_api, const_fn, lang_items, panic_implementation)]
 
+#[macro_use]
 extern crate alloc;
 #[macro_use]
 extern crate bitflags;
