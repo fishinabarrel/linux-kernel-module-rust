@@ -68,6 +68,8 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     len: *mut usize,
     ppos: *mut bindings::loff_t,
 ) -> c_types::c_int {
+    // If we're reading from some offset other than the beginning of the file,
+    // return an empty read to signal EOF.
     if *ppos != 0 && write == 0 {
         *len = 0;
         return 0;
