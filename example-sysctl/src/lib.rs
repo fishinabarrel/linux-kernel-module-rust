@@ -1,7 +1,5 @@
 #![no_std]
-#![feature(alloc)]
 
-extern crate alloc;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 #[macro_use]
