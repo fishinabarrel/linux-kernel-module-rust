@@ -1,6 +1,7 @@
 #![no_std]
 #![feature(alloc, global_allocator, allocator_api, const_fn, lang_items, panic_implementation)]
 
+#[macro_use]
 extern crate alloc;
 #[macro_use]
 extern crate bitflags;
@@ -14,8 +15,12 @@ mod error;
 pub mod filesystem;
 #[macro_use]
 pub mod printk;
+pub mod sysctl;
+mod types;
+pub mod user_ptr;
 
 pub use error::{Error, KernelResult};
+pub use types::Mode;
 
 pub type _InitResult = c_types::c_int;
 
