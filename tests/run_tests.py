@@ -17,6 +17,8 @@ def run(*args, **kwargs):
 
 
 def main():
+    run("rustc", "--crate-type=rlib", os.path.join(BASE_DIR, "testlib.rs"))
+
     for path in os.listdir(BASE_DIR):
         if (
             not os.path.isdir(os.path.join(BASE_DIR, path)) or
@@ -57,6 +59,7 @@ def main():
             "--test",
             "--out-dir", os.path.join(BASE_DIR, path),
             os.path.join(BASE_DIR, path, "tests.rs"),
+            "--extern", "kernel_module_tests=libtestlib.rlib"
         )
         # TODO: qemu
         run(
