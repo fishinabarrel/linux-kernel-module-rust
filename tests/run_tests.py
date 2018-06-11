@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import glob
 import os
 import subprocess
 
@@ -32,14 +31,18 @@ def main():
                 os.environ,
                 RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir),
                 CARGO_TARGET_DIR=os.path.relpath(
-                    os.path.join(BASE_DIR, "target"), os.path.join(BASE_DIR, path)
+                    os.path.join(BASE_DIR, "target"),
+                    os.path.join(BASE_DIR, path)
                 ),
             )
         )
 
-        [module] = glob.glob(os.path.join(
-            BASE_DIR, "target/x86_64-linux-kernel-module/debug/lib*.a"
-        ))
+        module = os.path.join(
+            BASE_DIR,
+            "target/x86_64-linux-kernel-module/debug/lib{}_tests.a".format(
+                path
+            )
+        )
         run(
             "make", "-C", BASE_DIR,
             "TEST_LIBRARY={}".format(
