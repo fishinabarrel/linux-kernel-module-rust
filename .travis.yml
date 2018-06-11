@@ -6,7 +6,7 @@ rust:
 cache:
     - cargo: true
     - directories:
-        - tests/*/target
+        - tests/target/
 
 branches:
     only:

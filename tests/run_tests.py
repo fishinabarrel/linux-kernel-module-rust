@@ -30,18 +30,20 @@ def main():
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
-                RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir)
+                RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir),
+                CARGO_TARGET_DIR=os.path.relpath(
+                    os.path.join(BASE_DIR, "target"), os.path.join(BASE_DIR, path)
+                ),
             )
         )
 
         [module] = glob.glob(os.path.join(
-            BASE_DIR, path, "target/x86_64-linux-kernel-module/debug/lib*.a")
-        )
+            BASE_DIR, "target/x86_64-linux-kernel-module/debug/lib*.a"
+        ))
         run(
             "make", "-C", BASE_DIR,
             "TEST_LIBRARY={}".format(
                 os.path.join(
-                    path,
                     "target/x86_64-linux-kernel-module/debug/",
                     os.path.basename(module)
                 )
