@@ -29,7 +29,7 @@ def main():
             "cargo", "xbuild",
             "--target",
             os.path.join(
-                BASE_DIR, os.path.pardir, "x86_64-linux-kernel-module"
+                BASE_DIR, os.path.pardir, "x86_64-linux-kernel-module.json"
             ),
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
