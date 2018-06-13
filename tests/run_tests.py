@@ -25,11 +25,14 @@ def main():
             continue
 
         run(
-            "cargo", "xbuild", "--target", "x86_64-linux-kernel-module",
+            "cargo", "xbuild",
+            "--target",
+            os.path.join(
+                BASE_DIR, os.path.pardir, "x86_64-linux-kernel-module"
+            ),
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
-                RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir),
                 CARGO_TARGET_DIR=os.path.relpath(
                     os.path.join(BASE_DIR, "target"),
                     os.path.join(BASE_DIR, path)
