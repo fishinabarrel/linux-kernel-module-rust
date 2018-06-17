@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 use core::u32;
 
 use bindings;
@@ -33,9 +34,13 @@ extern "C" {
 /// userspace process). Reads and writes wrap the kernel APIs
 /// `copy_from_user` and `copy_to_user`, and check the memory map of the
 /// current process.
-pub struct UserSlicePtr(*mut c_types::c_void, usize);
+pub struct UserSlicePtr<'a> {
+    ptr: *mut c_types::c_void,
+    length: usize,
+    _marker: PhantomData<&'a c_types::c_void>,
+}
 
-impl UserSlicePtr {
+impl<'a> UserSlicePtr<'a> {
     /// Construct a user slice from a raw pointer and a length in bytes.
     ///
     /// Checks that the provided range is within the legal area for
@@ -44,7 +49,7 @@ impl UserSlicePtr {
     /// the actual pages are mapped in the current process with
     /// appropriate permissions. Those checks are handled in the read
     /// and write methods.
-    pub fn new(ptr: *mut c_types::c_void, length: usize) -> error::KernelResult<UserSlicePtr> {
+    pub fn new(ptr: *mut c_types::c_void, length: usize) -> error::KernelResult<UserSlicePtr<'a>> {
         // No current access_ok implementation actually distinguishes
         // between VERIFY_READ and VERIFY_WRITE, so passing VERIFY_WRITE
         // is fine in practice and fails safe if a future implementation
@@ -53,7 +58,11 @@ impl UserSlicePtr {
         {
             return Err(error::Error::EFAULT);
         }
-        return Ok(UserSlicePtr(ptr, length));
+        return Ok(UserSlicePtr {
+            ptr,
+            length,
+            _marker: PhantomData,
+        });
     }
 
     /// Read the entirety of the user slice and return it in a `Vec`.
@@ -61,7 +70,7 @@ impl UserSlicePtr {
     /// Returns EFAULT if the address does not currently point to
     /// mapped, readable memory.
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
-        let mut data = vec![0; self.1];
+        let mut data = vec![0; self.length];
         self.reader().read(&mut data)?;
         return Ok(data);
     }
@@ -69,7 +78,7 @@ impl UserSlicePtr {
     /// Construct a `UserSlicePtrReader` that can incrementally read
     /// from the user slice.
     pub fn reader(self) -> UserSlicePtrReader {
-        return UserSlicePtrReader(self.0, self.1);
+        return UserSlicePtrReader(self.ptr, self.length);
     }
 
     /// Write the provided slice into the user slice.
@@ -85,7 +94,7 @@ impl UserSlicePtr {
     /// Construct a `UserSlicePtrWrite` that can incrementally write
     /// into the user slice.
     pub fn writer(self) -> UserSlicePtrWriter {
-        return UserSlicePtrWriter(self.0, self.1);
+        return UserSlicePtrWriter(self.ptr, self.length);
     }
 }
 
