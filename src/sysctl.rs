@@ -15,6 +15,8 @@ pub struct Sysctl<T: SysctlStorage> {
     header: *mut bindings::ctl_table_header,
 }
 
+unsafe impl<T: SysctlStorage> Sync for Sysctl<T> {}
+
 pub trait SysctlStorage: Sync {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
     fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>);
