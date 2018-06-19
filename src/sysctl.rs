@@ -15,6 +15,8 @@ pub struct Sysctl<T: SysctlStorage> {
     header: *mut bindings::ctl_table_header,
 }
 
+// This is safe because the only public method we have is get(), which returns
+// &T, and T: Sync. Any new methods must adhere to this requirement.
 unsafe impl<T: SysctlStorage> Sync for Sysctl<T> {}
 
 pub trait SysctlStorage: Sync {
