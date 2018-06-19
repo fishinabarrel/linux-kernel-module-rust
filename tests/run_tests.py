@@ -63,7 +63,7 @@ def main():
         )
         # TODO: qemu
         run(
-            os.path.join(BASE_DIR, path, "tests"),
+            os.path.join(BASE_DIR, path, "tests"), "--test-threads=1",
             environ=dict(
                 os.environ,
                 KERNEL_MODULE=os.path.join(BASE_DIR, "testmodule.ko")

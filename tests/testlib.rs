@@ -7,31 +7,34 @@ struct LoadedModule {
 
 impl LoadedModule {
     fn load(name: String) -> LoadedModule {
-        Command::new("sudo")
+        let status = Command::new("sudo")
             .arg("insmod")
             .arg(&name)
             .status()
             .unwrap();
+        assert!(status.success());
         return LoadedModule { name };
     }
 }
 
 impl Drop for LoadedModule {
     fn drop(&mut self) {
-        Command::new("sudo")
+        let status = Command::new("sudo")
             .arg("rmmod")
             .arg(&self.name)
             .status()
             .unwrap();
+        assert!(status.success());
     }
 }
 
 pub fn with_kernel_module<F: Fn()>(f: F) {
-    Command::new("sudo")
+    let status = Command::new("sudo")
         .arg("dmesg")
         .arg("-C")
         .status()
         .unwrap();
+    assert!(status.success());
     let _m = LoadedModule::load(env::var("KERNEL_MODULE").unwrap());
     f();
 }
