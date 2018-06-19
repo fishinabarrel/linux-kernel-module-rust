@@ -66,7 +66,7 @@ macro_rules! kernel_module {
     };
 }
 
-pub trait KernelModule: Sized {
+pub trait KernelModule: Sized + Sync {
     fn init() -> KernelResult<Self>;
 }
 

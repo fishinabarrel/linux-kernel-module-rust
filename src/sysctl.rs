@@ -9,12 +9,6 @@ use error;
 use types;
 use user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
-pub struct Sysctl<T: SysctlStorage> {
-    inner: Box<T>,
-    table: Box<[bindings::ctl_table]>,
-    header: *mut bindings::ctl_table_header,
-}
-
 pub trait SysctlStorage: Sync {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
     fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>);
@@ -59,6 +53,16 @@ impl SysctlStorage for atomic::AtomicBool {
         (value.len(), data.write(value))
     }
 }
+
+pub struct Sysctl<T: SysctlStorage> {
+    inner: Box<T>,
+    table: Box<[bindings::ctl_table]>,
+    header: *mut bindings::ctl_table_header,
+}
+
+// This is safe because the only public method we have is get(), which returns
+// &T, and T: Sync. Any new methods must adhere to this requirement.
+unsafe impl<T: SysctlStorage> Sync for Sysctl<T> {}
 
 unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     ctl: *mut bindings::ctl_table,
