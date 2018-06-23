@@ -32,6 +32,7 @@ def main():
             environ=dict(
                 os.environ,
                 RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir),
+                RUSTFLAGS="-Dwarnings",
                 CARGO_TARGET_DIR=os.path.relpath(
                     os.path.join(BASE_DIR, "target"),
                     os.path.join(BASE_DIR, path)
@@ -57,9 +58,10 @@ def main():
         run(
             "rustc",
             "--test",
+            "-Dwarnings",
             "--out-dir", os.path.join(BASE_DIR, path),
             os.path.join(BASE_DIR, path, "tests.rs"),
-            "--extern", "kernel_module_tests=libtestlib.rlib"
+            "--extern", "kernel_module_tests=libtestlib.rlib",
         )
         # TODO: qemu
         run(
