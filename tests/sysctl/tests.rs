@@ -27,6 +27,17 @@ fn test_write_bool() {
 }
 
 #[test]
+fn test_write_bool_whitespace() {
+    with_kernel_module(|| {
+        fs::write("/proc/sys/rust/sysctl-tests/a", "  1\t").unwrap();
+        assert_eq!(
+            fs::read_to_string("/proc/sys/rust/sysctl-tests/a").unwrap(),
+            "1\n"
+        );
+    });
+}
+
+#[test]
 fn test_file_doesnt_exit_after_module_unloaded() {
     with_kernel_module(|| {
         assert!(Path::new("/proc/sys/rust/sysctl-tests/a").exists());
