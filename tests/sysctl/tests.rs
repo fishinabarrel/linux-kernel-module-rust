@@ -1,6 +1,7 @@
 extern crate kernel_module_tests;
 
 use std::fs;
+use std::path::Path;
 
 use kernel_module_tests::with_kernel_module;
 
@@ -23,4 +24,12 @@ fn test_write_bool() {
             "1\n"
         );
     });
+}
+
+#[test]
+fn test_file_doesnt_exit_after_module_unloaded() {
+    with_kernel_module(|| {
+        assert!(Path::new("/proc/sys/rust/sysctl-tests/a").exists());
+    });
+    assert!(!Path::new("/proc/sys/rust/sysctl-tests/a").exists());
 }
