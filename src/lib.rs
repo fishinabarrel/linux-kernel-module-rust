@@ -11,6 +11,7 @@ use core::panic::PanicInfo;
 mod allocator;
 pub mod bindings;
 mod c_types;
+pub mod chrdev;
 mod error;
 pub mod filesystem;
 #[macro_use]

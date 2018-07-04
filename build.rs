@@ -19,6 +19,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "access_ok",
     "_copy_to_user",
     "_copy_from_user",
+    "alloc_chrdev_region",
+    "unregister_chrdev_region",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
