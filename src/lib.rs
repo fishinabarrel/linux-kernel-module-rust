@@ -1,5 +1,11 @@
 #![no_std]
-#![feature(alloc, allocator_api, const_fn, lang_items, panic_implementation)]
+#![feature(
+    alloc,
+    allocator_api,
+    alloc_error_handler,
+    const_fn,
+    panic_implementation
+)]
 
 #[macro_use]
 extern crate alloc;
