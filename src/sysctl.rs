@@ -56,7 +56,7 @@ impl SysctlStorage for atomic::AtomicBool {
 
 pub struct Sysctl<T: SysctlStorage> {
     inner: Box<T>,
-    table: Box<[bindings::ctl_table]>,
+    _table: Box<[bindings::ctl_table]>,
     header: *mut bindings::ctl_table_header,
 }
 
@@ -137,7 +137,7 @@ impl<T: SysctlStorage> Sysctl<T> {
 
         return Ok(Sysctl {
             inner: storage,
-            table: table,
+            _table: table,
             header: result,
         });
     }
