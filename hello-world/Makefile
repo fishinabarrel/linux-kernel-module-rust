@@ -1,5 +1,5 @@
 obj-m := helloworld.o
-helloworld-objs := target/x86_64-linux-kernel-module/debug/libhello_world.a
+helloworld-objs := libhello_world.o
 EXTRA_LDFLAGS += --entry=init_module
 KDIR ?= /lib/modules/$(shell uname -r)/build
 
