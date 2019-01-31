@@ -21,7 +21,7 @@ unsafe impl GlobalAlloc for KernelAllocator {
     }
 }
 
-#[alloc_error_handler]
-fn oom(_layout: Layout) -> ! {
+#[lang = "oom"]
+extern "C" fn oom(_err: AllocErr) -> ! {
     panic!("Out of memory!");
 }

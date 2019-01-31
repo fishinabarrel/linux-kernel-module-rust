@@ -7,6 +7,6 @@ authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
 bitflags = "1"
 
 [build-dependencies]
-bindgen = "*"
+bindgen = "0.37.4"
 cc = "1.0"
 shlex = "0.1"

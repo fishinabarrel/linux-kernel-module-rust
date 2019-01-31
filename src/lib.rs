@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(alloc, allocator_api, const_fn, lang_items, alloc_error_handler)]
+#![feature(alloc, allocator_api, const_fn, lang_items, panic_implementation)]
 
 #[macro_use]
 extern crate alloc;
@@ -72,7 +72,7 @@ extern "C" {
     fn bug_helper() -> !;
 }
 
-#[panic_handler]
+#[panic_implementation]
 fn panic(_info: &PanicInfo) -> ! {
     unsafe {
         bug_helper();
