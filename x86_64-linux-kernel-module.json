@@ -24,6 +24,7 @@
   },
   "relocation-model": "static",
   "relro-level": "full",
+  "needs-plt": true,
   "target-c-int-width": "32",
   "target-endian": "little",
   "target-family": "unix",
