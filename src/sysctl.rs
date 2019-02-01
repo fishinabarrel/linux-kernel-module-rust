@@ -56,7 +56,6 @@ impl SysctlStorage for atomic::AtomicBool {
 
 pub struct Sysctl<T: SysctlStorage> {
     inner: Box<T>,
-    // Responsible for keeping the ctl_table alive.
     _table: Box<[bindings::ctl_table]>,
     header: *mut bindings::ctl_table_header,
 }
