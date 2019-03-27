@@ -46,6 +46,8 @@ def main():
                 path
             )
         )
+        library_archive, _ = os.path.splitext(os.path.basename(module))
+        library_archive = os.path.join(library_archive, ".a")
         run(
             "make", "-C", BASE_DIR,
             "TEST_LIBRARY={}".format(
@@ -54,6 +56,7 @@ def main():
                     os.path.basename(module)
                 )
             ),
+            "TEST_LIBRARY_ARCHIVE={}".format(library_archive),
         )
         run(
             "rustc",
