@@ -46,16 +46,12 @@ def main():
                 path
             )
         )
-        library_archive, _ = os.path.splitext(os.path.basename(module))
-        library_archive = library_archive + ".a"
+        library_path, _ = os.path.splitext(os.path.basename(module))
+        library_object = library_path + ".o"
+        library_archive = library_path + ".a"
         run(
             "make", "-C", BASE_DIR,
-            "TEST_LIBRARY={}".format(
-                os.path.join(
-                    "target/x86_64-linux-kernel-module/debug/",
-                    os.path.basename(module)
-                )
-            ),
+            "TEST_LIBRARY_OBJECT={}".format(library_object),
             "TEST_LIBRARY_ARCHIVE={}".format(library_archive),
         )
         run(
