@@ -47,7 +47,7 @@ def main():
             )
         )
         library_archive, _ = os.path.splitext(os.path.basename(module))
-        library_archive = os.path.join(library_archive, ".a")
+        library_archive = library_archive + ".a"
         run(
             "make", "-C", BASE_DIR,
             "TEST_LIBRARY={}".format(
