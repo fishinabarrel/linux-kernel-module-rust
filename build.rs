@@ -37,9 +37,10 @@ const INCLUDED_VARS: &[&str] = &[
     "VERIFY_WRITE",
 ];
 const OPAQUE_TYPES: &[&str] = &[
-    // This needs to be opaque because it's both packed and aligned, which rustc
+    // These need to be opaque because they're both packed and aligned, which rustc
     // doesn't support yet. See https://github.com/rust-lang/rust/issues/59154
     // and https://github.com/rust-lang/rust-bindgen/issues/1538
+    "desc_struct",
     "xregs_state",
 ];
 
