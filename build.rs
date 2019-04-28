@@ -57,7 +57,8 @@ fn main() {
             .output()
             .unwrap()
             .stdout,
-    ).unwrap();
+    )
+    .unwrap();
 
     for arg in shlex::split(&output).unwrap() {
         builder = builder.clang_arg(arg.to_string());
