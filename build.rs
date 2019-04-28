@@ -34,6 +34,12 @@ const INCLUDED_VARS: &[&str] = &[
     "KERN_INFO",
     "VERIFY_WRITE",
 ];
+const OPAQUE_TYPES: &[&str] = &[
+    // This needs to be opaque because it's both packed and aligned, which rustc
+    // doesn't support yet. See https://github.com/rust-lang/rust/issues/59154
+    // and https://github.com/rust-lang/rust-bindgen/issues/1538
+    "xregs_state",
+];
 
 fn main() {
     let mut builder = bindgen::Builder::default()
@@ -68,6 +74,9 @@ fn main() {
     }
     for v in INCLUDED_VARS {
         builder = builder.whitelist_var(v);
+    }
+    for t in OPAQUE_TYPES {
+        builder = builder.opaque_type(t);
     }
     let bindings = builder.generate().expect("Unable to generate bindings");
 
