@@ -100,7 +100,7 @@ impl UserSlicePtrReader {
             bindings::_copy_from_user(
                 data.as_mut_ptr() as *mut c_types::c_void,
                 self.0,
-                data.len() as u32,
+                data.len() as _,
             )
         };
         if res != 0 {
@@ -126,7 +126,7 @@ impl UserSlicePtrWriter {
             bindings::_copy_to_user(
                 self.0,
                 data.as_ptr() as *const c_types::c_void,
-                data.len() as u32,
+                data.len() as _,
             )
         };
         if res != 0 {

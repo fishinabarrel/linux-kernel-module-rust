@@ -1,4 +1,7 @@
-sudo: required
+matrix:
+    include:
+        - dist: trusty
+        - dist: xenial
 
 language: rust
 rust:
