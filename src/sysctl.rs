@@ -127,7 +127,8 @@ impl<T: SysctlStorage> Sysctl<T> {
                 extra2: ptr::null_mut(),
             },
             unsafe { mem::zeroed() },
-        ].into_boxed_slice();
+        ]
+        .into_boxed_slice();
 
         let result =
             unsafe { bindings::register_sysctl(path.as_ptr() as *const i8, table.as_mut_ptr()) };
