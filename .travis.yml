@@ -21,7 +21,7 @@ install:
       else
           cargo install --force cargo-xbuild
       fi
-    - rustup component add rust-src
+    - rustup component add rust-src rustfmt
 
 script:
     - ./tests/run_tests.py
