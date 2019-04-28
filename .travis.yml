@@ -1,8 +1,7 @@
 matrix:
     include:
-        - sudo: required
+        - dist: trusty
         - dist: xenial
-          sudo: required
 
 language: rust
 rust:
