@@ -11,6 +11,7 @@
   "linker-is-gnu": true,
   "llvm-target": "x86_64-unknown-linux-gnu",
   "max-atomic-width": 64,
+  "needs-plt": false,
   "no-compiler-rt": true,
   "os": "none",
   "panic-strategy": "abort",
