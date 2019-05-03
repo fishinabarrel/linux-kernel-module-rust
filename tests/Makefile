@@ -11,5 +11,5 @@ all:
 	$(MAKE) -C $(KDIR) M=$(CURDIR)
 
 clean:
-	$(MAKE) -C /lib/modules/$(shell uname -r)/build M=$(CURDIR) clean
+	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
 endif
