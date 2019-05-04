@@ -1,9 +1,9 @@
 #![no_std]
-#![feature(alloc)]
+#![feature(alloc, const_str_as_bytes)]
 
 extern crate alloc;
 use alloc::borrow::ToOwned;
-use alloc::String;
+use alloc::string::String;
 
 #[macro_use]
 extern crate linux_kernel_module;
@@ -27,6 +27,7 @@ impl Drop for HelloWorldModule {
         println!("Goodbye kernel module!");
     }
 }
+
 kernel_module!(
     HelloWorldModule,
     author: "Alex Gaynor and Geoffrey Thomas",

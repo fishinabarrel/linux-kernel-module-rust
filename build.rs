@@ -38,6 +38,7 @@ const OPAQUE_TYPES: &[&str] = &[
     // This needs to be opaque because it's both packed and aligned, which rustc
     // doesn't support yet. See https://github.com/rust-lang/rust/issues/59154
     // and https://github.com/rust-lang/rust-bindgen/issues/1538
+    "desc_struct",
     "xregs_state",
 ];
 
@@ -59,6 +60,7 @@ fn main() {
     )
     .unwrap();
 
+    builder = builder.clang_arg("--target=x86_64-linux-kernel-module");
     for arg in shlex::split(&output).unwrap() {
         builder = builder.clang_arg(arg.to_string());
     }
@@ -88,6 +90,7 @@ fn main() {
     let mut builder = cc::Build::new();
     println!("cargo:rerun-if-env-changed=CLANG");
     builder.compiler(env::var("CLANG").unwrap_or("clang".to_string()));
+    builder.target("x86_64-linux-kernel-module");
     builder.warnings(false);
     builder.file("src/helpers.c");
     for arg in shlex::split(&output).unwrap() {
