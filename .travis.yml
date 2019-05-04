@@ -1,6 +1,5 @@
 matrix:
     include:
-        - dist: trusty
         - dist: xenial
 
 language: rust
