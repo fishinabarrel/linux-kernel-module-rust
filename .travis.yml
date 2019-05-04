@@ -11,10 +11,6 @@ cache:
     - directories:
         - tests/target/
 
-branches:
-    only:
-        - master
-
 install:
     - sudo apt-get install -y "linux-headers-$(uname -r)" realpath
     - type -p cargo-install-update || cargo install --force cargo-update
