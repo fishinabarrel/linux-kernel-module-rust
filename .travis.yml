@@ -1,6 +1,5 @@
 matrix:
     include:
-        - dist: trusty
         - dist: xenial
 
 language: rust
@@ -10,10 +9,6 @@ cache:
     - cargo: true
     - directories:
         - tests/target/
-
-branches:
-    only:
-        - master
 
 install:
     - sudo apt-get install -y "linux-headers-$(uname -r)" realpath
