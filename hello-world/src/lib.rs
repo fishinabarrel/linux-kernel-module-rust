@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(alloc)]
+#![feature(alloc, const_str_as_bytes)]
 
 extern crate alloc;
 use alloc::borrow::ToOwned;

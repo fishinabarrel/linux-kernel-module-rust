@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(const_str_as_bytes)]
 
 use core::sync::atomic::AtomicBool;
 
