@@ -27,6 +27,7 @@ impl Drop for HelloWorldModule {
         println!("Goodbye kernel module!");
     }
 }
+
 kernel_module!(
     HelloWorldModule,
     author: "Alex Gaynor and Geoffrey Thomas",

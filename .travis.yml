@@ -1,5 +1,6 @@
 matrix:
     include:
+        # - dist: trusty
         - dist: xenial
 
 language: rust
@@ -29,3 +30,4 @@ after_failure:
 
 notifications:
     email: false
+
