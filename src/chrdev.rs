@@ -1,3 +1,5 @@
+use core::ops::Range;
+
 use bindings;
 use c_types;
 use error;
