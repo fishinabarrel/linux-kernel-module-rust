@@ -9,19 +9,19 @@ pub struct DeviceNumberRegion {
 
 impl DeviceNumberRegion {
     pub fn allocate(
-        count: usize,
-        first_minor: usize,
+        minors: Range<usize>,
         name: &'static str,
     ) -> error::KernelResult<DeviceNumberRegion> {
         if !name.ends_with('\x00') {
             return Err(error::Error::EINVAL);
         }
 
+        let count = minors.end - minors.start;
         let mut dev: bindings::dev_t = 0;
         let res = unsafe {
             bindings::alloc_chrdev_region(
                 &mut dev,
-                first_minor as bindings::dev_t,
+                minors.start as bindings::dev_t,
                 count as bindings::dev_t,
                 name.as_ptr() as *const c_types::c_char,
             )

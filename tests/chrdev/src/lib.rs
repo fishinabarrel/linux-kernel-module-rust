@@ -11,8 +11,7 @@ impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         Ok(ChrdevTestModule {
             _dev: linux_kernel_module::chrdev::DeviceNumberRegion::allocate(
-                1,
-                0,
+                0..1,
                 "chrdev-tests\x00",
             )?,
         })
