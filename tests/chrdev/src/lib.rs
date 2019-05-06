@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(const_str_as_bytes)]
 
 #[macro_use]
 extern crate linux_kernel_module;
