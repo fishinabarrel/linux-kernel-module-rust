@@ -5,6 +5,7 @@ authors = ["Alex Gaynor <alex.gaynor@gmail.com>"]
 
 [dependencies]
 bitflags = "1"
+byte-strings = { git = "https://github.com/geofft/byte-strings-rs", branch = "no-std", default-features = false }
 
 [build-dependencies]
 bindgen = "*"

@@ -8,3 +8,4 @@ crate-type = ["staticlib"]
 
 [dependencies]
 linux-kernel-module = { path = ".." }
+byte-strings = { git = "https://github.com/geofft/byte-strings-rs", branch = "no-std", default-features = false }

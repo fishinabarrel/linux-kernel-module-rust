@@ -5,6 +5,8 @@
 extern crate alloc;
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
+extern crate byte_strings;
 
 use core::panic::PanicInfo;
 
@@ -58,12 +60,16 @@ macro_rules! kernel_module {
     };
 
     (@attribute $name:ident, $value:expr) => {
+        kernel_module!(@modinfo $name, concat_bytes!(as_bytes!(stringify!($name), b"=", as_bytes!($value))));
+    };
+
+    (@modinfo $name:ident, $bytes:expr) => {
         #[link_section = ".modinfo"]
         #[allow(non_upper_case_globals)]
         // TODO: Generate a name the same way the kernel's `__MODULE_INFO` does.
-        // TODO: This needs to be a `[u8; _]`, since the kernel defines this as a  `const char []`.
-        // See https://github.com/rust-lang/rfcs/pull/2545
-        pub static $name: &'static [u8] = concat!(stringify!($name), "=", $value, '\0').as_bytes();
+        // TODO: Use of .len() here requires `#![feature(const_slice_len)]`.
+        // We'd prefer [u8; ]. See https://github.com/rust-lang/rfcs/pull/2545
+        pub static $name: [u8; ($bytes).len()] = *($bytes);
     };
 }
 

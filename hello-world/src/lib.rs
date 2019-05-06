@@ -1,5 +1,7 @@
 #![no_std]
-#![feature(alloc, const_str_as_bytes)]
+#![feature(alloc, const_slice_len)]
+#[macro_use]
+extern crate byte_strings;
 
 extern crate alloc;
 use alloc::borrow::ToOwned;
