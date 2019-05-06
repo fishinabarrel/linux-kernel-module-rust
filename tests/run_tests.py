@@ -55,6 +55,8 @@ def main():
                 )
             ),
         )
+        run("sh", "-c", "readelf -r tests/testmodule.ko | awk '$3 ~ /^R/ {print $3}' | sort | uniq -c | sort -nr || true")
+        run("sh", "-c", "readelf -r tests/testmodule.ko | grep R_ | egrep -v 'R_X86_64_(NONE|64|32|32S|PC32|PLT32|PC64)' || true")
         run(
             "rustc",
             "--test",
