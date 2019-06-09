@@ -1,7 +1,7 @@
 #![no_std]
 #![feature(const_str_as_bytes)]
 
-use linux_kernel_module;
+use linux_kernel_module::{self, println};
 
 struct PrintkTestModule;
 
