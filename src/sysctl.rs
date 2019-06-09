@@ -79,7 +79,7 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         return 0;
     }
 
-    let data = match UserSlicePtr::new(buffer, *len) {
+    let data = match unsafe { UserSlicePtr::new(buffer, *len) } {
         Ok(ptr) => ptr,
         Err(e) => return e.to_kernel_errno(),
     };
