@@ -1,8 +1,7 @@
 #![no_std]
 #![feature(const_str_as_bytes)]
 
-#[macro_use]
-extern crate linux_kernel_module;
+use linux_kernel_module;
 
 struct ChrdevTestModule {
     _dev: linux_kernel_module::chrdev::DeviceNumberRegion,
@@ -19,7 +18,7 @@ impl linux_kernel_module::KernelModule for ChrdevTestModule {
     }
 }
 
-kernel_module!(
+linux_kernel_module::kernel_module!(
     ChrdevTestModule,
     author: "Alex Gaynor and Geoffrey Thomas",
     description: "A module for testing character devices",

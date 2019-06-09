@@ -3,8 +3,7 @@
 
 use core::sync::atomic::AtomicBool;
 
-#[macro_use]
-extern crate linux_kernel_module;
+use linux_kernel_module;
 
 use linux_kernel_module::sysctl::Sysctl;
 use linux_kernel_module::Mode;
@@ -33,7 +32,7 @@ impl linux_kernel_module::KernelModule for SysctlTestModule {
     }
 }
 
-kernel_module!(
+linux_kernel_module::kernel_module!(
     SysctlTestModule,
     author: "Alex Gaynor and Geoffrey Thomas",
     description: "A module for testing sysctls",
