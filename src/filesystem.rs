@@ -3,6 +3,8 @@ use core::default::Default;
 use core::marker;
 use core::mem;
 
+use bitflags;
+
 use crate::bindings;
 use crate::c_types;
 use crate::error;
@@ -24,7 +26,7 @@ pub trait FileSystem {
     const FLAGS: FileSystemFlags;
 }
 
-bitflags! {
+bitflags::bitflags! {
     pub struct FileSystemFlags: c_types::c_int {
         const FS_REQUIRES_DEV = bindings::FS_REQUIRES_DEV as c_types::c_int;
         const FS_BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA as c_types::c_int;
