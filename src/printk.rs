@@ -1,7 +1,7 @@
 use core::cmp;
 use core::fmt;
 
-use c_types::c_int;
+use crate::c_types::c_int;
 
 pub struct KernelConsole;
 

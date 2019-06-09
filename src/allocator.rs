@@ -1,7 +1,8 @@
 use core::alloc::{GlobalAlloc, Layout};
+use core::ptr;
 
-use bindings;
-use c_types;
+use crate::bindings;
+use crate::c_types;
 
 pub struct KernelAllocator;
 
@@ -10,7 +11,7 @@ unsafe impl GlobalAlloc for KernelAllocator {
         // krealloc is used instead of kmalloc because kmalloc is an inline function and can't be
         // bound to as a result
         return bindings::krealloc(
-            0 as *const c_types::c_void,
+            ptr::null(),
             layout.size(),
             bindings::GFP_KERNEL,
         ) as *mut u8;
