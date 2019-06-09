@@ -5,6 +5,7 @@ use alloc::borrow::ToOwned;
 use alloc::string::String;
 
 use linux_kernel_module;
+use linux_kernel_module::println;
 
 struct HelloWorldModule {
     message: String,
