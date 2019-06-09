@@ -79,16 +79,10 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         return 0;
     }
 
-    let data = match UserSlicePtr::new(buffer, *len) {
-        Ok(ptr) => ptr,
-        Err(e) => return e.to_kernel_errno(),
-    };
+    let data = UserSlicePtr::new(buffer, *len)?;
     let storage = &*((*ctl).data as *const T);
     let (bytes_processed, result) = if write != 0 {
-        let data = match data.read_all() {
-            Ok(r) => r,
-            Err(e) => return e.to_kernel_errno(),
-        };
+        let data = data.read_all()?;
         storage.store_value(&data)
     } else {
         let mut writer = data.writer();

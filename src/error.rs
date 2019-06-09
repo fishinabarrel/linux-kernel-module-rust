@@ -17,4 +17,10 @@ impl Error {
     }
 }
 
+impl From<Error> for c_types::c_int {
+    fn from(err: Error) -> c_types::c_int {
+        return err.to_kernel_errno();
+    }
+}
+
 pub type KernelResult<T> = Result<T, Error>;
