@@ -30,7 +30,6 @@ script:
     - cargo fmt --all -- --check
     - cd hello-world && cargo fmt --all -- --check
     - |
-      set -ex
       for p in tests/*; do
         if [ -d "$p" ]; then
           pushd "$p"
