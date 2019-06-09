@@ -56,8 +56,7 @@ impl UserSlicePtr {
         // between VERIFY_READ and VERIFY_WRITE, so passing VERIFY_WRITE
         // is fine in practice and fails safe if a future implementation
         // bothers.
-        if unsafe { access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) } == 0
-        {
+        if access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) == 0 {
             return Err(error::Error::EFAULT);
         }
         return Ok(UserSlicePtr(ptr, length));
