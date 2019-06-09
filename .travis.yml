@@ -30,13 +30,14 @@ script:
     - cargo fmt --all -- --check
     - cd hello-world && cargo fmt --all -- --check
     - |
+      set -ex
       for p in tests/*; do
         if [ -d "$p" ]; then
           pushd "$p"
           cargo fmt --all -- --check
           popd
         fi
-      end
+      done
 
 after_failure:
     - dmesg
