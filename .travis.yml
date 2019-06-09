@@ -5,10 +5,6 @@ matrix:
 language: rust
 rust:
     - nightly
-cache:
-    - cargo: true
-    - directories:
-        - tests/target/
 
 branches:
     only:
