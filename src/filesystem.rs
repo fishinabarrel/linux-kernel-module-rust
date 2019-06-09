@@ -36,12 +36,6 @@ bitflags::bitflags! {
     }
 }
 
-impl FileSystemFlags {
-    pub const fn const_empty() -> FileSystemFlags {
-        FileSystemFlags { bits: 0 }
-    }
-}
-
 extern "C" fn fill_super_callback<T: FileSystem>(
     _sb: *mut bindings::super_block,
     _data: *mut c_types::c_void,
