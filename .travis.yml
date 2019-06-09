@@ -27,6 +27,16 @@ install:
 
 script:
     - ./tests/run_tests.py
+    - cargo fmt --all -- --check
+    - cd hello-world && cargo fmt --all -- --check
+    - |
+      for p in tests/*; do
+        if [ -d "$p" ]; then
+          pushd "$p"
+          cargo fmt --all -- --check
+          popd
+        fi
+      end
 
 after_failure:
     - dmesg
