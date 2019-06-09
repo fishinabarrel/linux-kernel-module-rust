@@ -49,7 +49,7 @@ macro_rules! kernel_module {
         }
 
         $(
-            kernel_module!(@attribute $name, $value);
+            $crate::kernel_module!(@attribute $name, $value);
         )*
     };
 
