@@ -59,6 +59,7 @@ def main():
             "rustc",
             "--test",
             "-Dwarnings",
+            "--edition", "2018",
             "--out-dir", os.path.join(BASE_DIR, path),
             os.path.join(BASE_DIR, path, "tests.rs"),
             "--extern", "kernel_module_tests=libtestlib.rlib",
@@ -76,4 +77,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
