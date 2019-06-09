@@ -48,7 +48,10 @@ impl UserSlicePtr {
     /// This is `unsafe` because if it is called within `set_fs(KERNEL_DS)` context then
     /// `access_ok` will not do anything. As a result the only place you can safely use this is
     /// with an `__user` pointer that was provided by the kernel.
-    pub(crate) unsafe fn new(ptr: *mut c_types::c_void, length: usize) -> error::KernelResult<UserSlicePtr> {
+    pub(crate) unsafe fn new(
+        ptr: *mut c_types::c_void,
+        length: usize,
+    ) -> error::KernelResult<UserSlicePtr> {
         // No current access_ok implementation actually distinguishes
         // between VERIFY_READ and VERIFY_WRITE, so passing VERIFY_WRITE
         // is fine in practice and fails safe if a future implementation
