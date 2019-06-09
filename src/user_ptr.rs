@@ -1,4 +1,3 @@
-use alloc::vec;
 use alloc::vec::Vec;
 use core::u32;
 
@@ -62,7 +61,7 @@ impl UserSlicePtr {
     /// Returns EFAULT if the address does not currently point to
     /// mapped, readable memory.
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
-        let mut data = vec![0; self.1];
+        let mut data = alloc::vec![0; self.1];
         self.reader().read(&mut data)?;
         return Ok(data);
     }

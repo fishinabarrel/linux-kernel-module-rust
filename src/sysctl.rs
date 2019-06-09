@@ -1,4 +1,3 @@
-use alloc::vec;
 use alloc::boxed::Box;
 use core::mem;
 use core::ptr;
@@ -115,7 +114,7 @@ impl<T: SysctlStorage> Sysctl<T> {
         }
 
         let storage = Box::new(storage);
-        let mut table = vec![
+        let mut table = alloc::vec![
             bindings::ctl_table {
                 procname: name.as_ptr() as *const i8,
                 mode: mode.as_int(),
