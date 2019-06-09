@@ -128,7 +128,7 @@ impl<T: SysctlStorage> Sysctl<T> {
                 extra1: ptr::null_mut(),
                 extra2: ptr::null_mut(),
             },
-            unsafe { mem::zeroed() },
+            unsafe { mem::zeroed() }
         ]
         .into_boxed_slice();
 
