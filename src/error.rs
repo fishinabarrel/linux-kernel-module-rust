@@ -1,5 +1,5 @@
-use bindings;
-use c_types;
+use crate::bindings;
+use crate::c_types;
 
 pub struct Error(c_types::c_int);
 

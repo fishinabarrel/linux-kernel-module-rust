@@ -3,9 +3,9 @@ use core::default::Default;
 use core::marker;
 use core::mem;
 
-use bindings;
-use c_types;
-use error;
+use crate::bindings;
+use crate::c_types;
+use crate::error;
 
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,

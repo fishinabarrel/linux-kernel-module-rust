@@ -1,8 +1,8 @@
 use core::ops::Range;
 
-use bindings;
-use c_types;
-use error;
+use crate::bindings;
+use crate::c_types;
+use crate::error;
 
 pub struct DeviceNumberRegion {
     dev: bindings::dev_t,

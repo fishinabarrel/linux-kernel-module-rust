@@ -3,11 +3,11 @@ use core::mem;
 use core::ptr;
 use core::sync::atomic;
 
-use bindings;
-use c_types;
-use error;
-use types;
-use user_ptr::{UserSlicePtr, UserSlicePtrWriter};
+use crate::bindings;
+use crate::c_types;
+use crate::error;
+use crate::types;
+use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
 pub trait SysctlStorage: Sync {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
