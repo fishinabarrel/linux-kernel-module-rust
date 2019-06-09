@@ -28,7 +28,7 @@ install:
 script:
     - ./tests/run_tests.py
     - cargo fmt --all -- --check
-    - cd hello-world && cargo fmt --all -- --check
+    - pushd hello-world; cargo fmt --all -- --check; popd
     - |
       for p in tests/*; do
         if [ -d "$p" ]; then
