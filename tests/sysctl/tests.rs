@@ -1,5 +1,3 @@
-extern crate kernel_module_tests;
-
 use std::fs;
 use std::path::Path;
 

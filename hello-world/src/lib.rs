@@ -1,7 +1,6 @@
 #![no_std]
 #![feature(alloc, const_str_as_bytes)]
 
-extern crate alloc;
 use alloc::borrow::ToOwned;
 use alloc::string::String;
 
