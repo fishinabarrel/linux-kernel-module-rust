@@ -1,8 +1,7 @@
 #![no_std]
 #![feature(const_str_as_bytes)]
 
-#[macro_use]
-extern crate linux_kernel_module;
+use linux_kernel_module::{self, println};
 
 struct PrintkTestModule;
 
@@ -16,7 +15,7 @@ impl linux_kernel_module::KernelModule for PrintkTestModule {
     }
 }
 
-kernel_module!(
+linux_kernel_module::kernel_module!(
     PrintkTestModule,
     author: "Alex Gaynor and Geoffrey Thomas",
     description: "A module for testing println!()",

@@ -1,12 +1,11 @@
 #![no_std]
 #![feature(alloc, const_str_as_bytes)]
 
-extern crate alloc;
 use alloc::borrow::ToOwned;
 use alloc::string::String;
 
-#[macro_use]
-extern crate linux_kernel_module;
+use linux_kernel_module;
+use linux_kernel_module::println;
 
 struct HelloWorldModule {
     message: String,
@@ -28,7 +27,7 @@ impl Drop for HelloWorldModule {
     }
 }
 
-kernel_module!(
+linux_kernel_module::kernel_module!(
     HelloWorldModule,
     author: "Alex Gaynor and Geoffrey Thomas",
     description: "An extremely simple kernel module",

@@ -1,5 +1,3 @@
-extern crate kernel_module_tests;
-
 use kernel_module_tests::with_kernel_module;
 use std::fs;
 

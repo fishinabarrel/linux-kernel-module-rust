@@ -1,10 +1,7 @@
 #![no_std]
-#![feature(allocator_api, const_fn, alloc_error_handler)]
+#![feature(allocator_api, alloc_error_handler)]
 
-#[macro_use]
 extern crate alloc;
-#[macro_use]
-extern crate bitflags;
 
 use core::panic::PanicInfo;
 
@@ -14,7 +11,6 @@ mod c_types;
 pub mod chrdev;
 mod error;
 pub mod filesystem;
-#[macro_use]
 pub mod printk;
 pub mod sysctl;
 mod types;
@@ -53,7 +49,7 @@ macro_rules! kernel_module {
         }
 
         $(
-            kernel_module!(@attribute $name, $value);
+            $crate::kernel_module!(@attribute $name, $value);
         )*
     };
 

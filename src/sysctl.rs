@@ -1,4 +1,5 @@
 use alloc::boxed::Box;
+use alloc::vec;
 use core::mem;
 use core::ptr;
 use core::sync::atomic;
