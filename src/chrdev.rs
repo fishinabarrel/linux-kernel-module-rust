@@ -1,25 +1,44 @@
 use core::convert::TryInto;
 use core::ops::Range;
+use core::{mem, ptr};
+
+use alloc::boxed::Box;
+use alloc::vec;
+use alloc::vec::Vec;
 
 use crate::bindings;
 use crate::c_types;
-use crate::error;
+use crate::error::{Error, KernelResult};
+use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
-pub fn builder(name: &'static str, minors: Range<u16>) -> error::KernelResult<Builder> {
+pub fn builder(name: &'static str, minors: Range<u16>) -> KernelResult<Builder> {
     if !name.ends_with('\x00') {
-        return Err(error::Error::EINVAL);
+        return Err(Error::EINVAL);
     }
 
-    return Ok(Builder { name, minors });
+    return Ok(Builder {
+        name,
+        minors,
+        file_ops: vec![],
+    });
 }
 
 pub struct Builder {
     name: &'static str,
     minors: Range<u16>,
+    file_ops: Vec<&'static FileOperationsVtable>,
 }
 
 impl Builder {
-    pub fn build(self) -> error::KernelResult<Registration> {
+    pub fn register_device<T: FileOperations>(mut self) -> Builder {
+        if self.file_ops.len() >= self.minors.len() {
+            panic!("More devices registered than minor numbers allocated.")
+        }
+        self.file_ops.push(&T::VTABLE);
+        return self;
+    }
+
+    pub fn build(self) -> KernelResult<Registration> {
         let mut dev: bindings::dev_t = 0;
         let res = unsafe {
             bindings::alloc_chrdev_region(
@@ -30,11 +49,32 @@ impl Builder {
             )
         };
         if res != 0 {
-            return Err(error::Error::from_kernel_errno(res));
+            return Err(Error::from_kernel_errno(res));
         }
+
+        // Turn this into a boxed slice immediately because the kernel stores pointers into it, and
+        // so that data should never be moved.
+        let mut cdevs = vec![unsafe { mem::zeroed() }; self.file_ops.len()].into_boxed_slice();
+        for (i, file_op) in self.file_ops.iter().enumerate() {
+            unsafe {
+                bindings::cdev_init(&mut cdevs[i], &file_op.0);
+                cdevs[i].owner = &mut bindings::__this_module;
+                let rc = bindings::cdev_add(&mut cdevs[i], dev + i as bindings::dev_t, 1);
+                if rc != 0 {
+                    // Clean up the ones that were allocated.
+                    for j in 0..=i {
+                        bindings::cdev_del(&mut cdevs[j]);
+                    }
+                    bindings::unregister_chrdev_region(dev, self.minors.len() as _);
+                    return Err(Error::from_kernel_errno(rc));
+                }
+            }
+        }
+
         return Ok(Registration {
             dev,
             count: self.minors.len(),
+            cdevs,
         });
     }
 }
@@ -42,12 +82,112 @@ impl Builder {
 pub struct Registration {
     dev: bindings::dev_t,
     count: usize,
+    cdevs: Box<[bindings::cdev]>,
 }
+
+// This is safe because Registration doesn't actually expose any methods.
+unsafe impl Sync for Registration {}
 
 impl Drop for Registration {
     fn drop(&mut self) {
         unsafe {
+            for dev in self.cdevs.iter_mut() {
+                bindings::cdev_del(dev);
+            }
             bindings::unregister_chrdev_region(self.dev, self.count as _);
         }
     }
+}
+
+pub struct FileOperationsVtable(bindings::file_operations);
+
+unsafe extern "C" fn open_callback<T: FileOperations>(
+    _inode: *mut bindings::inode,
+    file: *mut bindings::file,
+) -> c_types::c_int {
+    let f = match T::open() {
+        Ok(f) => Box::new(f),
+        Err(e) => return e.to_kernel_errno(),
+    };
+    (*file).private_data = Box::into_raw(f) as *mut c_types::c_void;
+    return 0;
+}
+
+unsafe extern "C" fn read_callback<T: FileOperations>(
+    file: *mut bindings::file,
+    buf: *mut c_types::c_char,
+    len: c_types::c_size_t,
+    offset: *mut bindings::loff_t,
+) -> c_types::c_ssize_t {
+    let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len) {
+        Ok(ptr) => ptr.writer(),
+        Err(e) => return e.to_kernel_errno() as c_types::c_ssize_t,
+    };
+    let f = &*((*file).private_data as *const T);
+    // TODO: Pass offset to read()?
+    match f.read(&mut data) {
+        Ok(()) => {
+            let written = len - data.len();
+            (*offset) += written as bindings::loff_t;
+            return written as c_types::c_ssize_t;
+        }
+        Err(e) => return e.to_kernel_errno() as c_types::c_ssize_t,
+    };
+}
+
+unsafe extern "C" fn release_callback<T: FileOperations>(
+    _inode: *mut bindings::inode,
+    file: *mut bindings::file,
+) -> c_types::c_int {
+    let ptr = mem::replace(&mut (*file).private_data, ptr::null_mut());
+    drop(Box::from_raw(ptr as *mut T));
+    return 0;
+}
+
+impl FileOperationsVtable {
+    pub const fn new<T: FileOperations>() -> FileOperationsVtable {
+        return FileOperationsVtable(bindings::file_operations {
+            open: Some(open_callback::<T>),
+            read: Some(read_callback::<T>),
+            release: Some(release_callback::<T>),
+
+            check_flags: None,
+            clone_file_range: None,
+            compat_ioctl: None,
+            copy_file_range: None,
+            dedupe_file_range: None,
+            fallocate: None,
+            fasync: None,
+            flock: None,
+            flush: None,
+            fsync: None,
+            get_unmapped_area: None,
+            iterate: None,
+            iterate_shared: None,
+            llseek: None,
+            lock: None,
+            mmap: None,
+            #[cfg(kernel_4_15_0_or_greataer)]
+            mmap_supported_flags: 0,
+            owner: ptr::null_mut(),
+            poll: None,
+            read_iter: None,
+            sendpage: None,
+            setfl: None,
+            setlease: None,
+            show_fdinfo: None,
+            splice_read: None,
+            splice_write: None,
+            unlocked_ioctl: None,
+            write: None,
+            write_iter: None,
+        });
+    }
+}
+
+pub trait FileOperations: Sync + Sized {
+    const VTABLE: FileOperationsVtable;
+
+    fn open() -> KernelResult<Self>;
+    fn read(&self, buf: &mut UserSlicePtrWriter) -> KernelResult<()>;
 }
