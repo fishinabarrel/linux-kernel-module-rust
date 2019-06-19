@@ -3,24 +3,24 @@
 
 use linux_kernel_module;
 
-struct ChrdevTestModule {
+struct ChrdevRegionAllocationTestModule {
     _dev: linux_kernel_module::chrdev::DeviceNumberRegion,
 }
 
-impl linux_kernel_module::KernelModule for ChrdevTestModule {
+impl linux_kernel_module::KernelModule for ChrdevRegionAllocationTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
-        Ok(ChrdevTestModule {
+        Ok(ChrdevRegionAllocationTestModule {
             _dev: linux_kernel_module::chrdev::DeviceNumberRegion::allocate(
                 0..1,
-                "chrdev-tests\x00",
+                "chrdev-region-allocation-tests\x00",
             )?,
         })
     }
 }
 
 linux_kernel_module::kernel_module!(
-    ChrdevTestModule,
+    ChrdevRegionAllocationTestModule,
     author: "Alex Gaynor and Geoffrey Thomas",
-    description: "A module for testing character devices",
+    description: "A module for testing character device region allocation",
     license: "GPL"
 );

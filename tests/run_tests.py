@@ -43,7 +43,7 @@ def main():
         module = os.path.join(
             BASE_DIR,
             "target/x86_64-linux-kernel-module/debug/lib{}_tests.a".format(
-                path
+                path.replace("-", "_")
             )
         )
         run(
