@@ -125,6 +125,10 @@ impl UserSlicePtrReader {
 pub struct UserSlicePtrWriter(*mut c_types::c_void, usize);
 
 impl UserSlicePtrWriter {
+    pub fn len(&self) -> usize {
+        return self.1;
+    }
+
     pub fn write(&mut self, data: &[u8]) -> error::KernelResult<()> {
         if data.len() > self.1 || data.len() > u32::MAX as usize {
             return Err(error::Error::EFAULT);
