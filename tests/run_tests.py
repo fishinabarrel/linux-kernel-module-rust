@@ -40,19 +40,10 @@ def main():
             )
         )
 
-        module = os.path.join(
-            BASE_DIR,
-            "target/x86_64-linux-kernel-module/debug/lib{}_tests.a".format(
-                path.replace("-", "_")
-            )
-        )
         run(
             "make", "-C", BASE_DIR,
-            "TEST_LIBRARY={}".format(
-                os.path.join(
-                    "target/x86_64-linux-kernel-module/debug/",
-                    os.path.basename(module)
-                )
+            "TEST_LIBRARY=target/x86_64-linux-kernel-module/debug/lib{}_tests.a".format(
+                path.replace("-", "_")
             ),
         )
         run(
