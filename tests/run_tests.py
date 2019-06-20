@@ -43,7 +43,7 @@ def main():
         run(
             "make", "-C", BASE_DIR,
             "TEST_LIBRARY=target/x86_64-linux-kernel-module/debug/lib{}_tests.a".format(
-                path
+                path.replace("-", "_")
             ),
         )
         run(

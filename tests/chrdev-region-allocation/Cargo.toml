@@ -1,5 +1,5 @@
 [package]
-name = "chrdev-tests"
+name = "chrdev-region-allocation-tests"
 version = "0.1.0"
 authors = ["Alex Gaynor <alex.gaynor@gmail.com>", "Geoffrey Thomas <geofft@ldpreload.com>"]
 edition = "2018"
