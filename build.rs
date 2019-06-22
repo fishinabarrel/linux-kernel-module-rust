@@ -45,12 +45,7 @@ const OPAQUE_TYPES: &[&str] = &[
 ];
 
 fn main() {
-    let mut builder = bindgen::Builder::default()
-        .use_core()
-        .ctypes_prefix("c_types")
-        .derive_default(true)
-        .rustfmt_bindings(true);
-
+    println!("rerun-if-env-changed=KDIR");
     let output = String::from_utf8(
         Command::new("make")
             .arg("-C")
@@ -61,6 +56,12 @@ fn main() {
             .stdout,
     )
     .unwrap();
+
+    let mut builder = bindgen::Builder::default()
+        .use_core()
+        .ctypes_prefix("c_types")
+        .derive_default(true)
+        .rustfmt_bindings(true);
 
     builder = builder.clang_arg("--target=x86_64-linux-kernel-module");
     for arg in shlex::split(&output).unwrap() {
