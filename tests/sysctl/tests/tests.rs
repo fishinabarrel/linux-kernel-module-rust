@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::Path;
 
-use kernel_module_tests::with_kernel_module;
+use kernel_module_testlib::with_kernel_module;
 
 #[test]
 fn test_read_bool_default() {

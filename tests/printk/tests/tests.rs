@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use kernel_module_tests::with_kernel_module;
+use kernel_module_testlib::with_kernel_module;
 
 fn assert_dmesg_contains(msgs: &[&[u8]]) {
     let output = Command::new("dmesg").output().unwrap();

@@ -1,5 +1,6 @@
-use kernel_module_tests::with_kernel_module;
 use std::fs;
+
+use kernel_module_testlib::with_kernel_module;
 
 #[test]
 fn test_proc_devices() {
@@ -16,10 +17,8 @@ fn test_proc_devices() {
     });
 
     let devices = fs::read_to_string("/proc/devices").unwrap();
-    assert!(
-        devices
-            .lines()
-            .find(|l| l.ends_with("chrdev-region-allocation-tests"))
-            .is_none()
-    );
+    assert!(devices
+        .lines()
+        .find(|l| l.ends_with("chrdev-region-allocation-tests"))
+        .is_none());
 }
