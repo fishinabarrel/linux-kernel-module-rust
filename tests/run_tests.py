@@ -17,12 +17,10 @@ def run(*args, **kwargs):
 
 
 def main():
-    run("rustc", "--crate-type=rlib", os.path.join(BASE_DIR, "testlib.rs"))
-
     for path in os.listdir(BASE_DIR):
         if (
             not os.path.isdir(os.path.join(BASE_DIR, path)) or
-            not os.path.exists(os.path.join(BASE_DIR, path, "tests.rs"))
+            not os.path.exists(os.path.join(BASE_DIR, path, "tests"))
         ):
             continue
 
@@ -47,24 +45,20 @@ def main():
                 path.replace("-", "_")
             ),
         )
-        run(
-            "rustc",
-            "--test",
-            "-Dwarnings",
-            "--edition", "2018",
-            "--out-dir", os.path.join(BASE_DIR, path),
-            os.path.join(BASE_DIR, path, "tests.rs"),
-            "--extern", "kernel_module_tests=libtestlib.rlib",
-        )
         # TODO: qemu
         run(
-            os.path.join(BASE_DIR, path, "tests"), "--test-threads=1",
+            "cargo", "test", "--", "--test-threads=1",
+            cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
-                KERNEL_MODULE=os.path.join(BASE_DIR, "testmodule.ko")
+                KERNEL_MODULE=os.path.join(BASE_DIR, "testmodule.ko"),
+                RUSTFLAGS="-Dwarnings",
+                CARGO_TARGET_DIR=os.path.relpath(
+                    os.path.join(BASE_DIR, "target"),
+                    os.path.join(BASE_DIR, path)
+                ),
             )
         )
-
 
 
 if __name__ == "__main__":
