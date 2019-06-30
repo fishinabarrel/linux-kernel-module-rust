@@ -3,18 +3,18 @@
 
 use linux_kernel_module;
 
+#[derive(Default)]
 struct ChrdevRegionAllocationTestModule {
-    _dev: linux_kernel_module::chrdev::DeviceNumberRegion,
+    _dev: Option<linux_kernel_module::chrdev::DeviceNumberRegion>,
 }
 
 impl linux_kernel_module::KernelModule for ChrdevRegionAllocationTestModule {
-    fn init() -> linux_kernel_module::KernelResult<Self> {
-        Ok(ChrdevRegionAllocationTestModule {
-            _dev: linux_kernel_module::chrdev::DeviceNumberRegion::allocate(
-                0..1,
-                "chrdev-region-allocation-tests\x00",
-            )?,
-        })
+    fn init(&mut self) -> linux_kernel_module::KernelResult<()> {
+        self._dev = Some(linux_kernel_module::chrdev::DeviceNumberRegion::allocate(
+            0..1,
+            "chrdev-region-allocation-tests\x00",
+        )?);
+        Ok(())
     }
 }
 

@@ -26,26 +26,24 @@ macro_rules! kernel_module {
     ($module:ty, $($name:ident : $value:expr),*) => {
         static mut __MOD: Option<$module> = None;
         #[no_mangle]
-        pub extern "C" fn init_module() -> $crate::_InitResult {
-            match <$module as $crate::KernelModule>::init() {
-                Ok(m) => {
-                    unsafe {
-                        __MOD = Some(m);
-                    }
+        pub unsafe extern "C" fn init_module() -> $crate::_InitResult {
+            use $crate::KernelModule;
+            __MOD = Some(Default::default());
+            match __MOD.as_mut().unwrap().init() {
+                Ok(()) => {
                     return 0;
                 }
                 Err(e) => {
+                    __MOD = None;
                     return e.to_kernel_errno();
                 }
             }
         }
 
         #[no_mangle]
-        pub extern "C" fn cleanup_module() {
-            unsafe {
-                // Invokes drop() on __MOD, which should be used for cleanup.
-                __MOD = None;
-            }
+        pub unsafe extern "C" fn cleanup_module() {
+            // Invokes drop() on __MOD, which should be used for cleanup.
+            __MOD = None;
         }
 
         $(
@@ -63,8 +61,8 @@ macro_rules! kernel_module {
     };
 }
 
-pub trait KernelModule: Sized + Sync {
-    fn init() -> KernelResult<Self>;
+pub trait KernelModule: Sized + Sync + Default {
+    fn init(&'static mut self) -> KernelResult<()>;
 }
 
 extern "C" {

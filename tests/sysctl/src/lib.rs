@@ -4,31 +4,31 @@
 use core::sync::atomic::AtomicBool;
 
 use linux_kernel_module;
-
 use linux_kernel_module::sysctl::Sysctl;
 use linux_kernel_module::Mode;
 
+#[derive(Default)]
 struct SysctlTestModule {
-    _sysctl_a: Sysctl<AtomicBool>,
-    _sysctl_b: Sysctl<AtomicBool>,
+    _sysctl_a: Option<Sysctl<AtomicBool>>,
+    _sysctl_b: Option<Sysctl<AtomicBool>>,
 }
 
 impl linux_kernel_module::KernelModule for SysctlTestModule {
-    fn init() -> linux_kernel_module::KernelResult<Self> {
-        Ok(SysctlTestModule {
-            _sysctl_a: Sysctl::register(
-                "rust/sysctl-tests\x00",
-                "a\x00",
-                AtomicBool::new(false),
-                Mode::from_int(0o666),
-            )?,
-            _sysctl_b: Sysctl::register(
-                "rust/sysctl-tests\x00",
-                "b\x00",
-                AtomicBool::new(false),
-                Mode::from_int(0o666),
-            )?,
-        })
+    fn init(&mut self) -> linux_kernel_module::KernelResult<()> {
+        self._sysctl_a = Some(Sysctl::register(
+            "rust/sysctl-tests\x00",
+            "a\x00",
+            AtomicBool::new(false),
+            Mode::from_int(0o666),
+        )?);
+        self._sysctl_b = Some(Sysctl::register(
+            "rust/sysctl-tests\x00",
+            "b\x00",
+            AtomicBool::new(false),
+            Mode::from_int(0o666),
+        )?);
+
+        return Ok(());
     }
 }
 

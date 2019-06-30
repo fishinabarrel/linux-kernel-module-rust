@@ -9,16 +9,16 @@ use alloc::string::String;
 use linux_kernel_module;
 use linux_kernel_module::println;
 
+#[derive(Default)]
 struct HelloWorldModule {
     message: String,
 }
 
 impl linux_kernel_module::KernelModule for HelloWorldModule {
-    fn init() -> linux_kernel_module::KernelResult<Self> {
+    fn init(&mut self) -> linux_kernel_module::KernelResult<()> {
         println!("Hello kernel module!");
-        Ok(HelloWorldModule {
-            message: "on the heap!".to_owned(),
-        })
+        self.message = "on the heap!".to_owned();
+        Ok(())
     }
 }
 

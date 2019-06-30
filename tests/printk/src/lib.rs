@@ -3,15 +3,16 @@
 
 use linux_kernel_module::{self, println};
 
+#[derive(Default)]
 struct PrintkTestModule;
 
 impl linux_kernel_module::KernelModule for PrintkTestModule {
-    fn init() -> linux_kernel_module::KernelResult<Self> {
+    fn init(&mut self) -> linux_kernel_module::KernelResult<()> {
         println!("Single element printk");
         println!();
         println!("printk with {} parameters{}", 2, "!");
 
-        Ok(PrintkTestModule)
+        Ok(())
     }
 }
 
