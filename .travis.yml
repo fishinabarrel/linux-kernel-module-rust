@@ -24,6 +24,7 @@ install:
     - rustup component add rust-src rustfmt
 
 script:
+    - zcat /proc/config.gz | grep RANDSTRUCT
     - ./tests/run_tests.py
     - |
       for p in . hello-world tests/*; do
