@@ -26,6 +26,7 @@ def main():
         ):
             continue
 
+        print("+ [{}]".format(path))
         run(
             "cargo", "xbuild", "--target", "x86_64-linux-kernel-module",
             cwd=os.path.join(BASE_DIR, path),
