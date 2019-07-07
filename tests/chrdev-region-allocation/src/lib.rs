@@ -4,16 +4,17 @@
 use linux_kernel_module;
 
 struct ChrdevRegionAllocationTestModule {
-    _dev: linux_kernel_module::chrdev::DeviceNumberRegion,
+    _chrdev_reg: linux_kernel_module::chrdev::Registration,
 }
 
 impl linux_kernel_module::KernelModule for ChrdevRegionAllocationTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
+        let chrdev_reg =
+            linux_kernel_module::chrdev::builder("chrdev-region-allocation-tests\x00", 0..1)?
+                .build()?;
+
         Ok(ChrdevRegionAllocationTestModule {
-            _dev: linux_kernel_module::chrdev::DeviceNumberRegion::allocate(
-                0..1,
-                "chrdev-region-allocation-tests\x00",
-            )?,
+            _chrdev_reg: chrdev_reg,
         })
     }
 }
