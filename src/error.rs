@@ -1,5 +1,7 @@
-use bindings;
-use c_types;
+use core::num::TryFromIntError;
+
+use crate::bindings;
+use crate::c_types;
 
 pub struct Error(c_types::c_int);
 
@@ -14,6 +16,12 @@ impl Error {
 
     pub fn to_kernel_errno(&self) -> c_types::c_int {
         return self.0;
+    }
+}
+
+impl From<TryFromIntError> for Error {
+    fn from(_: TryFromIntError) -> Error {
+        return Error::EINVAL;
     }
 }
 

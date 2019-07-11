@@ -1,19 +1,14 @@
 use alloc::boxed::Box;
+use alloc::vec;
 use core::mem;
 use core::ptr;
 use core::sync::atomic;
 
-use bindings;
-use c_types;
-use error;
-use types;
-use user_ptr::{UserSlicePtr, UserSlicePtrWriter};
-
-pub struct Sysctl<T: SysctlStorage> {
-    inner: Box<T>,
-    table: Box<[bindings::ctl_table]>,
-    header: *mut bindings::ctl_table_header,
-}
+use crate::bindings;
+use crate::c_types;
+use crate::error;
+use crate::types;
+use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
 pub trait SysctlStorage: Sync {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
@@ -59,6 +54,17 @@ impl SysctlStorage for atomic::AtomicBool {
         (value.len(), data.write(value))
     }
 }
+
+pub struct Sysctl<T: SysctlStorage> {
+    inner: Box<T>,
+    // Responsible for keeping the ctl_table alive.
+    _table: Box<[bindings::ctl_table]>,
+    header: *mut bindings::ctl_table_header,
+}
+
+// This is safe because the only public method we have is get(), which returns
+// &T, and T: Sync. Any new methods must adhere to this requirement.
+unsafe impl<T: SysctlStorage> Sync for Sysctl<T> {}
 
 unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     ctl: *mut bindings::ctl_table,
@@ -123,7 +129,8 @@ impl<T: SysctlStorage> Sysctl<T> {
                 extra2: ptr::null_mut(),
             },
             unsafe { mem::zeroed() },
-        ].into_boxed_slice();
+        ]
+        .into_boxed_slice();
 
         let result =
             unsafe { bindings::register_sysctl(path.as_ptr() as *const i8, table.as_mut_ptr()) };
@@ -133,7 +140,7 @@ impl<T: SysctlStorage> Sysctl<T> {
 
         return Ok(Sysctl {
             inner: storage,
-            table: table,
+            _table: table,
             header: result,
         });
     }

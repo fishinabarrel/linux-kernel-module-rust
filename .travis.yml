@@ -1,12 +1,12 @@
-sudo: required
+matrix:
+    include:
+        - dist: xenial
 
 language: rust
 rust:
     - nightly
 cache:
     - cargo: true
-    - directories:
-        - tests/target/
 
 branches:
     only:
@@ -21,10 +21,16 @@ install:
       else
           cargo install --force cargo-xbuild
       fi
-    - rustup component add rust-src
+    - rustup component add rust-src rustfmt
 
 script:
-    - RUST_BACKTRACE=1 ./tests/run_tests.py
+    - ./tests/run_tests.py
+    - |
+      for p in . hello-world tests/*; do
+        if [ -d "$p" ]; then
+          (cd "$p" && cargo fmt --all -- --check) || exit 1
+        fi
+      done
 
 after_failure:
     - dmesg

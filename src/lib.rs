@@ -1,26 +1,23 @@
 #![no_std]
-#![feature(alloc, allocator_api, const_fn, lang_items, panic_implementation)]
+#![feature(allocator_api, alloc_error_handler)]
 
-#[macro_use]
 extern crate alloc;
-#[macro_use]
-extern crate bitflags;
 
 use core::panic::PanicInfo;
 
 mod allocator;
 pub mod bindings;
 mod c_types;
+pub mod chrdev;
 mod error;
 pub mod filesystem;
-#[macro_use]
 pub mod printk;
 pub mod sysctl;
 mod types;
 pub mod user_ptr;
 
-pub use error::{Error, KernelResult};
-pub use types::Mode;
+pub use crate::error::{Error, KernelResult};
+pub use crate::types::Mode;
 
 pub type _InitResult = c_types::c_int;
 
@@ -52,7 +49,7 @@ macro_rules! kernel_module {
         }
 
         $(
-            kernel_module!(@attribute $name, $value);
+            $crate::kernel_module!(@attribute $name, $value);
         )*
     };
 
@@ -60,13 +57,13 @@ macro_rules! kernel_module {
         #[link_section = ".modinfo"]
         #[allow(non_upper_case_globals)]
         // TODO: Generate a name the same way the kernel's `__MODULE_INFO` does.
-        // TODO: This needs to be a `&'static [u8]`, since the kernel defines this as a
-        // `const char []`.
-        pub static $name: &'static str = concat!(stringify!($name), "=", $value);
+        // TODO: This needs to be a `[u8; _]`, since the kernel defines this as a  `const char []`.
+        // See https://github.com/rust-lang/rfcs/pull/2545
+        pub static $name: &'static [u8] = concat!(stringify!($name), "=", $value, '\0').as_bytes();
     };
 }
 
-pub trait KernelModule: Sized {
+pub trait KernelModule: Sized + Sync {
     fn init() -> KernelResult<Self>;
 }
 
@@ -74,7 +71,7 @@ extern "C" {
     fn bug_helper() -> !;
 }
 
-#[panic_implementation]
+#[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     unsafe {
         bug_helper();

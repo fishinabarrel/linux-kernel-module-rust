@@ -1,7 +1,7 @@
 [package]
-name = "printk-tests"
+name = "sysctl-tests"
 version = "0.1.0"
-authors = ["Alex Gaynor <alex.gaynor@gmail.com>", "Geoffrey Thomas <geofft@ldpreload.com>"]
+authors = ["Alex Gaynor <alex.gaynor@gmail.com", "Geoffrey Thomas <geofft@ldpreload.com>"]
 edition = "2018"
 
 [lib]

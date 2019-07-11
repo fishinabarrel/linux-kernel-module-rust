@@ -1,6 +1,6 @@
-extern crate bindgen;
-extern crate cc;
-extern crate shlex;
+use bindgen;
+use cc;
+use shlex;
 
 use std::env;
 use std::path::PathBuf;
@@ -19,6 +19,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "access_ok",
     "_copy_to_user",
     "_copy_from_user",
+    "alloc_chrdev_region",
+    "unregister_chrdev_region",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
@@ -34,15 +36,16 @@ const INCLUDED_VARS: &[&str] = &[
     "KERN_INFO",
     "VERIFY_WRITE",
 ];
+const OPAQUE_TYPES: &[&str] = &[
+    // These need to be opaque because they're both packed and aligned, which rustc
+    // doesn't support yet. See https://github.com/rust-lang/rust/issues/59154
+    // and https://github.com/rust-lang/rust-bindgen/issues/1538
+    "desc_struct",
+    "xregs_state",
+];
 
 fn main() {
-    let mut builder = bindgen::Builder::default()
-        .use_core()
-        .ctypes_prefix("c_types")
-        .no_copy(".*")
-        .derive_default(true)
-        .rustfmt_bindings(true);
-
+    println!("rerun-if-env-changed=KDIR");
     let output = String::from_utf8(
         Command::new("make")
             .arg("-C")
@@ -51,8 +54,16 @@ fn main() {
             .output()
             .unwrap()
             .stdout,
-    ).unwrap();
+    )
+    .unwrap();
 
+    let mut builder = bindgen::Builder::default()
+        .use_core()
+        .ctypes_prefix("c_types")
+        .derive_default(true)
+        .rustfmt_bindings(true);
+
+    builder = builder.clang_arg("--target=x86_64-linux-kernel-module");
     for arg in shlex::split(&output).unwrap() {
         builder = builder.clang_arg(arg.to_string());
     }
@@ -69,6 +80,9 @@ fn main() {
     for v in INCLUDED_VARS {
         builder = builder.whitelist_var(v);
     }
+    for t in OPAQUE_TYPES {
+        builder = builder.opaque_type(t);
+    }
     let bindings = builder.generate().expect("Unable to generate bindings");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -79,6 +93,7 @@ fn main() {
     let mut builder = cc::Build::new();
     println!("cargo:rerun-if-env-changed=CLANG");
     builder.compiler(env::var("CLANG").unwrap_or("clang".to_string()));
+    builder.target("x86_64-linux-kernel-module");
     builder.warnings(false);
     builder.file("src/helpers.c");
     for arg in shlex::split(&output).unwrap() {

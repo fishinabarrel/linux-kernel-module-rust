@@ -1,4 +1,4 @@
-use bindings;
+use crate::bindings;
 
 pub struct Mode(bindings::umode_t);
 

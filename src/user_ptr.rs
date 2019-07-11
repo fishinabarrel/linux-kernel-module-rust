@@ -1,9 +1,10 @@
+use alloc::vec;
 use alloc::vec::Vec;
 use core::u32;
 
-use bindings;
-use c_types;
-use error;
+use crate::bindings;
+use crate::c_types;
+use crate::error;
 
 extern "C" {
     fn access_ok_helper(
@@ -44,13 +45,19 @@ impl UserSlicePtr {
     /// the actual pages are mapped in the current process with
     /// appropriate permissions. Those checks are handled in the read
     /// and write methods.
-    pub fn new(ptr: *mut c_types::c_void, length: usize) -> error::KernelResult<UserSlicePtr> {
+    ///
+    /// This is `unsafe` because if it is called within `set_fs(KERNEL_DS)` context then
+    /// `access_ok` will not do anything. As a result the only place you can safely use this is
+    /// with an `__user` pointer that was provided by the kernel.
+    pub(crate) unsafe fn new(
+        ptr: *mut c_types::c_void,
+        length: usize,
+    ) -> error::KernelResult<UserSlicePtr> {
         // No current access_ok implementation actually distinguishes
         // between VERIFY_READ and VERIFY_WRITE, so passing VERIFY_WRITE
         // is fine in practice and fails safe if a future implementation
         // bothers.
-        if unsafe { access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) } == 0
-        {
+        if access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) == 0 {
             return Err(error::Error::EFAULT);
         }
         return Ok(UserSlicePtr(ptr, length));
@@ -100,7 +107,7 @@ impl UserSlicePtrReader {
             bindings::_copy_from_user(
                 data.as_mut_ptr() as *mut c_types::c_void,
                 self.0,
-                data.len() as u32,
+                data.len() as _,
             )
         };
         if res != 0 {
@@ -126,7 +133,7 @@ impl UserSlicePtrWriter {
             bindings::_copy_to_user(
                 self.0,
                 data.as_ptr() as *const c_types::c_void,
-                data.len() as u32,
+                data.len() as _,
             )
         };
         if res != 0 {
