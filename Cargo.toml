@@ -8,6 +8,6 @@ edition = "2018"
 bitflags = "1"
 
 [build-dependencies]
-bindgen = "/tmp/rust-bindgen"
+bindgen = { path = "/tmp/rust-bindgen" }
 cc = "1.0"
 shlex = "0.1"
