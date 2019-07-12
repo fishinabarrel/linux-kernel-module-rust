@@ -1,5 +1,4 @@
 use core::convert::TryInto;
-use core::ops::Range;
 use core::{mem, ptr};
 
 use alloc::boxed::Box;
@@ -11,29 +10,30 @@ use crate::c_types;
 use crate::error::{Error, KernelResult};
 use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
-pub fn builder(name: &'static str, minors: Range<u16>) -> KernelResult<Builder> {
+pub fn builder(name: &'static str) -> KernelResult<Builder> {
     if !name.ends_with('\x00') {
         return Err(Error::EINVAL);
     }
 
     return Ok(Builder {
         name,
-        minors,
+        0,
         file_ops: vec![],
     });
 }
 
 pub struct Builder {
     name: &'static str,
-    minors: Range<u16>,
+    minor_start: u16,
     file_ops: Vec<&'static FileOperationsVtable>,
 }
 
 impl Builder {
+    pub fn start_minor_at(&mut self, minor_start: u16) {
+        self.minor_start = minor_start;
+    }
+
     pub fn register_device<T: FileOperations>(mut self) -> Builder {
-        if self.file_ops.len() >= self.minors.len() {
-            panic!("More devices registered than minor numbers allocated.")
-        }
         self.file_ops.push(&T::VTABLE);
         return self;
     }
@@ -43,8 +43,8 @@ impl Builder {
         let res = unsafe {
             bindings::alloc_chrdev_region(
                 &mut dev,
-                self.minors.start.into(),
-                self.minors.len().try_into()?,
+                self.minor_start.into(),
+                self.file_ops.len().try_into()?,
                 self.name.as_ptr() as *const c_types::c_char,
             )
         };
@@ -65,7 +65,7 @@ impl Builder {
                     for j in 0..=i {
                         bindings::cdev_del(&mut cdevs[j]);
                     }
-                    bindings::unregister_chrdev_region(dev, self.minors.len() as _);
+                    bindings::unregister_chrdev_region(dev, self.file_ops.len() as _);
                     return Err(Error::from_kernel_errno(rc));
                 }
             }
@@ -73,7 +73,7 @@ impl Builder {
 
         return Ok(Registration {
             dev,
-            count: self.minors.len(),
+            count: self.file_ops.len(),
             cdevs,
         });
     }
