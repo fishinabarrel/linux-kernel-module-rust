@@ -8,10 +8,6 @@ rust:
 cache:
     - cargo: true
 
-branches:
-    only:
-        - master
-
 install:
     - sudo apt-get install -y "linux-headers-$(uname -r)" realpath
     - type -p cargo-install-update || cargo install --force cargo-update
@@ -24,6 +20,7 @@ install:
     - rustup component add rust-src rustfmt
 
 script:
+    - cd /tmp; git clone https://github.com/rust-lang/rust-bindgen; cd rust-bindgen; git revert --no-edit 4a3eec8c4f996b78a1f7ae4ff8fee06bebd963b6
     - ./tests/run_tests.py
     - |
       for p in . hello-world tests/*; do
