@@ -20,7 +20,7 @@ install:
     - rustup component add rust-src rustfmt
 
 script:
-    - (cd /tmp; git clone https://github.com/rust-lang/rust-bindgen; cd rust-bindgen; git checkout 0176a76fbfc861c70f7e93289c1c114de16e7282)
+    - (cd /tmp; git clone https://github.com/rust-lang/rust-bindgen; cd rust-bindgen; git checkout 33912cfcdc34bda21599de29cd7b4241eb7c341a)
     - ./tests/run_tests.py
     - |
       for p in . hello-world tests/*; do
