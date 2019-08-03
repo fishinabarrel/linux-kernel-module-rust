@@ -26,11 +26,14 @@ def main():
 
         print("+ [{}]".format(path))
         run(
-            "cargo", "xbuild", "--target", "x86_64-linux-kernel-module",
+            "cargo", "xbuild",
+            "--target",
+            os.path.join(
+                BASE_DIR, os.path.pardir, "x86_64-linux-kernel-module.json"
+            ),
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
-                RUST_TARGET_PATH=os.path.join(BASE_DIR, os.path.pardir),
                 RUSTFLAGS="-Dwarnings",
                 CARGO_TARGET_DIR=os.path.relpath(
                     os.path.join(BASE_DIR, "target"),

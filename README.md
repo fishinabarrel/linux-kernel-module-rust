@@ -16,8 +16,7 @@ cd hello-world
 3. Build the static object with cargo xbuild, pointing it at our custom target
 
 ```
-RUST_TARGET_PATH=$(pwd)/.. cargo xbuild --target x86_64-linux-kernel-module
-
+cargo xbuild --target $(pwd)/../x86_64-linux-kernel-module.json
 ```
 
 4. Build the kernel module using the Linux kernel build system (kbuild)
