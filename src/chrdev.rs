@@ -96,6 +96,27 @@ impl Drop for Registration {
     }
 }
 
+pub struct File {
+    ptr: *const bindings::file,
+}
+
+impl File {
+    unsafe fn from_ptr(ptr: *const bindings::file) -> File {
+        File { ptr }
+    }
+
+    pub fn pos(&self) -> u64 {
+        unsafe { (*self.ptr).f_pos as u64 }
+    }
+}
+
+// Matches std::io::SeekFrom in the Rust stdlib
+pub enum SeekFrom {
+    Start(u64),
+    End(i64),
+    Current(i64),
+}
+
 pub struct FileOperationsVtable(bindings::file_operations);
 
 unsafe extern "C" fn open_callback<T: FileOperations>(
@@ -141,12 +162,34 @@ unsafe extern "C" fn release_callback<T: FileOperations>(
     0
 }
 
+unsafe extern "C" fn llseek_callback<T: FileOperations>(
+    file: *mut bindings::file,
+    offset: bindings::loff_t,
+    whence: c_types::c_int,
+) -> bindings::loff_t {
+    let off = match whence as u32 {
+        bindings::SEEK_SET => match offset.try_into() {
+            Ok(v) => SeekFrom::Start(v),
+            Err(_) => return Error::EINVAL.to_kernel_errno().into(),
+        },
+        bindings::SEEK_CUR => SeekFrom::Current(offset),
+        bindings::SEEK_END => SeekFrom::End(offset),
+        _ => return Error::EINVAL.to_kernel_errno().into(),
+    };
+    let f = &*((*file).private_data as *const T);
+    match f.seek(&File::from_ptr(file), off) {
+        Ok(off) => off as bindings::loff_t,
+        Err(e) => e.to_kernel_errno().into(),
+    }
+}
+
 impl FileOperationsVtable {
     pub const fn new<T: FileOperations>() -> FileOperationsVtable {
         FileOperationsVtable(bindings::file_operations {
             open: Some(open_callback::<T>),
             read: Some(read_callback::<T>),
             release: Some(release_callback::<T>),
+            llseek: Some(llseek_callback::<T>),
 
             check_flags: None,
             #[cfg(not(kernel_4_20_0_or_greater))]
@@ -167,7 +210,6 @@ impl FileOperationsVtable {
             iterate_shared: None,
             #[cfg(kernel_5_1_0_or_greater)]
             iopoll: None,
-            llseek: None,
             lock: None,
             mmap: None,
             #[cfg(kernel_4_15_0_or_greater)]
@@ -194,5 +236,10 @@ pub trait FileOperations: Sync + Sized {
     const VTABLE: FileOperationsVtable;
 
     fn open() -> KernelResult<Self>;
-    fn read(&self, buf: &mut UserSlicePtrWriter) -> KernelResult<()>;
+    fn read(&self, _buf: &mut UserSlicePtrWriter) -> KernelResult<()> {
+        Err(Error::EINVAL)
+    }
+    fn seek(&self, _file: &File, _offset: SeekFrom) -> KernelResult<u64> {
+        Err(Error::ESPIPE)
+    }
 }
