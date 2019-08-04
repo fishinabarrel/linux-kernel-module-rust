@@ -58,7 +58,7 @@ def main():
                 KERNEL_MODULE=os.path.join(BASE_DIR, "testmodule.ko"),
                 RUSTFLAGS="-Dwarnings",
                 CARGO_TARGET_DIR=os.path.relpath(
-                    os.path.join(BASE_DIR, "target"),
+                    os.path.join(BASE_DIR, "target-test"),
                     os.path.join(BASE_DIR, path)
                 ),
             )
