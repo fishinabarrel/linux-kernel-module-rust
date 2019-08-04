@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -74,5 +74,37 @@ fn test_read() {
         let mut data = [0; 12];
         f.read_exact(&mut data).unwrap();
         assert_eq!(&data, b"123456789123")
+    });
+}
+
+#[test]
+fn test_lseek_unimplemented() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, READ_FILE_MINOR);
+
+        let mut f = fs::File::open(&p).unwrap();
+        assert_eq!(
+            f.seek(SeekFrom::Start(12))
+                .unwrap_err()
+                .raw_os_error()
+                .unwrap(),
+            libc::ESPIPE
+        );
+        assert_eq!(
+            f.seek(SeekFrom::End(-12))
+                .unwrap_err()
+                .raw_os_error()
+                .unwrap(),
+            libc::ESPIPE
+        );
+        assert_eq!(
+            f.seek(SeekFrom::Current(12))
+                .unwrap_err()
+                .raw_os_error()
+                .unwrap(),
+            libc::ESPIPE
+        );
     });
 }
