@@ -54,6 +54,7 @@ fn mknod(path: &PathBuf, major: libc::dev_t, minor: libc::dev_t) -> UnlinkOnDrop
 }
 
 const READ_FILE_MINOR: libc::dev_t = 0;
+const SEEK_FILE_MINOR: libc::dev_t = 1;
 
 #[test]
 fn test_mknod() {
@@ -75,6 +76,22 @@ fn test_read() {
         f.read_exact(&mut data).unwrap();
         assert_eq!(&data, b"123456789123")
     });
+}
+
+#[test]
+fn test_read_unimplemented() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, SEEK_FILE_MINOR);
+
+        let mut f = fs::File::open(&p).unwrap();
+        let mut data = [0; 12];
+        assert_eq!(
+            f.read_exact(&mut data).unwrap_err().raw_os_error().unwrap(),
+            libc::EINVAL
+        );
+    })
 }
 
 #[test]
@@ -105,6 +122,28 @@ fn test_lseek_unimplemented() {
                 .raw_os_error()
                 .unwrap(),
             libc::ESPIPE
+        );
+    });
+}
+
+#[test]
+fn test_lseek() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, SEEK_FILE_MINOR);
+
+        let mut f = fs::File::open(&p).unwrap();
+        assert_eq!(f.seek(SeekFrom::Start(12)).unwrap(), 1234);
+        assert_eq!(f.seek(SeekFrom::End(-12)).unwrap(), 1234);
+        assert_eq!(f.seek(SeekFrom::Current(12)).unwrap(), 1234);
+
+        assert_eq!(
+            f.seek(SeekFrom::Start(u64::max_value()))
+                .unwrap_err()
+                .raw_os_error()
+                .unwrap(),
+            libc::EINVAL
         );
     });
 }

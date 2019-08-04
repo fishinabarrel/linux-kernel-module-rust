@@ -29,6 +29,7 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
     "ENOMEM",
+    "ESPIPE",
     "EFAULT",
     "__this_module",
     "FS_REQUIRES_DEV",
@@ -40,6 +41,9 @@ const INCLUDED_VARS: &[&str] = &[
     "KERN_INFO",
     "VERIFY_WRITE",
     "LINUX_VERSION_CODE",
+    "SEEK_SET",
+    "SEEK_CUR",
+    "SEEK_END",
 ];
 const OPAQUE_TYPES: &[&str] = &[
     // These need to be opaque because they're both packed and aligned, which rustc
