@@ -9,7 +9,7 @@
   "features": "-mmx,-sse,-sse2,-sse3,-ssse3,-sse4.1,-sse4.2,-3dnow,-3dnowa,-avx,-avx2,+soft-float",
   "linker-flavor": "gcc",
   "linker-is-gnu": true,
-  "llvm-target": "x86_64-unknown-linux-gnu",
+  "llvm-target": "x86_64-elf",
   "max-atomic-width": 64,
   "no-compiler-rt": true,
   "os": "none",
