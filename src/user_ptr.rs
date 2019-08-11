@@ -60,7 +60,7 @@ impl UserSlicePtr {
         if access_ok_helper(bindings::VERIFY_WRITE, ptr, length as c_types::c_ulong) == 0 {
             return Err(error::Error::EFAULT);
         }
-        return Ok(UserSlicePtr(ptr, length));
+        Ok(UserSlicePtr(ptr, length))
     }
 
     /// Read the entirety of the user slice and return it in a `Vec`.
@@ -70,13 +70,13 @@ impl UserSlicePtr {
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
         let mut data = vec![0; self.1];
         self.reader().read(&mut data)?;
-        return Ok(data);
+        Ok(data)
     }
 
     /// Construct a `UserSlicePtrReader` that can incrementally read
     /// from the user slice.
     pub fn reader(self) -> UserSlicePtrReader {
-        return UserSlicePtrReader(self.0, self.1);
+        UserSlicePtrReader(self.0, self.1)
     }
 
     /// Write the provided slice into the user slice.
@@ -86,13 +86,13 @@ impl UserSlicePtr {
     /// fault may be written), or `data` is larger than the user slice
     /// (in which case no data is written).
     pub fn write_all(self, data: &[u8]) -> error::KernelResult<()> {
-        return self.writer().write(data);
+        self.writer().write(data)
     }
 
     /// Construct a `UserSlicePtrWrite` that can incrementally write
     /// into the user slice.
     pub fn writer(self) -> UserSlicePtrWriter {
-        return UserSlicePtrWriter(self.0, self.1);
+        UserSlicePtrWriter(self.0, self.1)
     }
 }
 
@@ -126,7 +126,11 @@ pub struct UserSlicePtrWriter(*mut c_types::c_void, usize);
 
 impl UserSlicePtrWriter {
     pub fn len(&self) -> usize {
-        return self.1;
+        self.1
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn write(&mut self, data: &[u8]) -> error::KernelResult<()> {

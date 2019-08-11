@@ -16,11 +16,11 @@ pub fn builder(name: &'static str, minors: Range<u16>) -> KernelResult<Builder> 
         return Err(Error::EINVAL);
     }
 
-    return Ok(Builder {
+    Ok(Builder {
         name,
         minors,
         file_ops: vec![],
-    });
+    })
 }
 
 pub struct Builder {
@@ -35,7 +35,7 @@ impl Builder {
             panic!("More devices registered than minor numbers allocated.")
         }
         self.file_ops.push(&T::VTABLE);
-        return self;
+        self
     }
 
     pub fn build(self) -> KernelResult<Registration> {
@@ -71,11 +71,11 @@ impl Builder {
             }
         }
 
-        return Ok(Registration {
+        Ok(Registration {
             dev,
             count: self.minors.len(),
             cdevs,
-        });
+        })
     }
 }
 
@@ -110,7 +110,7 @@ unsafe extern "C" fn open_callback<T: FileOperations>(
         Err(e) => return e.to_kernel_errno(),
     };
     (*file).private_data = Box::into_raw(f) as *mut c_types::c_void;
-    return 0;
+    0
 }
 
 unsafe extern "C" fn read_callback<T: FileOperations>(
@@ -129,10 +129,10 @@ unsafe extern "C" fn read_callback<T: FileOperations>(
         Ok(()) => {
             let written = len - data.len();
             (*offset) += written as bindings::loff_t;
-            return written as c_types::c_ssize_t;
+            written as c_types::c_ssize_t
         }
-        Err(e) => return e.to_kernel_errno() as c_types::c_ssize_t,
-    };
+        Err(e) => e.to_kernel_errno() as c_types::c_ssize_t,
+    }
 }
 
 unsafe extern "C" fn release_callback<T: FileOperations>(
@@ -141,12 +141,12 @@ unsafe extern "C" fn release_callback<T: FileOperations>(
 ) -> c_types::c_int {
     let ptr = mem::replace(&mut (*file).private_data, ptr::null_mut());
     drop(Box::from_raw(ptr as *mut T));
-    return 0;
+    0
 }
 
 impl FileOperationsVtable {
     pub const fn new<T: FileOperations>() -> FileOperationsVtable {
-        return FileOperationsVtable(bindings::file_operations {
+        FileOperationsVtable(bindings::file_operations {
             open: Some(open_callback::<T>),
             read: Some(read_callback::<T>),
             release: Some(release_callback::<T>),
@@ -181,7 +181,7 @@ impl FileOperationsVtable {
             unlocked_ioctl: None,
             write: None,
             write_iter: None,
-        });
+        })
     }
 }
 

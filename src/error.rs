@@ -11,17 +11,17 @@ impl Error {
     pub const EFAULT: Self = Error(-(bindings::EFAULT as i32));
 
     pub fn from_kernel_errno(errno: c_types::c_int) -> Error {
-        return Error(errno);
+        Error(errno)
     }
 
     pub fn to_kernel_errno(&self) -> c_types::c_int {
-        return self.0;
+        self.0
     }
 }
 
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Error {
-        return Error::EINVAL;
+        Error::EINVAL
     }
 }
 

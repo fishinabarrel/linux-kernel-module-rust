@@ -22,6 +22,7 @@ pub struct LogLineWriter {
     pos: usize,
 }
 
+#[allow(clippy::new_without_default)]
 impl LogLineWriter {
     pub fn new() -> LogLineWriter {
         LogLineWriter {
@@ -31,7 +32,7 @@ impl LogLineWriter {
     }
 
     pub fn as_bytes(&self) -> &[u8] {
-        return &self.data[..self.pos];
+        &self.data[..self.pos]
     }
 }
 
@@ -40,7 +41,7 @@ impl fmt::Write for LogLineWriter {
         let copy_len = cmp::min(LOG_LINE_MAX - self.pos, s.as_bytes().len());
         self.data[self.pos..self.pos + copy_len].copy_from_slice(&s.as_bytes()[..copy_len]);
         self.pos += copy_len;
-        return Ok(());
+        Ok(())
     }
 }
 

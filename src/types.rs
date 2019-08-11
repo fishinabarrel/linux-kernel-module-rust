@@ -8,6 +8,6 @@ impl Mode {
     }
 
     pub fn as_int(&self) -> u16 {
-        return self.0;
+        self.0
     }
 }
