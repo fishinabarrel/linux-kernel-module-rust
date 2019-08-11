@@ -78,5 +78,5 @@ pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T
         return Err(error::Error::from_kernel_errno(result));
     }
 
-    return Ok(fs_registration);
+    Ok(fs_registration)
 }

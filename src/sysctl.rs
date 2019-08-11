@@ -26,7 +26,7 @@ fn trim_whitespace(mut data: &[u8]) -> &[u8] {
     {
         data = &data[..data.len() - 1];
     }
-    return data;
+    data
 }
 
 impl SysctlStorage for atomic::AtomicBool {
@@ -42,7 +42,7 @@ impl SysctlStorage for atomic::AtomicBool {
             }
             _ => Err(error::Error::EINVAL),
         };
-        return (data.len(), result);
+        (data.len(), result)
     }
 
     fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>) {
@@ -138,15 +138,15 @@ impl<T: SysctlStorage> Sysctl<T> {
             return Err(error::Error::ENOMEM);
         }
 
-        return Ok(Sysctl {
+        Ok(Sysctl {
             inner: storage,
             _table: table,
             header: result,
-        });
+        })
     }
 
     pub fn get(&self) -> &T {
-        return &self.inner;
+        &self.inner
     }
 }
 
