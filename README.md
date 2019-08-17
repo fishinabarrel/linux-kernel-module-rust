@@ -1,10 +1,11 @@
 # Linux kernel modules in safe Rust
 
-1. Install [cargo-xbuild](https://github.com/rust-osdev/cargo-xbuild) and the `rust-src` `rustup` component:
+1. Make sure you have Rust installed, as well as [LLVM/Clang 3.9 or higher](https://github.com/rust-lang/rust-bindgen/issues/1316) and kernel headers. Install [cargo-xbuild](https://github.com/rust-osdev/cargo-xbuild) and the `rust-src` and `rustfmt` components for `rustup` component:
 
 ```
+apt-get install llvm clang linux-headers-"$(uname -r)" # or the equivalent for your OS
 cargo install cargo-xbuild
-rustup component add --toolchain=nightly rust-src
+rustup component add --toolchain=nightly rust-src rustfmt
 ```
 
 2. cd to one of the examples
