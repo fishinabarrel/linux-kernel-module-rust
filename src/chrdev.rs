@@ -152,11 +152,15 @@ impl FileOperationsVtable {
             release: Some(release_callback::<T>),
 
             check_flags: None,
+            #[cfg(not(kernel_4_20_0_or_greater))]
             clone_file_range: None,
             compat_ioctl: None,
             copy_file_range: None,
+            #[cfg(not(kernel_4_20_0_or_greater))]
             dedupe_file_range: None,
             fallocate: None,
+            #[cfg(kernel_4_19_0_or_greater)]
+            fadvise: None,
             fasync: None,
             flock: None,
             flush: None,
@@ -164,14 +168,18 @@ impl FileOperationsVtable {
             get_unmapped_area: None,
             iterate: None,
             iterate_shared: None,
+            #[cfg(kernel_5_1_0_or_greater)]
+            iopoll: None,
             llseek: None,
             lock: None,
             mmap: None,
-            #[cfg(kernel_4_15_0_or_greataer)]
+            #[cfg(kernel_4_15_0_or_greater)]
             mmap_supported_flags: 0,
             owner: ptr::null_mut(),
             poll: None,
             read_iter: None,
+            #[cfg(kernel_4_20_0_or_greater)]
+            remap_file_range: None,
             sendpage: None,
             setfl: None,
             setlease: None,
