@@ -1,6 +1,7 @@
 #include <linux/bug.h>
 #include <linux/printk.h>
 #include <linux/uaccess.h>
+#include <linux/version.h>
 
 
 int printk_helper(const unsigned char *s, int len)
@@ -13,7 +14,11 @@ void bug_helper(void)
     BUG();
 }
 
-int access_ok_helper(unsigned int mode, const void __user *addr, unsigned long n)
+int access_ok_helper(const void __user *addr, unsigned long n)
 {
-    return access_ok(mode, addr, n);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) /* v5.0-rc1~46 */
+    return access_ok(addr, n);
+#else
+    return access_ok(0, addr, n);
+#endif
 }
