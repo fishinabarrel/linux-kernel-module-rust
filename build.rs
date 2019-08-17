@@ -71,6 +71,9 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     if version >= kernel_version_code(4, 15, 0) {
         println!("cargo:rustc-cfg=kernel_4_15_0_or_greataer")
     }
+    if version >= kernel_version_code(4, 19, 0) {
+        println!("cargo:rustc-cfg=kernel_4_19_0_or_greataer")
+    }
 }
 
 fn main() {

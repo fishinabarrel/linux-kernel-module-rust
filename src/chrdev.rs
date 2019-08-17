@@ -157,6 +157,8 @@ impl FileOperationsVtable {
             copy_file_range: None,
             dedupe_file_range: None,
             fallocate: None,
+            #[cfg(kernel_4_19_0_or_greataer)]
+            fadvise: None,
             fasync: None,
             flock: None,
             flush: None,
