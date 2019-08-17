@@ -17,7 +17,6 @@ pub struct FileSystemRegistration<T: FileSystem> {
 impl<T: FileSystem> Drop for FileSystemRegistration<T> {
     fn drop(&mut self) {
         unsafe { bindings::unregister_filesystem(&mut *self.ptr) };
-        self.ptr = unsafe { mem::zeroed() };
     }
 }
 
