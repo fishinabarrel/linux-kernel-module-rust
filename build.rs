@@ -74,7 +74,7 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
 }
 
 fn main() {
-    println!("rerun-if-env-changed=KDIR");
+    println!("cargo:rerun-if-env-changed=KDIR");
     let output = String::from_utf8(
         Command::new("make")
             .arg("-C")
