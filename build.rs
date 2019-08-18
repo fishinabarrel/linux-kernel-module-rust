@@ -83,17 +83,21 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
 }
 
 fn main() {
-    println!("rerun-if-env-changed=KDIR");
-    let output = String::from_utf8(
-        Command::new("make")
-            .arg("-C")
-            .arg("kernel-cflags-finder")
-            .arg("-s")
-            .output()
-            .unwrap()
-            .stdout,
-    )
-    .unwrap();
+    println!("cargo:rerun-if-env-changed=KDIR");
+    println!("cargo:rerun-if-env-changed=CLANG");
+    println!("cargo:rerun-if-changed=kernel-cflags-finder/Makefile");
+    let output = Command::new("make")
+        .arg("-C")
+        .arg("kernel-cflags-finder")
+        .arg("-s")
+        .output()
+        .unwrap();
+    if !output.status.success() {
+        eprintln!("kernel-cflags-finder did not succeed");
+        eprintln!("stdout: {}", std::str::from_utf8(&output.stdout).unwrap());
+        eprintln!("stderr: {}", std::str::from_utf8(&output.stderr).unwrap());
+        std::process::exit(1);
+    }
 
     let mut builder = bindgen::Builder::default()
         .use_core()
@@ -102,7 +106,7 @@ fn main() {
         .rustfmt_bindings(true);
 
     builder = builder.clang_arg("--target=x86_64-linux-kernel-module");
-    for arg in shlex::split(&output).unwrap() {
+    for arg in shlex::split(std::str::from_utf8(&output.stdout).unwrap()).unwrap() {
         builder = builder.clang_arg(arg.to_string());
     }
 
@@ -136,7 +140,7 @@ fn main() {
     builder.target("x86_64-linux-kernel-module");
     builder.warnings(false);
     builder.file("src/helpers.c");
-    for arg in shlex::split(&output).unwrap() {
+    for arg in shlex::split(std::str::from_utf8(&output.stdout).unwrap()).unwrap() {
         builder.flag(&arg);
     }
     builder.compile("helpers");
