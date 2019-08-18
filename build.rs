@@ -188,6 +188,7 @@ fn main() {
     builder.compiler(env::var("CC").unwrap_or_else(|_| "clang".to_string()));
     builder.target(&target);
     builder.warnings(false);
+    println!("cargo:rerun-if-changed=src/helpers.c");
     builder.file("src/helpers.c");
     for arg in kernel_args.iter() {
         builder.flag(&arg);
