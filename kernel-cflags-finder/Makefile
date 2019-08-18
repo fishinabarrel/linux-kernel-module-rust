@@ -21,7 +21,7 @@ $(if $(filter-out -I/% -I../%,$(1)),$(patsubst ./%,$(CURDIR)/%,$(patsubst -I%,-I
 our_flags = $(foreach o,$($(1)),$(call our_addtree,$(o)))
 
 $(M)/dummy.c:
-	@echo $(NOSTDINC_FLAGS) $(call our_flags,LINUXINCLUDE) $(__c_flags) $(modkern_cflags)
+	@echo $(NOSTDINC_FLAGS) $(call our_flags,LINUXINCLUDE) $(or $(__c_flags),$(_c_flags)) $(modkern_cflags)
 	@touch $@
 
 .PHONY: $(M)/dummy.c
