@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 use core::default::Default;
 use core::marker;
-use core::mem;
 
 use bitflags;
 
