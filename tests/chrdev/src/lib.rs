@@ -30,7 +30,7 @@ struct ChrdevTestModule {
 
 impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
-        let chrdev_registration = linux_kernel_module::chrdev::builder("chrdev-tests\x00", 0..1)?
+        let chrdev_registration = linux_kernel_module::chrdev::builder("chrdev-tests\x00")?
             .register_device::<CycleFile>()
             .build()?;
         Ok(ChrdevTestModule {
