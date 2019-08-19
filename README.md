@@ -1,6 +1,6 @@
 # Linux kernel modules in safe Rust
 
-This is a framework for writing Linux loadable kernel modules in Rust,
+This is a framework for writing loadable Linux kernel modules in Rust,
 using safe abstractions around kernel interfaces and primitives.
 
 For more information on the motivation and goals for this project, check
@@ -19,8 +19,8 @@ We run [bindgen](https://github.com/rust-lang/rust-bindgen) on the
 kernel headers to generate automatic Rust FFI bindings. bindgen is
 powered by [Clang](https://clang.llvm.org), so we use use the kernel's
 own build system to determine the appropriate CFLAGS (see
-kernel-cflags-finder) and pass them to bindgen (see build.rs). Then we
-write safe bindings to these types (see the various files inside lib).
+`kernel-cflags-finder`) and pass them to bindgen (see `build.rs`). Then we
+write safe bindings to these types (see the various files inside `src/`).
 
 Each kernel module in Rust lives in a `staticlib` crate, which generates
 a `.a` file. We pass this object to the Linux kernel's own module build
@@ -57,7 +57,7 @@ environment variable appropriately, e.g., `CLANG=clang-9`.
 
 1. Install clang, kernel headers,
 [cargo-xbuild](https://github.com/rust-osdev/cargo-xbuild), and the
-`rust-src` and `rustfmt` components for `rustup` component:
+`rust-src` and `rustfmt` components from `rustup`:
 
 ```
 apt-get install llvm clang linux-headers-"$(uname -r)" # or the equivalent for your OS
