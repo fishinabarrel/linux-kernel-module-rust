@@ -29,6 +29,19 @@ fn trim_whitespace(mut data: &[u8]) -> &[u8] {
     data
 }
 
+impl<T> SysctlStorage for &T
+where
+    T: SysctlStorage,
+{
+    fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>) {
+        (*self).store_value(data)
+    }
+
+    fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>) {
+        (*self).read_value(data)
+    }
+}
+
 impl SysctlStorage for atomic::AtomicBool {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>) {
         let result = match trim_whitespace(data) {
