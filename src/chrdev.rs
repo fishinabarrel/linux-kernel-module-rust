@@ -9,13 +9,10 @@ use alloc::vec::Vec;
 use crate::bindings;
 use crate::c_types;
 use crate::error::{Error, KernelResult};
+use crate::types::CStr;
 use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
-pub fn builder(name: &'static str, minors: Range<u16>) -> KernelResult<Builder> {
-    if !name.ends_with('\x00') {
-        return Err(Error::EINVAL);
-    }
-
+pub fn builder(name: &'static CStr, minors: Range<u16>) -> KernelResult<Builder> {
     Ok(Builder {
         name,
         minors,
@@ -24,7 +21,7 @@ pub fn builder(name: &'static str, minors: Range<u16>) -> KernelResult<Builder> 
 }
 
 pub struct Builder {
-    name: &'static str,
+    name: &'static CStr,
     minors: Range<u16>,
     file_ops: Vec<&'static FileOperationsVtable>,
 }

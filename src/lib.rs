@@ -17,7 +17,7 @@ mod types;
 pub mod user_ptr;
 
 pub use crate::error::{Error, KernelResult};
-pub use crate::types::Mode;
+pub use crate::types::{CStr, Mode};
 
 pub type _InitResult = c_types::c_int;
 

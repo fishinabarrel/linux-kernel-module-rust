@@ -1,7 +1,7 @@
 #![no_std]
 #![feature(const_str_as_bytes)]
 
-use linux_kernel_module;
+use linux_kernel_module::{self, cstr};
 
 struct CycleFile;
 
@@ -30,9 +30,10 @@ struct ChrdevTestModule {
 
 impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
-        let chrdev_registration = linux_kernel_module::chrdev::builder("chrdev-tests\x00", 0..1)?
-            .register_device::<CycleFile>()
-            .build()?;
+        let chrdev_registration =
+            linux_kernel_module::chrdev::builder(cstr!("chrdev-tests"), 0..1)?
+                .register_device::<CycleFile>()
+                .build()?;
         Ok(ChrdevTestModule {
             _chrdev_registration: chrdev_registration,
         })
