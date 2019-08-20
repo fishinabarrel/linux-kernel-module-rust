@@ -39,6 +39,7 @@ def main():
                     os.path.join(BASE_DIR, "target"),
                     os.path.join(BASE_DIR, path)
                 ),
+                XBUILD_SYSROOT_PATH=os.path.join(BASE_DIR, "target-sysroot"),
             )
         )
 
