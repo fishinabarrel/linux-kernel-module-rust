@@ -5,10 +5,12 @@ using safe abstractions around kernel interfaces and primitives.
 
 For more information on the motivation and goals for this project, check
 out [our presentation at Linux Security Summit North America
-2019](https://lssna19.sched.com/event/RHaT). We're immediately focusing
-on making this project viable for out-of-tree modules, but we also see
-this project as a testing ground for whether in-tree components could be
-written in Rust.
+2019](https://ldpreload.com/p/kernel-modules-in-rust-lssna2019.pdf)
+(recording coming soon on [LSSNA's
+website](https://lssna19.sched.com/event/RHaT)). We're immediately
+focusing on making this project viable for out-of-tree modules, but we
+also see this project as a testing ground for whether in-tree components
+could be written in Rust.
 
 There is a simple demo module in the hello-world directory, as well as
 various other examples in the tests/ directory.
