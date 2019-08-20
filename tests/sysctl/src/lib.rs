@@ -3,7 +3,7 @@
 
 use core::sync::atomic::AtomicBool;
 
-use linux_kernel_module;
+use linux_kernel_module::{self, cstr};
 
 use linux_kernel_module::sysctl::Sysctl;
 use linux_kernel_module::Mode;
@@ -17,14 +17,14 @@ impl linux_kernel_module::KernelModule for SysctlTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         Ok(SysctlTestModule {
             _sysctl_a: Sysctl::register(
-                "rust/sysctl-tests\x00",
-                "a\x00",
+                cstr!("rust/sysctl-tests"),
+                cstr!("a"),
                 AtomicBool::new(false),
                 Mode::from_int(0o666),
             )?,
             _sysctl_b: Sysctl::register(
-                "rust/sysctl-tests\x00",
-                "b\x00",
+                cstr!("rust/sysctl-tests"),
+                cstr!("b"),
                 AtomicBool::new(false),
                 Mode::from_int(0o666),
             )?,

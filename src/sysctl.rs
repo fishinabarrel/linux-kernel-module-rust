@@ -118,12 +118,12 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
 
 impl<T: SysctlStorage> Sysctl<T> {
     pub fn register(
-        path: &'static str,
-        name: &'static str,
+        path: &'static types::CStr,
+        name: &'static types::CStr,
         storage: T,
         mode: types::Mode,
     ) -> error::KernelResult<Sysctl<T>> {
-        if !path.ends_with('\x00') || !name.ends_with('\x00') || name.contains('/') {
+        if name.contains('/') {
             return Err(error::Error::EINVAL);
         }
 

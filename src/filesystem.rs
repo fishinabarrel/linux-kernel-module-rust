@@ -7,6 +7,7 @@ use bitflags;
 use crate::bindings;
 use crate::c_types;
 use crate::error;
+use crate::types::CStr;
 
 pub struct FileSystemRegistration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
@@ -20,7 +21,7 @@ impl<T: FileSystem> Drop for FileSystemRegistration<T> {
 }
 
 pub trait FileSystem {
-    const NAME: &'static str;
+    const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
 }
 
@@ -56,9 +57,6 @@ extern "C" fn mount_callback<T: FileSystem>(
 }
 
 pub fn register<T: FileSystem>() -> error::KernelResult<FileSystemRegistration<T>> {
-    if !T::NAME.ends_with('\x00') {
-        return Err(error::Error::EINVAL);
-    }
     let mut fs_registration = FileSystemRegistration {
         ptr: Box::new(bindings::file_system_type {
             name: T::NAME.as_ptr() as *const i8,
