@@ -41,6 +41,7 @@ pub fn with_kernel_module<F: Fn()>(f: F) {
 
 pub fn assert_dmesg_contains(msgs: &[&[u8]]) {
     let output = Command::new("dmesg").output().unwrap();
+    assert!(output.status.success());
     let lines = output.stdout.split(|x| *x == b'\n').collect::<Vec<_>>();
     let mut lines: &[&[u8]] = &lines;
     for msg in msgs {
