@@ -9,7 +9,7 @@ mod allocator;
 pub mod bindings;
 mod c_types;
 pub mod chrdev;
-mod error;
+pub mod error;
 pub mod filesystem;
 pub mod printk;
 pub mod sysctl;
