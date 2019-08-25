@@ -31,7 +31,7 @@ script:
           (cd "$p" && cargo fmt --all -- --check) || exit 1
         fi
       done
-    - cargo clippy
+    - cargo clippy -- -D warnings
 
 after_failure:
     - dmesg
