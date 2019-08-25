@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::{Read, Seek, SeekFrom};
+use std::os::unix::prelude::FileExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -75,6 +76,36 @@ fn test_read() {
         let mut data = [0; 12];
         f.read_exact(&mut data).unwrap();
         assert_eq!(&data, b"123456789123")
+    });
+}
+
+#[test]
+fn test_read_offset() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, READ_FILE_MINOR);
+
+        let mut f = fs::File::open(&p).unwrap();
+        let mut data = [0; 5];
+        f.read_exact(&mut data).unwrap();
+        assert_eq!(&data, b"12345");
+        f.read_exact(&mut data).unwrap();
+        assert_eq!(&data, b"67891");
+    });
+}
+
+#[test]
+fn test_read_at() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, READ_FILE_MINOR);
+
+        let f = fs::File::open(&p).unwrap();
+        let mut data = [0; 5];
+        f.read_exact_at(&mut data, 7).unwrap();
+        assert_eq!(&data, b"89123");
     });
 }
 

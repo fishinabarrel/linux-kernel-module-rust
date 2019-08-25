@@ -16,8 +16,14 @@ impl linux_kernel_module::chrdev::FileOperations for CycleFile {
     fn read(
         &self,
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
+        offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
-        for c in b"123456789".iter().cycle().take(buf.len()) {
+        for c in b"123456789"
+            .iter()
+            .cycle()
+            .skip((offset % 9) as _)
+            .take(buf.len())
+        {
             buf.write(&[*c])?;
         }
         return Ok(());
