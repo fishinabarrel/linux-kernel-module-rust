@@ -1,4 +1,4 @@
-use core::convert::TryInto;
+use core::convert::{TryFrom, TryInto};
 use core::ops::Range;
 use core::{mem, ptr};
 
@@ -139,17 +139,22 @@ unsafe extern "C" fn read_callback<T: FileOperations>(
 ) -> c_types::c_ssize_t {
     let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len) {
         Ok(ptr) => ptr.writer(),
-        Err(e) => return e.to_kernel_errno() as c_types::c_ssize_t,
+        Err(e) => return e.to_kernel_errno().try_into().unwrap(),
     };
     let f = &*((*file).private_data as *const T);
-    // TODO: Pass offset to read()?
-    match f.read(&mut data) {
+    // No FMODE_UNSIGNED_OFFSET support, so offset must be in [0, 2^63).
+    // See discussion in #113
+    let positive_offset = match (*offset).try_into() {
+        Ok(v) => v,
+        Err(_) => return Error::EINVAL.to_kernel_errno().try_into().unwrap(),
+    };
+    match f.read(&mut data, positive_offset) {
         Ok(()) => {
             let written = len - data.len();
-            (*offset) += written as bindings::loff_t;
-            written as c_types::c_ssize_t
+            (*offset) += bindings::loff_t::try_from(written).unwrap();
+            written.try_into().unwrap()
         }
-        Err(e) => e.to_kernel_errno() as c_types::c_ssize_t,
+        Err(e) => e.to_kernel_errno().try_into().unwrap(),
     }
 }
 
@@ -236,7 +241,7 @@ pub trait FileOperations: Sync + Sized {
     const VTABLE: FileOperationsVtable;
 
     fn open() -> KernelResult<Self>;
-    fn read(&self, _buf: &mut UserSlicePtrWriter) -> KernelResult<()> {
+    fn read(&self, _buf: &mut UserSlicePtrWriter, _offset: u64) -> KernelResult<()> {
         Err(Error::EINVAL)
     }
     fn seek(&self, _file: &File, _offset: SeekFrom) -> KernelResult<u64> {
