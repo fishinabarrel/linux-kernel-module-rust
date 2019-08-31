@@ -11,7 +11,6 @@
   "linker-is-gnu": true,
   "llvm-target": "x86_64-elf",
   "max-atomic-width": 64,
-  "no-compiler-rt": true,
   "os": "none",
   "panic-strategy": "abort",
   "position-independent-executables": true,
