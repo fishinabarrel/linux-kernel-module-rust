@@ -24,6 +24,12 @@ extern "C" {
 /// after completing a read, and not expect that multiple reads of the
 /// same address will return the same value.
 ///
+/// All APIs enforce the invariant that a given byte of memory from userspace
+/// may only be read once. By pretenting double-fetches we avoid TOCTOU
+/// vulnerabilities. This is accomplished by taking `self` by value to prevent
+/// obtaining multiple readers on a given UserSlicePtr, and the readers only
+/// permitting forward reads.
+///
 /// Constructing a `UserSlicePtr` only checks that the range is in valid
 /// userspace memory, and does not depend on the current process (and
 /// can safely be constructed inside a kernel thread with no current
