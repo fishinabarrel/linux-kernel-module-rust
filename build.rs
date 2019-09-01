@@ -91,6 +91,8 @@ fn main() {
     println!("cargo:rerun-if-env-changed=CLANG");
     println!("cargo:rerun-if-changed=kernel-cflags-finder/Makefile");
     let output = Command::new("make")
+	.arg("EXTRA_CFLAGS=-UCC_HAVE_ASM_GOTO -w")
+	.arg("-k")
         .arg("-C")
         .arg("kernel-cflags-finder")
         .arg("-s")
