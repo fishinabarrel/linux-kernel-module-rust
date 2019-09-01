@@ -7,7 +7,7 @@ use core::panic::PanicInfo;
 
 mod allocator;
 pub mod bindings;
-mod c_types;
+pub mod c_types;
 pub mod chrdev;
 mod error;
 pub mod filesystem;
@@ -19,14 +19,12 @@ pub mod user_ptr;
 pub use crate::error::{Error, KernelResult};
 pub use crate::types::{CStr, Mode};
 
-pub type _InitResult = c_types::c_int;
-
 #[macro_export]
 macro_rules! kernel_module {
     ($module:ty, $($name:ident : $value:expr),*) => {
         static mut __MOD: Option<$module> = None;
         #[no_mangle]
-        pub extern "C" fn init_module() -> $crate::_InitResult {
+        pub extern "C" fn init_module() -> $crate::c_types::c_int {
             match <$module as $crate::KernelModule>::init() {
                 Ok(m) => {
                     unsafe {
