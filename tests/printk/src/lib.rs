@@ -17,7 +17,7 @@ impl linux_kernel_module::KernelModule for PrintkTestModule {
 
 linux_kernel_module::kernel_module!(
     PrintkTestModule,
-    author: "Alex Gaynor and Geoffrey Thomas",
+    author: "Fish in a Barrel Contributors",
     description: "A module for testing println!()",
     license: "GPL"
 );
