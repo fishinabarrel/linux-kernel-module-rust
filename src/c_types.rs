@@ -1,5 +1,7 @@
 #![allow(non_camel_case_types)]
 
+use core::ffi;
+
 pub type c_int = i32;
 pub type c_char = i8;
 pub type c_long = i64;
@@ -13,12 +15,4 @@ pub type c_ushort = u16;
 pub type c_schar = i8;
 pub type c_size_t = usize;
 pub type c_ssize_t = isize;
-
-// See explanation in rust/src/libstd/os/raw.rs
-#[repr(u8)]
-pub enum c_void {
-    #[doc(hidden)]
-    __nothing_to_see_here,
-    #[doc(hidden)]
-    __move_along,
-}
+pub type c_void = ffi::c_void;
