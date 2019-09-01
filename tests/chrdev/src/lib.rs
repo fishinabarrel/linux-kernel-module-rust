@@ -68,7 +68,7 @@ impl linux_kernel_module::KernelModule for ChrdevTestModule {
 
 linux_kernel_module::kernel_module!(
     ChrdevTestModule,
-    author: "Alex Gaynor and Geoffrey Thomas",
+    author: "Fish in a Barrel Contributors",
     description: "A module for testing character devices",
     license: "GPL"
 );
