@@ -9,6 +9,7 @@ extern "C" {
     fn printk_helper(s: *const u8, len: c_int) -> c_int;
 }
 
+#[doc(hidden)]
 pub fn printk(s: &[u8]) {
     // TODO: I believe printk never fails
     unsafe { printk_helper(s.as_ptr(), s.len() as c_int) };
@@ -17,6 +18,7 @@ pub fn printk(s: &[u8]) {
 // From kernel/print/printk.c
 const LOG_LINE_MAX: usize = 1024 - 32;
 
+#[doc(hidden)]
 pub struct LogLineWriter {
     data: [u8; LOG_LINE_MAX],
     pos: usize,
@@ -45,6 +47,11 @@ impl fmt::Write for LogLineWriter {
     }
 }
 
+/// [`println!`] functions the same as it does in `std`, except instead of
+/// printing to `stdout`, it writes to the kernel console at the `KERN_INFO`
+/// level.
+///
+/// [`println!`]: https://doc.rust-lang.org/stable/std/macro.println.html
 #[macro_export]
 macro_rules! println {
     () => ({
