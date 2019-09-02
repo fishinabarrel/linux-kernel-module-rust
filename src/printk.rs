@@ -47,9 +47,11 @@ impl fmt::Write for LogLineWriter {
     }
 }
 
-/// `println!()` functions the same as it does in `std`, except instead of
+/// [`println!`] functions the same as it does in `std`, except instead of
 /// printing to `stdout`, it writes to the kernel console at the `KERN_INFO`
 /// level.
+///
+/// [`println!`]: https://doc.rust-lang.org/stable/std/macro.println.html
 #[macro_export]
 macro_rules! println {
     () => ({
