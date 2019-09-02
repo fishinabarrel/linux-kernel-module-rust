@@ -47,8 +47,8 @@ impl fmt::Write for LogLineWriter {
     }
 }
 
-/// `println!()` functions the same as it does in `std`, except instead of 
-/// printing to `stdout`, it writes to the kernel console at the `KERN_INFO` 
+/// `println!()` functions the same as it does in `std`, except instead of
+/// printing to `stdout`, it writes to the kernel console at the `KERN_INFO`
 /// level.
 #[macro_export]
 macro_rules! println {
