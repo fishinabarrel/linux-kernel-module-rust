@@ -108,7 +108,7 @@ fn main() {
         .derive_default(true)
         .rustfmt_bindings(true);
 
-    builder = builder.clang_arg("--target=x86_64-linux-kernel-module");
+    builder = builder.clang_arg("--target=x86_64-linux-kernel");
     for arg in shlex::split(std::str::from_utf8(&output.stdout).unwrap()).unwrap() {
         builder = builder.clang_arg(arg.to_string());
     }
@@ -140,7 +140,7 @@ fn main() {
     let mut builder = cc::Build::new();
     println!("cargo:rerun-if-env-changed=CLANG");
     builder.compiler(env::var("CLANG").unwrap_or("clang".to_string()));
-    builder.target("x86_64-linux-kernel-module");
+    builder.target("x86_64-linux-kernel");
     builder.warnings(false);
     builder.file("src/helpers.c");
     for arg in shlex::split(std::str::from_utf8(&output.stdout).unwrap()).unwrap() {
