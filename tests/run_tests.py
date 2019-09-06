@@ -27,10 +27,7 @@ def main():
         print("+ [{}]".format(path))
         run(
             "cargo", "xbuild",
-            "--target",
-            os.path.join(
-                BASE_DIR, os.path.pardir, "x86_64-linux-kernel-module.json"
-            ),
+            "--target", "x86_64-linux-kernel",
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
