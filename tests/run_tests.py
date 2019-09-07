@@ -45,9 +45,7 @@ def main():
 
         run(
             "make", "-C", BASE_DIR,
-            "TEST_LIBRARY=target/x86_64-linux-kernel-module/debug/lib{}_tests.a".format(
-                path.replace("-", "_")
-            ),
+            "TEST_NAME={}_tests".format(path.replace("-", "_")),
         )
         # TODO: qemu
         run(
