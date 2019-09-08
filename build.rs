@@ -62,13 +62,12 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     let mut version = None;
     for line in f.lines() {
         let line = line.unwrap();
-        if line.starts_with("pub const LINUX_VERSION_CODE") {
-            let mut parts = line.split(" = ");
-            parts.next();
-            let raw_version = parts.next().unwrap();
-            // Remove the trailing semi-colon
-            version = Some(raw_version[..raw_version.len() - 1].parse::<u64>().unwrap());
-            break;
+        if let Some(type_and_value) = line.split("pub const LINUX_VERSION_CODE").nth(1) {
+            if let Some(value) = type_and_value.split("=").nth(1) {
+                let raw_version = value.split(";").next().unwrap();
+                version = Some(raw_version.trim().parse::<u64>().unwrap());
+                break;
+            }
         }
     }
     let version = version.expect("Couldn't find kernel version");
