@@ -57,13 +57,10 @@ environment variable appropriately, e.g., `CLANG=clang-9`.
 
 ## Building hello-world
 
-1. Install clang, kernel headers,
-[cargo-xbuild](https://github.com/rust-osdev/cargo-xbuild), and the
-`rust-src` and `rustfmt` components from `rustup`:
+1. Install clang, kernel headers, and the `rust-src` and `rustfmt` components from `rustup`:
 
 ```
 apt-get install llvm clang linux-headers-"$(uname -r)" # or the equivalent for your OS
-cargo install cargo-xbuild
 rustup component add --toolchain=nightly rust-src rustfmt
 ```
 
@@ -73,10 +70,10 @@ rustup component add --toolchain=nightly rust-src rustfmt
 cd hello-world
 ```
 
-3. Build the static object with cargo xbuild, pointing it at our custom target
+3. Build the static object with cargo build, pointing it at our custom target
 
 ```
-cargo xbuild --target x86_64-linux-kernel
+cargo build -Z build-std=core,alloc --target x86_64-linux-kernel
 ```
 
 4. Build the kernel module using the Linux kernel build system (kbuild)
