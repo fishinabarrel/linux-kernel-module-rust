@@ -26,7 +26,7 @@ def main():
 
         print("+ [{}]".format(path))
         run(
-            "cargo", "xbuild",
+            "cargo", "build", "-Zbuild-std=core,alloc",
             "--target", "x86_64-linux-kernel",
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
