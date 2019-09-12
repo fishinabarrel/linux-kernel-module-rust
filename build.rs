@@ -83,6 +83,23 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     if version >= kernel_version_code(5, 1, 0) {
         println!("cargo:rustc-cfg=kernel_5_1_0_or_greater")
     }
+
+    let kdir = env::var("KDIR").unwrap_or(format!(
+        "/lib/modules/{}/build",
+        std::str::from_utf8(&(Command::new("uname").arg("-r").output().unwrap().stdout))
+            .unwrap()
+            .trim()
+    ));
+    let f = BufReader::new(fs::File::open(PathBuf::from(kdir).join("Module.symvers")).unwrap());
+    for line in f.lines() {
+        let line = line.unwrap();
+        if let Some(symbol) = line.split_ascii_whitespace().nth(1) {
+            if symbol == "setfl" {
+                println!("cargo:rustc-cfg=kernel_aufs_setfl");
+                break;
+            }
+        }
+    }
 }
 
 fn main() {
