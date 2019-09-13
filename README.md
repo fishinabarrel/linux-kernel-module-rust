@@ -70,7 +70,7 @@ rustup component add --toolchain=nightly rust-src rustfmt
 cd hello-world
 ```
 
-3. Build the static object with cargo build, pointing it at our custom target
+3. Build the static object with cargo build, cross-compiling for the kernel target
 
 ```
 cargo build -Z build-std=core,alloc --target x86_64-linux-kernel
