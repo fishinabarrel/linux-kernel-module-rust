@@ -57,7 +57,8 @@ environment variable appropriately, e.g., `CLANG=clang-9`.
 
 ## Building hello-world
 
-1. Install clang, kernel headers, and the `rust-src` and `rustfmt` components from `rustup`:
+1. Install clang, kernel headers, and the `rust-src` and `rustfmt` components
+from `rustup`:
 
 ```
 apt-get install llvm clang linux-headers-"$(uname -r)" # or the equivalent for your OS
@@ -70,19 +71,14 @@ rustup component add --toolchain=nightly rust-src rustfmt
 cd hello-world
 ```
 
-3. Build the static object with cargo build, cross-compiling for the kernel target
-
-```
-cargo build -Z build-std=core,alloc --target x86_64-linux-kernel
-```
-
-4. Build the kernel module using the Linux kernel build system (kbuild)
+3. Build the kernel module using the Linux kernel build system (kbuild), this
+will invoke `cargo` to build the Rust code
 
 ```
 make
 ```
 
-5. Load and unload the module!
+4. Load and unload the module!
 
 ```
 sudo insmod helloworld.ko

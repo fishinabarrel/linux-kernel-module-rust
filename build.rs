@@ -98,6 +98,12 @@ fn handle_kernel_symbols_cfg(symvers_path: &PathBuf) {
     }
 }
 
+fn add_env_if_present(cmd: &mut Command, var: &str) {
+    if let Ok(val) = env::var(var) {
+        cmd.env(var, val);
+    }
+}
+
 fn main() {
     println!("cargo:rerun-if-env-changed=KDIR");
     let kdir = env::var("KDIR").unwrap_or(format!(
@@ -109,12 +115,15 @@ fn main() {
 
     println!("cargo:rerun-if-env-changed=CLANG");
     println!("cargo:rerun-if-changed=kernel-cflags-finder/Makefile");
-    let output = Command::new("make")
-        .arg("-C")
+    let mut cmd = Command::new("make");
+    cmd.arg("-C")
         .arg("kernel-cflags-finder")
         .arg("-s")
-        .output()
-        .unwrap();
+        .env_clear();
+    add_env_if_present(&mut cmd, "KDIR");
+    add_env_if_present(&mut cmd, "CLANG");
+    add_env_if_present(&mut cmd, "PATH");
+    let output = cmd.output().unwrap();
     if !output.status.success() {
         eprintln!("kernel-cflags-finder did not succeed");
         eprintln!("stdout: {}", std::str::from_utf8(&output.stdout).unwrap());
@@ -161,7 +170,6 @@ fn main() {
     handle_kernel_symbols_cfg(&PathBuf::from(&kdir).join("Module.symvers"));
 
     let mut builder = cc::Build::new();
-    println!("cargo:rerun-if-env-changed=CLANG");
     builder.compiler(env::var("CLANG").unwrap_or("clang".to_string()));
     builder.target(&target);
     builder.warnings(false);

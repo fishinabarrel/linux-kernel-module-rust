@@ -5,7 +5,6 @@
 .tmp_versions/
 Module.symvers
 built-in.o
-dummy.c
 dummy.ko
 dummy.mod.c
 dummy.mod.o
