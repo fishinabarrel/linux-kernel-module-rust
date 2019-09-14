@@ -46,7 +46,7 @@ def main():
         )
         # TODO: qemu
         run(
-            "cargo", "test", "--", "--test-threads=1",
+            "cargo", "test", "--no-default-features", "--", "--test-threads=1",
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
