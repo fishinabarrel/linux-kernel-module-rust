@@ -5,8 +5,6 @@ matrix:
 language: rust
 rust:
     - nightly-2019-09-11
-cache:
-    - cargo: true
 
 branches:
     only:
