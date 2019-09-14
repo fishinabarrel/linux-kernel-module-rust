@@ -83,14 +83,10 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     if version >= kernel_version_code(5, 1, 0) {
         println!("cargo:rustc-cfg=kernel_5_1_0_or_greater")
     }
+}
 
-    let kdir = env::var("KDIR").unwrap_or(format!(
-        "/lib/modules/{}/build",
-        std::str::from_utf8(&(Command::new("uname").arg("-r").output().unwrap().stdout))
-            .unwrap()
-            .trim()
-    ));
-    let f = BufReader::new(fs::File::open(PathBuf::from(kdir).join("Module.symvers")).unwrap());
+fn handle_kernel_symbols_cfg(symvers_path: &PathBuf) {
+    let f = BufReader::new(fs::File::open(symvers_path).unwrap());
     for line in f.lines() {
         let line = line.unwrap();
         if let Some(symbol) = line.split_ascii_whitespace().nth(1) {
@@ -104,6 +100,13 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
 
 fn main() {
     println!("cargo:rerun-if-env-changed=KDIR");
+    let kdir = env::var("KDIR").unwrap_or(format!(
+        "/lib/modules/{}/build",
+        std::str::from_utf8(&(Command::new("uname").arg("-r").output().unwrap().stdout))
+            .unwrap()
+            .trim()
+    ));
+
     println!("cargo:rerun-if-env-changed=CLANG");
     println!("cargo:rerun-if-changed=kernel-cflags-finder/Makefile");
     let output = Command::new("make")
@@ -153,6 +156,7 @@ fn main() {
         .expect("Couldn't write bindings!");
 
     handle_kernel_version_cfg(&out_path.join("bindings.rs"));
+    handle_kernel_symbols_cfg(&PathBuf::from(&kdir).join("Module.symvers"));
 
     let mut builder = cc::Build::new();
     println!("cargo:rerun-if-env-changed=CLANG");
