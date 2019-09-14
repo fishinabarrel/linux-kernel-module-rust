@@ -18,7 +18,6 @@ def run(*args, **kwargs):
 
 
 def main(argv):
-    [_, target] = argv
     for path in os.listdir(BASE_DIR):
         if (
             not os.path.isdir(os.path.join(BASE_DIR, path)) or
@@ -27,23 +26,12 @@ def main(argv):
             continue
 
         print("+ [{}]".format(path))
-        run(
-            "cargo", "build", "-Zbuild-std=core,alloc",
-            "--target", target,
-            cwd=os.path.join(BASE_DIR, path),
-            environ=dict(
-                os.environ,
-                RUSTFLAGS="-Dwarnings",
-                CARGO_TARGET_DIR=os.path.relpath(
-                    os.path.join(BASE_DIR, "target"),
-                    os.path.join(BASE_DIR, path)
-                ),
-            )
-        )
 
         run(
             "make", "-C", BASE_DIR,
             "TEST_NAME={}_tests".format(path.replace("-", "_")),
+            "TEST_PATH={}".format(path),
+            "RUSTFLAGS=-Dwarnings",
         )
         # TODO: qemu
         run(
