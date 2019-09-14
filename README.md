@@ -20,9 +20,8 @@ various other examples in the tests/ directory.
 We run [bindgen](https://github.com/rust-lang/rust-bindgen) on the
 kernel headers to generate automatic Rust FFI bindings. bindgen is
 powered by [Clang](https://clang.llvm.org), so we use use the kernel's
-own build system to determine the appropriate CFLAGS (see
-`kernel-cflags-finder`) and pass them to bindgen (see `build.rs`). Then we
-write safe bindings to these types (see the various files inside `src/`).
+own build system to determine the appropriate CFLAGS. Then we write safe
+bindings to these types (see the various files inside `src/`).
 
 Each kernel module in Rust lives in a `staticlib` crate, which generates
 a `.a` file. We pass this object to the Linux kernel's own module build
@@ -52,12 +51,13 @@ or higher [to bind constants
 properly](https://github.com/rust-lang/rust-bindgen/issues/1316). If
 you're running kernel 5.0 or newer, [you'll need Clang
 9](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/123)
-(currently the development release).  You may need to set the `CLANG`
-environment variable appropriately, e.g., `CLANG=clang-9`.
+(currently the development release).  You may need to set the `CC`
+environment variable appropriately, e.g., `CC=clang-9`.
 
 ## Building hello-world
 
-1. Install clang, kernel headers, and the `rust-src` and `rustfmt` components from `rustup`:
+1. Install clang, kernel headers, and the `rust-src` and `rustfmt` components
+from `rustup`:
 
 ```
 apt-get install llvm clang linux-headers-"$(uname -r)" # or the equivalent for your OS
@@ -70,19 +70,14 @@ rustup component add --toolchain=nightly rust-src rustfmt
 cd hello-world
 ```
 
-3. Build the static object with cargo build, pointing it at our custom target
-
-```
-cargo build -Z build-std=core,alloc --target x86_64-linux-kernel
-```
-
-4. Build the kernel module using the Linux kernel build system (kbuild)
+3. Build the kernel module using the Linux kernel build system (kbuild), this
+will invoke `cargo` to build the Rust code
 
 ```
 make
 ```
 
-5. Load and unload the module!
+4. Load and unload the module!
 
 ```
 sudo insmod helloworld.ko

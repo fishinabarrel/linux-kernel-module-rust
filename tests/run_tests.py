@@ -25,24 +25,11 @@ def main():
             continue
 
         print("+ [{}]".format(path))
-        run(
-            "cargo", "build", "-Zbuild-std=core,alloc",
-            "--target", "x86_64-linux-kernel",
-            cwd=os.path.join(BASE_DIR, path),
-            environ=dict(
-                os.environ,
-                RUSTFLAGS="-Dwarnings",
-                CARGO_TARGET_DIR=os.path.relpath(
-                    os.path.join(BASE_DIR, "target"),
-                    os.path.join(BASE_DIR, path)
-                ),
-                XBUILD_SYSROOT_PATH=os.path.join(BASE_DIR, "target-sysroot"),
-            )
-        )
 
         run(
             "make", "-C", BASE_DIR,
             "TEST_NAME={}_tests".format(path.replace("-", "_")),
+            "TEST_PATH={}".format(path),
         )
         # TODO: qemu
         run(
