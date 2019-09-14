@@ -17,7 +17,7 @@ install:
     - rustup component add rust-src rustfmt clippy
 
 script:
-    - ./tests/run_tests.py
+    - ./tests/run_tests.py x86_64-linux-kernel
     - |
       for p in . hello-world tests/*; do
         if [ -d "$p" ]; then

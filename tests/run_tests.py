@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 
 
 BASE_DIR = os.path.realpath(os.path.dirname(__file__))
@@ -16,7 +17,8 @@ def run(*args, **kwargs):
     subprocess.check_call(list(args), cwd=cwd, env=environ)
 
 
-def main():
+def main(argv):
+    [_, target] = argv
     for path in os.listdir(BASE_DIR):
         if (
             not os.path.isdir(os.path.join(BASE_DIR, path)) or
@@ -27,7 +29,7 @@ def main():
         print("+ [{}]".format(path))
         run(
             "cargo", "build", "-Zbuild-std=core,alloc",
-            "--target", "x86_64-linux-kernel",
+            "--target", target,
             cwd=os.path.join(BASE_DIR, path),
             environ=dict(
                 os.environ,
@@ -60,4 +62,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
