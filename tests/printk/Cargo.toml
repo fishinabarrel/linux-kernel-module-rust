@@ -8,8 +8,11 @@ edition = "2018"
 crate-type = ["staticlib"]
 test = false
 
+[features]
+default = ["linux-kernel-module"]
+
 [dependencies]
-linux-kernel-module = { path = "../.." }
+linux-kernel-module = { path = "../..", optional = true }
 
 [dev-dependencies]
 kernel-module-testlib = { path = "../../testlib" }
