@@ -225,6 +225,7 @@ impl FileOperationsVtable {
             #[cfg(kernel_4_20_0_or_greater)]
             remap_file_range: None,
             sendpage: None,
+            #[cfg(kernel_aufs_setfl)]
             setfl: None,
             setlease: None,
             show_fdinfo: None,
