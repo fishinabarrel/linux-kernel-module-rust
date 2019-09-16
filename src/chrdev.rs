@@ -238,13 +238,30 @@ impl FileOperationsVtable {
     }
 }
 
+/// `FileOperations` corresponds to the kernel's `struct file_operations`. You
+/// implement this trait whenever you'd create a `struct file_operations`. File
+/// descriptors may be used from multiple threads (or processes) concurrently,
+/// so your type must be `Sync`.
 pub trait FileOperations: Sync + Sized {
+    /// A container for the actual `file_operations` value. This will always be:
+    /// ```
+    /// const VTABLE: linux_kernel_module::chrdev::FileOperationsVtable =
+    ///     linux_kernel_module::chrdev::FileOperationsVtable::new::<Self>();
+    /// ```
     const VTABLE: FileOperationsVtable;
 
+    /// Creates a new instance of this file. Corresponds to the `open` function
+    /// pointer in `struct file_operations`.
     fn open() -> KernelResult<Self>;
+
+    /// Reads data from this file to userspace. Corresponds to the `read`
+    /// function pointer in `struct file_operations`.
     fn read(&self, _buf: &mut UserSlicePtrWriter, _offset: u64) -> KernelResult<()> {
         Err(Error::EINVAL)
     }
+
+    /// Changes the position of the file. Corresponds to the `llseek` function
+    /// pointer in `struct file_operations`.
     fn seek(&self, _file: &File, _offset: SeekFrom) -> KernelResult<u64> {
         Err(Error::ESPIPE)
     }
