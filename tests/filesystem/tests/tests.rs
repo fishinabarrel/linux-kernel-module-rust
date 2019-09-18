@@ -3,7 +3,7 @@ use std::fs;
 use kernel_module_testlib::with_kernel_module;
 
 #[test]
-fn test_register_unregister() {
+fn test_proc_filesystems() {
     let filesystems = fs::read_to_string("/proc/filesystems").unwrap();
     assert!(!filesystems.contains("testfs"));
 
