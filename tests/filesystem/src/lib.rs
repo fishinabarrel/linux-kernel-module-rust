@@ -11,9 +11,6 @@ struct TestFSModule {
     _fs_registration: filesystem::Registration<TestFS>,
 }
 
-// This is safe because Registration doesn't actually expose any methods.
-unsafe impl Sync for TestFSModule {}
-
 struct TestFS {}
 
 impl FileSystem for TestFS {
