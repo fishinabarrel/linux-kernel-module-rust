@@ -18,11 +18,11 @@ impl Mode {
 pub struct CStr(str);
 
 impl CStr {
-    pub fn new(data: &str) -> &CStr {
-        if data.bytes().position(|b| b == b'\x00') != Some(data.len() - 1) {
-            panic!("CStr must contain a single NUL byte at the end");
-        }
-        unsafe { &*(data as *const str as *const CStr) }
+    /// Creates a new CStr from a str without performing any additional checks. `data` _must_ end
+    /// with a NUL byte, and should only have only a single NUL byte, or the string will be
+    /// truncated.
+    pub const unsafe fn new_unchecked(data: &str) -> &CStr {
+        &*(data as *const str as *const CStr)
     }
 }
 
@@ -34,9 +34,15 @@ impl Deref for CStr {
     }
 }
 
+/// Creates a new `CStr` from a string literal. The string literal should not contain any NUL
+/// bytes. Example usage:
+/// ```
+/// const MY_CSTR: &CStr = cstr!("My awesome CStr!");
+/// ```
 #[macro_export]
 macro_rules! cstr {
     ($str:expr) => {{
-        $crate::CStr::new(concat!($str, "\x00"))
+        let s = concat!($str, "\x00");
+        unsafe { $crate::CStr::new_unchecked(s) }
     }};
 }
