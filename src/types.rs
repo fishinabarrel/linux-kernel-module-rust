@@ -14,6 +14,8 @@ impl Mode {
     }
 }
 
+/// A string that is guaranteed to have exactly one NUL byte, which is at the
+/// end. Used for interoperability with kernel APIs that take C strings.
 #[repr(transparent)]
 pub struct CStr(str);
 
