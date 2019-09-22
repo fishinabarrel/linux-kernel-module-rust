@@ -5,7 +5,7 @@
 extern crate alloc;
 
 use linux_kernel_module::filesystem::{self, FileSystem, FileSystemFlags};
-use linux_kernel_module::{self, CStr};
+use linux_kernel_module::{self, cstr, CStr};
 
 struct TestFSModule {
     _fs_registration: filesystem::Registration<TestFS>,
@@ -14,7 +14,7 @@ struct TestFSModule {
 struct TestFS {}
 
 impl FileSystem for TestFS {
-    const NAME: &'static CStr = unsafe { &*("testfs\x00" as *const str as *const CStr) };
+    const NAME: &'static CStr = cstr!("testfs\x00");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
 }
 
