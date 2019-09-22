@@ -14,13 +14,16 @@ pub struct Registration<T: FileSystem> {
     ptr: Box<bindings::file_system_type>,
 }
 
+// This is safe because Registration doesn't actually expose any methods.
+unsafe impl<T> Sync for Registration<T> where T: FileSystem {}
+
 impl<T: FileSystem> Drop for Registration<T> {
     fn drop(&mut self) {
         unsafe { bindings::unregister_filesystem(&mut *self.ptr) };
     }
 }
 
-pub trait FileSystem {
+pub trait FileSystem: Sync {
     const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
 }
