@@ -13,7 +13,7 @@ struct TestFSModule {
 struct TestFS {}
 
 impl FileSystem for TestFS {
-    const NAME: &'static CStr = cstr!("testfs\x00");
+    const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
 }
 
