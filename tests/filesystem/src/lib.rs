@@ -1,6 +1,5 @@
 #![no_std]
 #![feature(const_str_as_bytes)]
-#![feature(const_raw_ptr_deref)]
 
 extern crate alloc;
 
