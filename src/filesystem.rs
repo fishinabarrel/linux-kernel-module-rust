@@ -8,6 +8,7 @@ use crate::bindings;
 use crate::c_types;
 use crate::error;
 use crate::types::CStr;
+use crate::error::{Error, KernelResult};
 
 pub struct Registration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
@@ -23,10 +24,16 @@ impl<T: FileSystem> Drop for Registration<T> {
     }
 }
 
-pub trait FileSystem: Sync {
+pub trait FileSystem<T: SuperBlockInfo>: Sync {
     const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
+
+    // TODO: use something like "Target = T: SuperBlockInfo"?
+
+    fn fill_super() -> KernelResult<T>;
 }
+
+pub trait SuperBlockInfo: Sync {}
 
 bitflags::bitflags! {
     pub struct FileSystemFlags: c_types::c_int {
@@ -50,6 +57,12 @@ extern "C" fn fill_super_callback<T: FileSystem>(
     unimplemented!();
 }
 
+extern "C" fn kill_sb_callback<T: FileSystem>(
+    sb: *mut bindings::super_block,
+) {
+    unsafe { bindings::kill_litter_super(sb) }
+}
+
 extern "C" fn mount_callback<T: FileSystem>(
     fs_type: *mut bindings::file_system_type,
     flags: c_types::c_int,
@@ -66,7 +79,7 @@ pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
             owner: unsafe { &mut bindings::__this_module },
             fs_flags: T::FLAGS.bits(),
             mount: Some(mount_callback::<T>),
-            kill_sb: Some(bindings::kill_litter_super),
+            kill_sb: Some(kill_sb_callback::<T>),
 
             ..Default::default()
         }),
