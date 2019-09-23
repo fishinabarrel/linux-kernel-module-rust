@@ -14,7 +14,7 @@ struct TestFS {}
 
 impl FileSystem for TestFS {
     const NAME: &'static CStr = cstr!("testfs");
-    const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
+    const FLAGS: FileSystemFlags = FileSystemFlags::empty();
 }
 
 impl linux_kernel_module::KernelModule for TestFSModule {
