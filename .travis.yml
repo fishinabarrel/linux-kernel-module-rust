@@ -4,7 +4,7 @@ matrix:
 
 language: rust
 rust:
-    - nightly-2019-09-11
+    - nightly-2019-09-25
 cache:
     - cargo: true
 
