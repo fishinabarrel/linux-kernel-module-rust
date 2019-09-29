@@ -6,7 +6,7 @@ use alloc::boxed::Box;
 use crate::bindings;
 use crate::c_types;
 use crate::error::{Error, KernelResult};
-use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
+use crate::user_ptr::{UserSlicePtr, UserSlicePtrReader, UserSlicePtrWriter};
 
 pub struct File {
     ptr: *const bindings::file,
@@ -65,6 +65,33 @@ unsafe extern "C" fn read_callback<T: Read>(
             let written = len - data.len();
             (*offset) += bindings::loff_t::try_from(written).unwrap();
             written.try_into().unwrap()
+        }
+        Err(e) => e.to_kernel_errno().try_into().unwrap(),
+    }
+}
+
+unsafe extern "C" fn write_callback<T: Write>(
+    file: *mut bindings::file,
+    buf: *const c_types::c_char,
+    len: c_types::c_size_t,
+    offset: *mut bindings::loff_t,
+) -> c_types::c_ssize_t {
+    let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len) {
+        Ok(ptr) => ptr.reader(),
+        Err(e) => return e.to_kernel_errno().try_into().unwrap(),
+    };
+    let f = &*((*file).private_data as *const T);
+    // No FMODE_UNSIGNED_OFFSET support, so offset must be in [0, 2^63).
+    // See discussion in #113
+    let positive_offset = match (*offset).try_into() {
+        Ok(v) => v,
+        Err(_) => return Error::EINVAL.to_kernel_errno().try_into().unwrap(),
+    };
+    match f.write(&mut data, positive_offset) {
+        Ok(()) => {
+            let read = len - data.len();
+            (*offset) += bindings::loff_t::try_from(read).unwrap();
+            read.try_into().unwrap()
         }
         Err(e) => e.to_kernel_errno().try_into().unwrap(),
     }
@@ -168,6 +195,13 @@ impl<T: Read> FileOperationsVtableBuilder<T> {
     }
 }
 
+impl<T: Write> FileOperationsVtableBuilder<T> {
+    pub const fn write(mut self) -> FileOperationsVtableBuilder<T> {
+        self.0.write = Some(write_callback::<T>);
+        self
+    }
+}
+
 impl<T: Seek> FileOperationsVtableBuilder<T> {
     pub const fn seek(mut self) -> FileOperationsVtableBuilder<T> {
         self.0.llseek = Some(llseek_callback::<T>);
@@ -197,6 +231,12 @@ pub trait Read {
     /// Reads data from this file to userspace. Corresponds to the `read`
     /// function pointer in `struct file_operations`.
     fn read(&self, buf: &mut UserSlicePtrWriter, offset: u64) -> KernelResult<()>;
+}
+
+pub trait Write {
+    /// Writes data from userspace o this file. Corresponds to the `write`
+    /// function pointer in `struct file_operations`.
+    fn write(&self, buf: &mut UserSlicePtrReader, offset: u64) -> KernelResult<()>;
 }
 
 pub trait Seek {
