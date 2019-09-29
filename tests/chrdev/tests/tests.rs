@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::os::unix::prelude::FileExt;
 use std::path::PathBuf;
 use std::process::Command;
@@ -45,6 +45,7 @@ impl Drop for UnlinkOnDrop<'_> {
 fn mknod(path: &PathBuf, major: libc::dev_t, minor: libc::dev_t) -> UnlinkOnDrop {
     Command::new("sudo")
         .arg("mknod")
+        .arg("--mode=a=rw")
         .arg(path.to_str().unwrap())
         .arg("c")
         .arg(major.to_string())
@@ -56,6 +57,7 @@ fn mknod(path: &PathBuf, major: libc::dev_t, minor: libc::dev_t) -> UnlinkOnDrop
 
 const READ_FILE_MINOR: libc::dev_t = 0;
 const SEEK_FILE_MINOR: libc::dev_t = 1;
+const WRITE_FILE_MINOR: libc::dev_t = 2;
 
 #[test]
 fn test_mknod() {
@@ -177,4 +179,45 @@ fn test_lseek() {
             libc::EINVAL
         );
     });
+}
+
+#[test]
+fn test_write_unimplemented() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, READ_FILE_MINOR);
+
+        let mut f = fs::OpenOptions::new().write(true).open(&p).unwrap();
+        assert_eq!(
+            f.write(&[1, 2, 3]).unwrap_err().raw_os_error().unwrap(),
+            libc::EINVAL
+        );
+    })
+}
+
+#[test]
+fn test_write() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number();
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, WRITE_FILE_MINOR);
+
+        let mut f = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&p)
+            .unwrap();
+        assert_eq!(f.write(&[1, 2, 3]).unwrap(), 3);
+
+        let mut buf = [0; 1];
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"3");
+
+        assert_eq!(f.write(&[1, 2, 3, 4, 5]).unwrap(), 5);
+
+        let mut buf = [0; 1];
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"8");
+    })
 }

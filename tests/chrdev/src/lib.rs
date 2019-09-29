@@ -1,5 +1,8 @@
 #![no_std]
 
+use alloc::string::ToString;
+use core::sync::atomic::{AtomicUsize, Ordering};
+
 use linux_kernel_module::{self, cstr};
 
 struct CycleFile;
@@ -55,6 +58,48 @@ impl linux_kernel_module::file_operations::Seek for SeekFile {
     }
 }
 
+struct WriteFile {
+    written: AtomicUsize,
+}
+
+impl linux_kernel_module::file_operations::FileOperations for WriteFile {
+    const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
+        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
+            .read()
+            .write()
+            .build();
+
+    fn open() -> linux_kernel_module::KernelResult<Self> {
+        return Ok(WriteFile {
+            written: AtomicUsize::new(0),
+        });
+    }
+}
+
+impl linux_kernel_module::file_operations::Read for WriteFile {
+    fn read(
+        &self,
+        buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
+        _offset: u64,
+    ) -> linux_kernel_module::KernelResult<()> {
+        let val = self.written.load(Ordering::SeqCst).to_string();
+        buf.write(val.as_bytes())?;
+        return Ok(());
+    }
+}
+
+impl linux_kernel_module::file_operations::Write for WriteFile {
+    fn write(
+        &self,
+        buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
+        _offset: u64,
+    ) -> linux_kernel_module::KernelResult<()> {
+        let data = buf.read_all()?;
+        self.written.fetch_add(data.len(), Ordering::SeqCst);
+        return Ok(());
+    }
+}
+
 struct ChrdevTestModule {
     _chrdev_registration: linux_kernel_module::chrdev::Registration,
 }
@@ -62,9 +107,10 @@ struct ChrdevTestModule {
 impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let chrdev_registration =
-            linux_kernel_module::chrdev::builder(cstr!("chrdev-tests"), 0..2)?
+            linux_kernel_module::chrdev::builder(cstr!("chrdev-tests"), 0..3)?
                 .register_device::<CycleFile>()
                 .register_device::<SeekFile>()
+                .register_device::<WriteFile>()
                 .build()?;
         Ok(ChrdevTestModule {
             _chrdev_registration: chrdev_registration,

@@ -66,9 +66,7 @@ impl UserSlicePtr {
     /// Returns EFAULT if the address does not currently point to
     /// mapped, readable memory.
     pub fn read_all(self) -> error::KernelResult<Vec<u8>> {
-        let mut data = vec![0; self.1];
-        self.reader().read(&mut data)?;
-        Ok(data)
+        self.reader().read_all()
     }
 
     /// Construct a `UserSlicePtrReader` that can incrementally read
@@ -97,6 +95,27 @@ impl UserSlicePtr {
 pub struct UserSlicePtrReader(*mut c_types::c_void, usize);
 
 impl UserSlicePtrReader {
+    /// Returns the number of bytes left to be read from this. Note that even
+    /// reading less than this number of bytes may return an Error().
+    pub fn len(&self) -> usize {
+        self.1
+    }
+
+    /// Returns `true` if `self.len()` is 0.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Read all data remaining in the user slice and return it in a `Vec`.
+    ///
+    /// Returns EFAULT if the address does not currently point to
+    /// mapped, readable memory.
+    pub fn read_all(&mut self) -> error::KernelResult<Vec<u8>> {
+        let mut data = vec![0; self.1];
+        self.read(&mut data)?;
+        Ok(data)
+    }
+
     pub fn read(&mut self, data: &mut [u8]) -> error::KernelResult<()> {
         if data.len() > self.1 || data.len() > u32::MAX as usize {
             return Err(error::Error::EFAULT);
