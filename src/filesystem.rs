@@ -24,16 +24,14 @@ impl<T: FileSystem> Drop for Registration<T> {
     }
 }
 
-pub trait FileSystem<T: SuperBlockInfo>: Sync {
+pub trait FileSystem: Sync {
     const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
 
-    // TODO: use something like "Target = T: SuperBlockInfo"?
+    type SuperBlockInfo;
 
-    fn fill_super() -> KernelResult<T>;
+    fn fill_super(fs_info: &mut Option<Box<Self::SuperBlockInfo>>) -> KernelResult<()>;
 }
-
-pub trait SuperBlockInfo: Sync {}
 
 bitflags::bitflags! {
     pub struct FileSystemFlags: c_types::c_int {
@@ -46,14 +44,22 @@ bitflags::bitflags! {
 }
 
 extern "C" fn fill_super_callback<T: FileSystem>(
-    _sb: *mut bindings::super_block,
+    sb: *mut bindings::super_block,
     _data: *mut c_types::c_void,
     _silent: c_types::c_int,
 ) -> c_types::c_int {
-    // T::fill_super(...)
+
+    T::fill_super(
+        &mut *(
+            (*sb).s_fs_info as
+                Option<Box<<T as FileSystem>::SuperBlockInfo>>
+        )
+    );
+
     // This should actually create an object that gets dropped by
     // file_system_registration::kill_sb. You can point to it with
     // sb->s_fs_info.
+
     unimplemented!();
 }
 
@@ -91,4 +97,36 @@ pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
     }
 
     Ok(fs_registration)
+}
+
+pub struct SuperOperationsVtable(bindings::super_operations);
+
+impl SuperOperationsVtable {
+    pub fn new<T: SuperOperations>() -> SuperOperationsVtable {
+        SuperOperationsVtable(bindings::super_operations {
+            put_super: Some(put_super_callback::<T>),
+            ..Default::default()
+        })
+    }
+}
+
+unsafe extern "C" fn put_super_callback<T: SuperOperations>(
+    _sb: *mut bindings::super_block,
+) {
+    // TODO: drop fs info?
+    unimplemented!();
+}
+
+pub trait SuperOperations: Sync + Sized {
+    /// A container for the actual `super_operations` value. This will always be:
+    /// ```
+    /// const VTABLE: linux_kernel_module::filesystem::SuperOperationsVtable =
+    ///     linux_kernel_module::filesystem::SuperOperationsVtable::new::<Self>();
+    /// ```
+    const VTABLE: SuperOperationsVtable;
+
+    // aka Drop?
+    fn put_super(&self) -> KernelResult<()> {
+        Err(Error::EINVAL)
+    }
 }
