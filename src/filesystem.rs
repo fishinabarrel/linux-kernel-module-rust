@@ -49,11 +49,11 @@ unsafe extern "C" fn fill_super_callback<T: FileSystem>(
     _silent: c_types::c_int,
 ) -> c_types::c_int {
 
-    let fs_info_cvoid = &mut (*sb).s_fs_info
-        as *mut *mut c_types::c_void;
-    let fs_info = fs_info_cvoid
-        as *mut Option<Box<<T as FileSystem>::SuperBlockInfo>>;
-    let fs_info = &mut *fs_info;
+    let fs_info = &mut *(
+        &mut (*sb).s_fs_info
+            as *mut *mut c_types::c_void
+            as *mut Option<Box<<T as FileSystem>::SuperBlockInfo>>
+    );
 
     // TODO: Check whether we actually need this. Maybe the kernel alread
     // guarantees that this is NULL.
