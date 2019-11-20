@@ -43,22 +43,25 @@ bitflags::bitflags! {
     }
 }
 
-extern "C" fn fill_super_callback<T: FileSystem>(
+unsafe extern "C" fn fill_super_callback<T: FileSystem>(
     sb: *mut bindings::super_block,
     _data: *mut c_types::c_void,
     _silent: c_types::c_int,
 ) -> c_types::c_int {
 
-    T::fill_super(
-        &mut *(
-            (*sb).s_fs_info as
-                Option<Box<<T as FileSystem>::SuperBlockInfo>>
-        )
-    );
+    let fs_info_cvoid = &mut (*sb).s_fs_info
+        as *mut *mut c_types::c_void;
+    let fs_info = fs_info_cvoid
+        as *mut Option<Box<<T as FileSystem>::SuperBlockInfo>>;
+    let fs_info = &mut *fs_info;
 
-    // This should actually create an object that gets dropped by
-    // file_system_registration::kill_sb. You can point to it with
-    // sb->s_fs_info.
+    // TODO: Check whether we actually need this. Maybe the kernel alread
+    // guarantees that this is NULL.
+    *fs_info = None;
+
+    T::fill_super(
+         fs_info
+    );
 
     unimplemented!();
 }
