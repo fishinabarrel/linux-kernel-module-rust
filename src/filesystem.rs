@@ -49,6 +49,9 @@ unsafe extern "C" fn fill_super_callback<T: FileSystem>(
     _silent: c_types::c_int,
 ) -> c_types::c_int {
 
+
+    // TODO: alternatively we can maybe use *mut's as_mut() and Box's from_raw()
+    // here if we only need the value thats inside and not a &mut to it.
     let fs_info = &mut *(
         &mut (*sb).s_fs_info
             as *mut *mut c_types::c_void
