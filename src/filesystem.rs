@@ -32,10 +32,38 @@ pub trait FileSystem: Sync {
     type SuperBlockInfo;
     type SuperOperations;
 
-    fn fill_super(sb: SuperBlock<Self::SuperBlockInfo>) -> KernelResult<()>;
+    fn fill_super(
+        sb: SuperBlock<Self::SuperBlockInfo>,
+        data: *mut c_types::c_void,
+        silent: c_types::c_int
+    ) -> KernelResult<()>;
 }
 
-struct SuperBlock<'a, I> {
+fn _fill_super_callback<T: FileSystem>(
+    ptr: *mut bindings::super_block,
+    data: *mut c_types::c_void,
+    silent: c_types::c_int,
+) -> KernelResult<()> {
+    let ptr = unsafe { ptr.as_mut() }.unwrap();
+    let sb = SuperBlock {
+        ptr: ptr,
+        _phantom: marker::PhantomData,
+    };
+    T::fill_super(sb, data, silent)
+}
+
+extern "C" fn fill_super_callback<T: FileSystem>(
+    sb: *mut bindings::super_block,
+    data: *mut c_types::c_void,
+    silent: c_types::c_int,
+) -> c_types::c_int {
+    match _fill_super_callback::<T>(sb, data, silent) {
+        Ok(()) => 0,
+        Err(e) => e.to_kernel_errno(),
+    }
+}
+
+pub struct SuperBlock<'a, I> {
     _phantom: marker::PhantomData<I>,
     ptr: &'a mut bindings::super_block,
 }
@@ -48,22 +76,20 @@ impl<'a, I> SuperBlock<'a, I> {
     // (maybe it is BorrowMut in the former case but what's the
     // reverse?). Therefore just require that fs_info is on the heap (i.e. a
     // Box).
-    fn set_fs_info(&mut self, fs_info: Option<Box<I>>) {
+    pub fn set_fs_info(&mut self, fs_info: Option<Box<I>>) {
         self.ptr.s_fs_info = match fs_info {
-            Some(b) => unsafe { Box::into_raw(b) as *mut c_types::c_void },
+            Some(b) => Box::into_raw(b) as *mut c_types::c_void,
             None => ptr::null_mut(),
         };
     }
 
-    fn get_fs_info(&self) -> Option<Box<I>> {
-        // TODO: Check whether ptr.s_fs_info is initilized to zero or
-        // uninitialized by the kernel. If it is the latter use MaybeUninit?
-        match self.ptr.s_fs_info.as_mut() {
-            Some(nonnull_mutborrow) => Some(unsafe { Box::from_raw(
-                nonnull_mutborrow
+    pub fn get_fs_info(&self) -> Option<Box<I>> {
+        match unsafe { self.ptr.s_fs_info.as_mut() } {
+            Some(fs_info) => Some(unsafe { Box::from_raw(
+                fs_info
                     as *mut c_types::c_void
                     as *mut I
-            )})
+            )}),
             None => None,
         }
     }
@@ -77,32 +103,6 @@ bitflags::bitflags! {
         const FS_HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE as c_types::c_int;
         const FS_USERNS_MOUNT = bindings::FS_USERNS_MOUNT as c_types::c_int;
         const FS_RENAME_DOES_D_MOVE = bindings::FS_RENAME_DOES_D_MOVE as c_types::c_int;
-    }
-}
-
-fn _fill_super_callback<T: FileSystem>(
-    raw_ptr: *mut bindings::super_block
-) -> KernelResult<()> {
-    // TODO: Panicing in a C callback is UB. Instead wrap this call in a closure
-    // with unwind in fill_super_callback<T: FileSystem>. Then return error in
-    // panic occurs.
-    let ptr = raw_ptr.as_mut().unwrap();
-    let sb = SuperBlock {
-        ptr: ptr,
-        _phantom: marker::PhantomData,
-    };
-
-    T::fill_super(sb)
-}
-
-extern "C" fn fill_super_callback<T: FileSystem>(
-    sb: *mut bindings::super_block,
-    _data: *mut c_types::c_void,
-    _silent: c_types::c_int,
-) -> c_types::c_int {
-    match _fill_super_callback::<T>(sb) {
-        Ok(()) => 0,
-        Err(e) => e.to_kernel_errno(),
     }
 }
 
@@ -140,36 +140,4 @@ pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
     }
 
     Ok(fs_registration)
-}
-
-pub struct SuperOperationsVtable(bindings::super_operations);
-
-impl SuperOperationsVtable {
-    pub fn new<T: SuperOperations>() -> SuperOperationsVtable {
-        SuperOperationsVtable(bindings::super_operations {
-            put_super: Some(put_super_callback::<T>),
-            ..Default::default()
-        })
-    }
-}
-
-unsafe extern "C" fn put_super_callback<T: SuperOperations>(
-    _sb: *mut bindings::super_block,
-) {
-    // TODO: drop fs info?
-    unimplemented!();
-}
-
-pub trait SuperOperations: Sync + Sized {
-    /// A container for the actual `super_operations` value. This will always be:
-    /// ```
-    /// const VTABLE: linux_kernel_module::filesystem::SuperOperationsVtable =
-    ///     linux_kernel_module::filesystem::SuperOperationsVtable::new::<Self>();
-    /// ```
-    const VTABLE: SuperOperationsVtable;
-
-    // aka Drop?
-    fn put_super(&self) -> KernelResult<()> {
-        Err(Error::EINVAL)
-    }
 }
