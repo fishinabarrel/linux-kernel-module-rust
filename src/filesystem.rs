@@ -6,7 +6,7 @@ use core::ptr;
 use bitflags;
 
 use crate::bindings;
-use crate::c_types;
+use crate::c_types::{self, c_void};
 use crate::error;
 use crate::types::CStr;
 use crate::error::{Error, KernelResult};
@@ -30,7 +30,6 @@ pub trait FileSystem: Sync {
     const FLAGS: FileSystemFlags;
 
     type SuperBlockInfo;
-    type SuperOperations;
 
     fn fill_super(
         sb: SuperBlock<Self::SuperBlockInfo>,
@@ -76,22 +75,30 @@ impl<'a, I> SuperBlock<'a, I> {
     // (maybe it is BorrowMut in the former case but what's the
     // reverse?). Therefore just require that fs_info is on the heap (i.e. a
     // Box).
-    pub fn set_fs_info(&mut self, fs_info: Option<Box<I>>) {
-        self.ptr.s_fs_info = match fs_info {
-            Some(b) => Box::into_raw(b) as *mut c_types::c_void,
-            None => ptr::null_mut(),
-        };
+    //
+    // Assumptions:
+    // - The interface should not allow the creation of multiple owned boxes.
+    // - The superblock is refcounted by the kernel, it is never
+    //   NULL and never an invalid pointer.
+    // - It is not safe to mutate sb.s_fs_info outside of put/fill_super.
+    // - When fs_info is deallocated, sb.s_fs_info should be set to NULL.
+
+    // To be called in fill_super.
+    pub fn into_fs_info(&mut self, val: Box<I>) {
+        assert!(self.ptr.s_fs_info.is_null());
+        self.ptr.s_fs_info = Box::into_raw(val) as *mut c_types::c_void;
     }
 
-    pub fn get_fs_info(&self) -> Option<Box<I>> {
-        match unsafe { self.ptr.s_fs_info.as_mut() } {
-            Some(fs_info) => Some(unsafe { Box::from_raw(
-                fs_info
-                    as *mut c_types::c_void
-                    as *mut I
-            )}),
-            None => None,
-        }
+    // TODO: We still need a way to obtain refs to fs_info in the callbacks
+    // between put/fill_super. These refs must become invalid when someone calls
+    // from_fs_info and drops the box.
+
+    // To be called in put_super.
+    pub fn from_fs_info(&mut self) -> Box<I> {
+        let ptr = self.ptr.s_fs_info;
+        assert!(!ptr.is_null());
+        self.ptr.s_fs_info = ptr::null() as *const c_void as *mut c_void;
+        unsafe { Box::from_raw(ptr as *mut I) }
     }
 
 }
