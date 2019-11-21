@@ -35,13 +35,19 @@ pub trait FileSystem: Sync {
     fn fill_super(sb: SuperBlock<Self::SuperBlockInfo>) -> KernelResult<()>;
 }
 
-struct SuperBlock<I> {
+struct SuperBlock<'a, I> {
     _phantom: marker::PhantomData<I>,
-    ptr: &mut bindings::super_block,
+    ptr: &'a mut bindings::super_block,
 }
 
-impl<I> SuperBlock<I> {
+impl<'a, I> SuperBlock<'a, I> {
 
+    // Ideally we should only require fs_info to be something than can be
+    // converted to a raw pointer and back again safely (if we don't mess with
+    // the value while we keep it). I don't think there exists such a trait
+    // (maybe it is BorrowMut in the former case but what's the
+    // reverse?). Therefore just require that fs_info is on the heap (i.e. a
+    // Box).
     fn set_fs_info(&mut self, fs_info: Option<Box<I>>) {
         self.ptr.s_fs_info = match fs_info {
             Some(b) => unsafe { Box::into_raw(b) as *mut c_types::c_void },
@@ -50,8 +56,15 @@ impl<I> SuperBlock<I> {
     }
 
     fn get_fs_info(&self) -> Option<Box<I>> {
+        // TODO: Check whether ptr.s_fs_info is initilized to zero or
+        // uninitialized by the kernel. If it is the latter use MaybeUninit?
         match self.ptr.s_fs_info.as_mut() {
-            // TODO
+            Some(nonnull_mutborrow) => Some(unsafe { Box::from_raw(
+                nonnull_mutborrow
+                    as *mut c_types::c_void
+                    as *mut I
+            )})
+            None => None,
         }
     }
 
@@ -68,11 +81,14 @@ bitflags::bitflags! {
 }
 
 fn _fill_super_callback<T: FileSystem>(
-    sb: *mut bindings::super_block
+    raw_ptr: *mut bindings::super_block
 ) -> KernelResult<()> {
-    let sb = sb.as_mut()?;
+    // TODO: Panicing in a C callback is UB. Instead wrap this call in a closure
+    // with unwind in fill_super_callback<T: FileSystem>. Then return error in
+    // panic occurs.
+    let ptr = raw_ptr.as_mut().unwrap();
     let sb = SuperBlock {
-        ptr: sb,
+        ptr: ptr,
         _phantom: marker::PhantomData,
     };
 
