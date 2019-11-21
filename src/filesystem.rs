@@ -1,6 +1,7 @@
 use alloc::boxed::Box;
 use core::default::Default;
 use core::marker;
+use core::ptr;
 
 use bitflags;
 
@@ -29,8 +30,31 @@ pub trait FileSystem: Sync {
     const FLAGS: FileSystemFlags;
 
     type SuperBlockInfo;
+    type SuperOperations;
 
-    fn fill_super(fs_info: &mut Option<Box<Self::SuperBlockInfo>>) -> KernelResult<()>;
+    fn fill_super(sb: SuperBlock<Self::SuperBlockInfo>) -> KernelResult<()>;
+}
+
+struct SuperBlock<I> {
+    _phantom: marker::PhantomData<I>,
+    ptr: &mut bindings::super_block,
+}
+
+impl<I> SuperBlock<I> {
+
+    fn set_fs_info(&mut self, fs_info: Option<Box<I>>) {
+        self.ptr.s_fs_info = match fs_info {
+            Some(b) => unsafe { Box::into_raw(b) as *mut c_types::c_void },
+            None => ptr::null_mut(),
+        };
+    }
+
+    fn get_fs_info(&self) -> Option<Box<I>> {
+        match self.ptr.s_fs_info.as_mut() {
+            // TODO
+        }
+    }
+
 }
 
 bitflags::bitflags! {
@@ -43,30 +67,27 @@ bitflags::bitflags! {
     }
 }
 
-unsafe extern "C" fn fill_super_callback<T: FileSystem>(
+fn _fill_super_callback<T: FileSystem>(
+    sb: *mut bindings::super_block
+) -> KernelResult<()> {
+    let sb = sb.as_mut()?;
+    let sb = SuperBlock {
+        ptr: sb,
+        _phantom: marker::PhantomData,
+    };
+
+    T::fill_super(sb)
+}
+
+extern "C" fn fill_super_callback<T: FileSystem>(
     sb: *mut bindings::super_block,
     _data: *mut c_types::c_void,
     _silent: c_types::c_int,
 ) -> c_types::c_int {
-
-
-    // TODO: alternatively we can maybe use *mut's as_mut() and Box's from_raw()
-    // here if we only need the value thats inside and not a &mut to it.
-    let fs_info = &mut *(
-        &mut (*sb).s_fs_info
-            as *mut *mut c_types::c_void
-            as *mut Option<Box<<T as FileSystem>::SuperBlockInfo>>
-    );
-
-    // TODO: Check whether we actually need this. Maybe the kernel alread
-    // guarantees that this is NULL.
-    *fs_info = None;
-
-    T::fill_super(
-         fs_info
-    );
-
-    unimplemented!();
+    match _fill_super_callback::<T>(sb) {
+        Ok(()) => 0,
+        Err(e) => e.to_kernel_errno(),
+    }
 }
 
 extern "C" fn kill_sb_callback<T: FileSystem>(
