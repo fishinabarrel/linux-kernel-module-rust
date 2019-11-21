@@ -32,9 +32,9 @@ pub trait FileSystem: Sync {
     type SuperBlockInfo;
 
     fn fill_super(
-        sb: SuperBlock<Self::SuperBlockInfo>,
+        sb: &mut SuperBlock<Self::SuperBlockInfo>,
         data: *mut c_types::c_void,
-        silent: c_types::c_int
+        silent: c_types::c_int,
     ) -> KernelResult<()>;
 }
 
@@ -48,7 +48,7 @@ fn _fill_super_callback<T: FileSystem>(
         ptr: ptr,
         _phantom: marker::PhantomData,
     };
-    T::fill_super(sb, data, silent)
+    T::fill_super(&mut sb, data, silent)
 }
 
 extern "C" fn fill_super_callback<T: FileSystem>(
@@ -91,7 +91,7 @@ impl<'a, I> SuperBlock<'a, I> {
 
     // TODO: We still need a way to obtain refs to fs_info in the callbacks
     // between put/fill_super. These refs must become invalid when someone calls
-    // from_fs_info and drops the box.
+    // from_fs_info and drops the box. Maybe they should take '&self'?
 
     // To be called in put_super.
     pub fn from_fs_info(&mut self) -> Box<I> {
