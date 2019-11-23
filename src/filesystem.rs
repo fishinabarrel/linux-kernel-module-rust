@@ -44,7 +44,7 @@ fn _fill_super_callback<T: FileSystem>(
     silent: c_types::c_int,
 ) -> KernelResult<()> {
     let ptr = unsafe { ptr.as_mut() }.unwrap();
-    let sb = SuperBlock {
+    let mut sb = SuperBlock {
         ptr: ptr,
         _phantom: marker::PhantomData,
     };
@@ -84,17 +84,38 @@ impl<'a, I> SuperBlock<'a, I> {
     // - When fs_info is deallocated, sb.s_fs_info should be set to NULL.
 
     // To be called in fill_super.
-    pub fn into_fs_info(&mut self, val: Box<I>) {
+    pub fn into_fs_info(&mut self, val: Box<I>) -> StoredInfoHandle {
         assert!(self.ptr.s_fs_info.is_null());
         self.ptr.s_fs_info = Box::into_raw(val) as *mut c_types::c_void;
     }
 
-    // TODO: We still need a way to obtain refs to fs_info in the callbacks
-    // between put/fill_super. These refs must become invalid when someone calls
-    // from_fs_info and drops the box. Maybe they should take '&self'?
+    // We still need a way to obtain refs to fs_info in the callbacks between
+    // put/fill_super. These refs must become invalid when someone calls
+    // from_fs_info and drops the box. They should take '&self' so they are
+    // useable in intermediate callbacks.
+    //
+    // A (mut) ref obtained by these two must not outlive the Box<I> obtained
+    // using from_fs_info.
+    pub fn fs_info_as_ref(&self, _h: &'b StoredInfoHandle) -> &'b I {
+        let ptr = self.ptr.s_fs_info;
+        assert!(!ptr.is_null());
+        unsafe { & *(ptr as *mut I) }
+    }
+
+    // It should be possible to mutate I even if SuperBlock is not mutable
+    // (i.e. between fill/put_super).
+    pub fn fs_info_as_mut(&self, _h: &'b mut StoredInfoHandle) -> &'b mut I {
+        let ptr = self.ptr.s_fs_info;
+        assert!(!ptr.is_null());
+        unsafe { &mut *(ptr as *mut I) }
+    }
 
     // To be called in put_super.
-    pub fn from_fs_info(&mut self) -> Box<I> {
+    //
+    // TODO: Maybe create some wrapper object, e.g. StoredSBI (with the lifetime 'i) from which
+    // re can retrieve references with lifetime 'i. Getting the box consumes the
+    // wrapper object and therefor invalidates all references created by it.
+    pub fn from_fs_info(&mut self, _h: StoredInfoHandle) -> Box<I> {
         let ptr = self.ptr.s_fs_info;
         assert!(!ptr.is_null());
         self.ptr.s_fs_info = ptr::null() as *const c_void as *mut c_void;
