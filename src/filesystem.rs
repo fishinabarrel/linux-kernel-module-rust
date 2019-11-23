@@ -32,7 +32,7 @@ pub trait FileSystem: Sync {
     type SuperBlockInfo;
 
     fn fill_super(
-        sb: &mut SuperBlock<Self::SuperBlockInfo>,
+        sb: &mut SuperBlockRef<Self::SuperBlockInfo>,
         data: *mut c_types::c_void,
         silent: c_types::c_int,
     ) -> KernelResult<()>;
@@ -44,7 +44,7 @@ fn _fill_super_callback<T: FileSystem>(
     silent: c_types::c_int,
 ) -> KernelResult<()> {
     let ptr = unsafe { ptr.as_mut() }.unwrap();
-    let mut sb = SuperBlock {
+    let mut sb = SuperBlockRef {
         ptr: ptr,
         _phantom: marker::PhantomData,
     };
@@ -62,12 +62,16 @@ extern "C" fn fill_super_callback<T: FileSystem>(
     }
 }
 
-pub struct SuperBlock<'a, I> {
-    _phantom: marker::PhantomData<I>,
+pub struct UninitSuperBlockRef<'a> {
     ptr: &'a mut bindings::super_block,
 }
 
-impl<'a, I> SuperBlock<'a, I> {
+pub struct SuperBlockRef<'a, I> {
+    ptr: &'a mut bindings::super_block,
+    _phantom_fs_info: marker::PhantomData<I>,
+}
+
+impl<'a> UninitSuperBlockRef<'a> {
 
     // Ideally we should only require fs_info to be something than can be
     // converted to a raw pointer and back again safely (if we don't mess with
@@ -84,10 +88,14 @@ impl<'a, I> SuperBlock<'a, I> {
     // - When fs_info is deallocated, sb.s_fs_info should be set to NULL.
 
     // To be called in fill_super.
-    pub fn into_fs_info(&mut self, val: Box<I>) -> StoredInfoHandle {
+    pub fn init_fs_info(self, val: Box<I>) -> SuperBlockRef<'a, I> {
         assert!(self.ptr.s_fs_info.is_null());
         self.ptr.s_fs_info = Box::into_raw(val) as *mut c_types::c_void;
     }
+
+}
+
+impl<'a> SuperBlockRef<'a, I> {
 
     // We still need a way to obtain refs to fs_info in the callbacks between
     // put/fill_super. These refs must become invalid when someone calls
@@ -96,34 +104,30 @@ impl<'a, I> SuperBlock<'a, I> {
     //
     // A (mut) ref obtained by these two must not outlive the Box<I> obtained
     // using from_fs_info.
-    pub fn fs_info_as_ref(&self, _h: &'b StoredInfoHandle) -> &'b I {
+    pub fn fs_info_as_ref(&'a self) -> &'a I {
         let ptr = self.ptr.s_fs_info;
         assert!(!ptr.is_null());
         unsafe { & *(ptr as *mut I) }
     }
 
-    // It should be possible to mutate I even if SuperBlock is not mutable
+    // It should be possible to mutate I even if SuperBlockRef is not mutable
     // (i.e. between fill/put_super).
     //
     // Two callbacks running concurrently must not be able to obtain mutable
     // refs to I. Therefore callbacks between fill/put only get borrowed
     // StoredInfoHandle. TODO: Should they use RefCell/Mutex?
-    pub fn fs_info_as_mut(&self, _h: &'b mut StoredInfoHandle) -> &'b mut I {
-        let ptr = self.ptr.s_fs_info;
-        assert!(!ptr.is_null());
-        unsafe { &mut *(ptr as *mut I) }
+    pub fn fs_info_as_mut(&'a mut self) -> &'a mut I {
+        let fs_info = self.ptr.s_fs_info;
+        assert!(!fs_info.is_null());
+        unsafe { &mut *(fs_info as *mut I) }
     }
 
     // To be called in put_super.
-    //
-    // TODO: Maybe create some wrapper object, e.g. StoredSBI (with the lifetime 'i) from which
-    // re can retrieve references with lifetime 'i. Getting the box consumes the
-    // wrapper object and therefor invalidates all references created by it.
-    pub fn from_fs_info(&mut self, _h: StoredInfoHandle) -> Box<I> {
-        let ptr = self.ptr.s_fs_info;
-        assert!(!ptr.is_null());
+    pub fn uninit_fs_info(self) -> (UninitSuperBlockRef<'a>, Box<I>) {
+        let fs_info = self.ptr.s_fs_info;
+        assert!(!fs_info.is_null());
         self.ptr.s_fs_info = ptr::null() as *const c_void as *mut c_void;
-        unsafe { Box::from_raw(ptr as *mut I) }
+        unsafe { Box::from_raw(fs_info as *mut I) }
     }
 
 }
