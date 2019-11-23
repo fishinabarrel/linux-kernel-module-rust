@@ -104,6 +104,10 @@ impl<'a, I> SuperBlock<'a, I> {
 
     // It should be possible to mutate I even if SuperBlock is not mutable
     // (i.e. between fill/put_super).
+    //
+    // Two callbacks running concurrently must not be able to obtain mutable
+    // refs to I. Therefore callbacks between fill/put only get borrowed
+    // StoredInfoHandle. TODO: Should they use RefCell/Mutex?
     pub fn fs_info_as_mut(&self, _h: &'b mut StoredInfoHandle) -> &'b mut I {
         let ptr = self.ptr.s_fs_info;
         assert!(!ptr.is_null());
