@@ -20,9 +20,9 @@ fn test_proc_filesystems() {
     assert!(!filesystems.contains("testfs"));
 }
 
-fn temporary_file_path() -> PathBuf {
+fn temporary_file_path(name: &str) -> PathBuf {
     let mut p = TempDir::new().unwrap().into_path();
-    p.push("node");
+    p.push(name);
     return p;
 }
 
@@ -60,20 +60,32 @@ impl Drop for ImageFile {
 }
 
 struct LoopDev {
-    pub path: PathBuf,
+    pub path: String,
     _img: ImageFile,
 }
 
 impl LoopDev {
-    fn new(path: PathBuf, img: ImageFile) -> LoopDev {
-        Command::new("sudo")
-            .arg("losetup")
-            .arg(path.to_str().unwrap())
+    fn new(img: ImageFile) -> LoopDev {
+        // -f finds first available loop device.
+        Command::new("sudo").arg("losetup")
+            .arg("-f")
             .arg(img.path.to_str().unwrap())
             .status()
             .unwrap();
+
+        // Get the name of the loop device that was availble.
+        let output = String::from_utf8(
+            Command::new("sudo").arg("losetup")
+                .arg("--associated").arg(img.path.to_str().unwrap())
+                .arg("--noheadings")
+                .arg("--output").arg("NAME")
+                .output()
+                .unwrap()
+                .stdout
+        ).unwrap();
+
         LoopDev {
-            path: path,
+            path: String::from(output.as_str().trim()),
             _img: img,
         }
     }
@@ -81,10 +93,8 @@ impl LoopDev {
 
 impl Drop for LoopDev {
     fn drop(&mut self) {
-        Command::new("sudo")
-            .arg("losetup")
-            .arg("-d")
-            .arg(self.path.to_str().unwrap())
+        Command::new("sudo").arg("losetup")
+            .arg("-d").arg(&self.path)
             .status()
             .unwrap();
     }
@@ -121,13 +131,10 @@ struct Mount {
 
 impl Mount {
     fn new(dev: LoopDev, mp: Mountpoint) -> Mount {
-        Command::new("sudo")
-            .arg("mount")
-            .arg("-o")
-            .arg("loop")
-            .arg("-t")
-            .arg("testfs")
-            .arg(dev.path.to_str().unwrap())
+        Command::new("sudo").arg("mount")
+            .arg("-o").arg("loop")
+            .arg("-t").arg("testfs")
+            .arg(&dev.path)
             .arg(mp.path.to_str().unwrap())
             .status()
             .unwrap();
@@ -151,10 +158,10 @@ impl Drop for Mount {
 #[test]
 fn test_fill_super() {
     with_kernel_module(|| {
-        let mut img = ImageFile::new(PathBuf::from("testfs-loop-image"));
+        let mut img = ImageFile::new(temporary_file_path("testfs_image"));
         img.zero_init();
-        let dev = LoopDev::new(PathBuf::from("/dev/loop0"), img);
-        let mp = Mountpoint::new(PathBuf::from("testfs-loop-mountpoint"));
+        let dev = LoopDev::new(img);
+        let mp = Mountpoint::new(temporary_file_path("testfs_mountpoint"));
         let mount = Mount::new(dev, mp);
 
         assert_dmesg_contains(&[b"TestFS fill_super successfull."]);
