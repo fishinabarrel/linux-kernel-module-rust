@@ -113,10 +113,10 @@ extern "C" fn kill_sb_callback<T: FileSystem>(
 extern "C" fn mount_callback<T: FileSystem>(
     fs_type: *mut bindings::file_system_type,
     flags: c_int,
-    _dev_name: *const c_char,
+    dev_name: *const c_char,
     data: *mut c_void,
 ) -> *mut bindings::dentry {
-    unsafe { bindings::mount_nodev(fs_type, flags, data, Some(fill_super_callback::<T>)) }
+    unsafe { bindings::mount_bdev(fs_type, flags, dev_name, data, Some(fill_super_callback::<T>)) }
 }
 
 pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
