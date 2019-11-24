@@ -151,10 +151,10 @@ impl Drop for Mount {
 #[test]
 fn test_fill_super() {
     with_kernel_module(|| {
-        let mut img = ImageFile::new(temporary_file_path());
+        let mut img = ImageFile::new(PathBuf::from("testfs-loop-image"));
         img.zero_init();
-        let dev = LoopDev::new(temporary_file_path(), img);
-        let mp = Mountpoint::new(temporary_file_path());
+        let dev = LoopDev::new(PathBuf::from("/dev/loop0"), img);
+        let mp = Mountpoint::new(PathBuf::from("testfs-loop-mountpoint"));
         let mount = Mount::new(dev, mp);
 
         assert_dmesg_contains(&[b"TestFS fill_super successfull."]);
