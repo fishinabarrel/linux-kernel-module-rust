@@ -32,7 +32,7 @@ pub trait FileSystem: Sync {
     type SuperBlockInfo;
 
     fn fill_super(
-        sb: &mut SuperBlockRef<Self::SuperBlockInfo>,
+        sb: &mut SuperBlock<Self::SuperBlockInfo>,
         data: *mut c_types::c_void,
         silent: c_types::c_int,
     ) -> KernelResult<()>;
@@ -44,7 +44,7 @@ fn _fill_super_callback<T: FileSystem>(
     silent: c_types::c_int,
 ) -> KernelResult<()> {
     let ptr = unsafe { ptr.as_mut() }.unwrap();
-    let mut sb = SuperBlockRef {
+    let mut sb = SuperBlock {
         ptr: ptr,
         _phantom: marker::PhantomData,
     };
@@ -62,16 +62,12 @@ extern "C" fn fill_super_callback<T: FileSystem>(
     }
 }
 
-pub struct UninitSuperBlockRef<'a> {
+pub struct SuperBlock<'a, I> {
     ptr: &'a mut bindings::super_block,
+    _phantom_fs_info: marker::PhantomData<Option<Box<I>>>,
 }
 
-pub struct SuperBlockRef<'a, I> {
-    ptr: &'a mut bindings::super_block,
-    _phantom_fs_info: marker::PhantomData<I>,
-}
-
-impl<'a> UninitSuperBlockRef<'a> {
+impl SuperBlock<I> {
 
     // Ideally we should only require fs_info to be something than can be
     // converted to a raw pointer and back again safely (if we don't mess with
@@ -79,55 +75,24 @@ impl<'a> UninitSuperBlockRef<'a> {
     // (maybe it is BorrowMut in the former case but what's the
     // reverse?). Therefore just require that fs_info is on the heap (i.e. a
     // Box).
-    //
-    // Assumptions:
-    // - The interface should not allow the creation of multiple owned boxes.
-    // - The superblock is refcounted by the kernel, it is never
-    //   NULL and never an invalid pointer.
-    // - It is not safe to mutate sb.s_fs_info outside of put/fill_super.
-    // - When fs_info is deallocated, sb.s_fs_info should be set to NULL.
-
-    // To be called in fill_super.
-    pub fn init_fs_info(self, val: Box<I>) -> SuperBlockRef<'a, I> {
-        assert!(self.ptr.s_fs_info.is_null());
-        self.ptr.s_fs_info = Box::into_raw(val) as *mut c_types::c_void;
+    pub fn replace_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
+        let old_val = match self.ptr.s_fs_info {
+            ptr::null() => None,
+            non_null => unsafe { Some(Box::from_raw(non_null)) }
+        };
+        self.ptr.s_fs_info = match new_val {
+            None => ptr::null(),
+            Some(b) => Box::into_raw(b) as *mut c_types::c_void,
+        };
+        old_val
     }
 
-}
-
-impl<'a> SuperBlockRef<'a, I> {
-
-    // We still need a way to obtain refs to fs_info in the callbacks between
-    // put/fill_super. These refs must become invalid when someone calls
-    // from_fs_info and drops the box. They should take '&self' so they are
-    // useable in intermediate callbacks.
-    //
-    // A (mut) ref obtained by these two must not outlive the Box<I> obtained
-    // using from_fs_info.
-    pub fn fs_info_as_ref(&'a self) -> &'a I {
-        let ptr = self.ptr.s_fs_info;
-        assert!(!ptr.is_null());
-        unsafe { & *(ptr as *mut I) }
+    pub fn fs_info_as_ref(&self) -> Option<&I> {
+        unsafe { self.ptr.s_fs_info.as_ref() }
     }
 
-    // It should be possible to mutate I even if SuperBlockRef is not mutable
-    // (i.e. between fill/put_super).
-    //
-    // Two callbacks running concurrently must not be able to obtain mutable
-    // refs to I. Therefore callbacks between fill/put only get borrowed
-    // StoredInfoHandle. TODO: Should they use RefCell/Mutex?
-    pub fn fs_info_as_mut(&'a mut self) -> &'a mut I {
-        let fs_info = self.ptr.s_fs_info;
-        assert!(!fs_info.is_null());
-        unsafe { &mut *(fs_info as *mut I) }
-    }
-
-    // To be called in put_super.
-    pub fn uninit_fs_info(self) -> (UninitSuperBlockRef<'a>, Box<I>) {
-        let fs_info = self.ptr.s_fs_info;
-        assert!(!fs_info.is_null());
-        self.ptr.s_fs_info = ptr::null() as *const c_void as *mut c_void;
-        unsafe { Box::from_raw(fs_info as *mut I) }
+    pub fn fs_info_as_mut(&mut self) -> Option<&mut I> {
+        unsafe { self.ptr.s_fs_info.as_mut() }
     }
 
 }
