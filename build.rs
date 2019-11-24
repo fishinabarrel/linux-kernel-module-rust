@@ -17,6 +17,7 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "krealloc",
     "kfree",
     "mount_nodev",
+    "mount_bdev",
     "kill_litter_super",
     "register_sysctl",
     "unregister_sysctl_table",

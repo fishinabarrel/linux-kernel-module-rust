@@ -29,10 +29,11 @@ pub trait FileSystem: Sync {
     const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
 
-    type SuperBlockInfo;
+    type SuperOperations: SuperOperations;
 
     fn fill_super(
-        sb: &mut SuperBlock<Self::SuperBlockInfo>,
+        sb: &mut SuperBlock<'_, <<Self as FileSystem>::SuperOperations
+                                 as SuperOperations>::SuperBlockInfo>,
         data: *mut c_void,
         silent: c_int,
     ) -> KernelResult<()>;
@@ -43,9 +44,8 @@ fn _fill_super_callback<T: FileSystem>(
     data: *mut c_void,
     silent: c_int,
 ) -> KernelResult<()> {
-    let sb_ref = unsafe { sb_raw.as_mut() }.unwrap();
     let mut sb = SuperBlock {
-        sb: sb_ref,
+        sb: unsafe { sb_raw.as_mut() }.unwrap(),
         _phantom_fs_info: marker::PhantomData,
     };
     T::fill_super(&mut sb, data, silent)
@@ -138,4 +138,34 @@ pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
     }
 
     Ok(fs_registration)
+}
+
+pub struct SuperOperationsVtable(bindings::super_operations);
+
+impl SuperOperationsVtable {
+    pub fn new<T: SuperOperations>() -> SuperOperationsVtable {
+        SuperOperationsVtable(bindings::super_operations {
+            put_super: Some(put_super_callback::<T>),
+
+            ..Default::default()
+        })
+    }
+}
+
+pub trait SuperOperations: Sync + Sized {
+    const VTABLE: SuperOperationsVtable;
+
+    type SuperBlockInfo;
+
+    fn put_super(sb: &mut SuperBlock<Self::SuperBlockInfo>);
+}
+
+unsafe extern "C" fn put_super_callback<T: SuperOperations>(
+    sb_raw: *mut bindings::super_block,
+) {
+    let mut sb = SuperBlock {
+        sb: sb_raw.as_mut().unwrap(),
+        _phantom_fs_info: marker::PhantomData,
+    };
+    T::put_super(&mut sb);
 }
