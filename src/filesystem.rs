@@ -6,10 +6,10 @@ use core::ptr;
 use bitflags;
 
 use crate::bindings;
-use crate::c_types::{self, c_void, c_int, c_char};
+use crate::c_types::{c_void, c_int, c_char};
 use crate::error;
 use crate::types::CStr;
-use crate::error::{Error, KernelResult};
+use crate::error::{KernelResult};
 
 pub struct Registration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
