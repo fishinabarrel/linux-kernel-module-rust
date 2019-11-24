@@ -36,7 +36,7 @@ fn test_write_bool_whitespace() {
 }
 
 #[test]
-fn test_file_doesnt_exit_after_module_unloaded() {
+fn test_file_doesnt_exist_after_module_unloaded() {
     with_kernel_module(|| {
         assert!(Path::new("/proc/sys/rust/sysctl-tests/a").exists());
     });
