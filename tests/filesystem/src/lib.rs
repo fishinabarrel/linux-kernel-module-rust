@@ -61,6 +61,15 @@ impl FileSystem for TestFS {
     }
 }
 
+extern "C" fn mount_callback<TestFS>(
+    fs_type: *mut bindings::file_system_type,
+    flags: c_int,
+    dev_name: *const c_char,
+    data: *mut c_void,
+) -> *mut bindings::dentry {
+    unsafe { bindings::mount_bdev(fs_type, flags, dev_name, data, Some(fill_super_callback::<T>)) }
+}
+
 impl linux_kernel_module::KernelModule for TestFSModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let fs_registration = filesystem::register::<TestFS>()?;
