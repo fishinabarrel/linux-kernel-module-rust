@@ -12,9 +12,25 @@ struct TestFSModule {
 
 struct TestFS {}
 
+struct TestFSInfo {
+    magic: 0x5ac6e888,
+}
+
 impl FileSystem for TestFS {
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
+
+    type SuperBlockInfo = TestFSInfo;
+
+    fn fill_super(
+        sb: &mut SuperBlock<Self::SuperBlockInfo>,
+        data: *mut c_types::c_void,
+        silent: c_types::c_int,
+    ) -> KernelResult<()> {
+        assert!(sb.get_fs_info() == None);
+        sb.set_fs_info(Some(Box::new(TestFSInfo {})));
+        assert!(sb.get_fs_info().unwrap());
+    }
 }
 
 impl linux_kernel_module::KernelModule for TestFSModule {
