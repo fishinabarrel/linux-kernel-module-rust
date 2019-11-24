@@ -73,7 +73,7 @@ impl<I> SuperBlock<'_, I> {
     // converted to a raw pointer and back again safely (if we don't mess with
     // the value while we keep it). I don't think there exists such a
     // trait. Therefore just require that fs_info is on the heap (i.e. a Box).
-    pub fn insert_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
+    pub fn assign_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
         let old_val = ptr::NonNull::new(self.sb.s_fs_info as *mut I).map(
             |nn| unsafe { Box::from_raw(nn.as_ptr()) }
         );
@@ -84,11 +84,11 @@ impl<I> SuperBlock<'_, I> {
         old_val
     }
 
-    pub fn get_fs_info(&self) -> Option<&I> {
+    pub fn fs_info_as_ref(&self) -> Option<&I> {
         unsafe { (self.sb.s_fs_info as *mut I).as_ref()}
     }
 
-    pub fn get_mut_fs_info(&mut self) -> Option<&mut I> {
+    pub fn fs_info_as_mut(&mut self) -> Option<&mut I> {
         unsafe { (self.sb.s_fs_info as *mut I).as_mut() }
     }
 

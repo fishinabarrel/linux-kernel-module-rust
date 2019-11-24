@@ -3,8 +3,11 @@
 
 extern crate alloc;
 
-use linux_kernel_module::filesystem::{self, FileSystem, FileSystemFlags};
-use linux_kernel_module::{self, cstr, CStr};
+use linux_kernel_module::filesystem::{self, FileSystem, FileSystemFlags, SuperBlock};
+use linux_kernel_module::{self, cstr, CStr, c_types};
+use linux_kernel_module::println;
+use linux_kernel_module::KernelResult;
+use alloc::boxed::Box;
 
 struct TestFSModule {
     _fs_registration: filesystem::Registration<TestFS>,
@@ -13,7 +16,7 @@ struct TestFSModule {
 struct TestFS {}
 
 struct TestFSInfo {
-    magic: 0x5ac6e888,
+    magic: u32,
 }
 
 impl FileSystem for TestFS {
@@ -24,12 +27,36 @@ impl FileSystem for TestFS {
 
     fn fill_super(
         sb: &mut SuperBlock<Self::SuperBlockInfo>,
-        data: *mut c_types::c_void,
-        silent: c_types::c_int,
+        _data: *mut c_types::c_void,
+        _silent: c_types::c_int,
     ) -> KernelResult<()> {
-        assert!(sb.get_fs_info() == None);
-        sb.set_fs_info(Some(Box::new(TestFSInfo {})));
-        assert!(sb.get_fs_info().unwrap());
+
+        // The kernel initializes fs_info to NULL.
+        assert!(sb.fs_info_as_ref().is_none());
+
+        // Replace NULL with our data. SuperBlock takes ownership of it.
+        sb.assign_fs_info(Some(Box::new(TestFSInfo {
+            magic: 42,
+        })));
+
+        // We can obtain references to it while SuperBlock owns it:
+        assert!(sb.fs_info_as_ref().unwrap().magic == 42);
+
+        // And also mutable references if we have a mutable reference to the
+        // super block:
+        let fs_info: &mut TestFSInfo = sb.fs_info_as_mut().unwrap();
+        fs_info.magic = 0xbadf00d;
+
+        assert!(sb.fs_info_as_ref().unwrap().magic == 0xbadf00d);
+
+        // This returns the old value therefore dropping it if we don't take
+        // ownership of it. This would normally happen in the put_super
+        // callback.
+        sb.assign_fs_info(None);
+
+        println!("TestFS fill_super successfull.");
+
+        Ok(())
     }
 }
 
