@@ -16,3 +16,4 @@ linux-kernel-module = { path = "../..", optional = true }
 
 [dev-dependencies]
 kernel-module-testlib = { path = "../../testlib" }
+tempfile = "3"
