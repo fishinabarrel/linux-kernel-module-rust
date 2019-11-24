@@ -18,16 +18,31 @@ struct TestFSInfo {
     magic: u32,
 }
 
+struct TestFSSuperOperations {}
+
+impl SuperOperations for TestFSSuperOperations {
+    type SuperBlockInfo = TestFSInfo;
+
+    fn put_super(sb: &mut SuperBlock<Self::SuperBlockInfo>) {
+        assert!(sb.fs_info_as_ref().unwrap().magic == 0xbadf00d);
+
+        // This returns the old value therefore dropping it if we don't take
+        // ownership of it. This would normally happen in the put_super
+        // callback.
+        sb.assign_fs_info(None);
+    }
+}
+
 impl FileSystem for TestFS {
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
 
-    type SuperBlockInfo = TestFSInfo;
+    type SuperOperations = TestFSSuperOperations;
 
     // TODO: Overwrite mount. Disallow mount_nodev with FS_REQUIRES_DEV?
 
     fn fill_super(
-        sb: &mut SuperBlock<Self::SuperBlockInfo>,
+        sb: &mut SuperBlock<TestFSInfo>,
         _data: *mut c_types::c_void,
         _silent: c_types::c_int,
     ) -> KernelResult<()> {
@@ -48,17 +63,11 @@ impl FileSystem for TestFS {
         let fs_info: &mut TestFSInfo = sb.fs_info_as_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
-        assert!(sb.fs_info_as_ref().unwrap().magic == 0xbadf00d);
 
-        // This returns the old value therefore dropping it if we don't take
-        // ownership of it. This would normally happen in the put_super
-        // callback.
-        sb.assign_fs_info(None);
-
-        println!("TestFS fill_super successfull.");
 
         Ok(())
     }
+
 }
 
 impl linux_kernel_module::KernelModule for TestFSModule {
