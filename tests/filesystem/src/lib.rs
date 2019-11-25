@@ -3,7 +3,7 @@
 
 extern crate alloc;
 
-use linux_kernel_module::filesystem::{self, FileSystem, FileSystemFlags, SuperBlock};
+use linux_kernel_module::filesystem::*;
 use linux_kernel_module::{self, cstr, CStr, c_types};
 use linux_kernel_module::println;
 use linux_kernel_module::KernelResult;
@@ -15,11 +15,10 @@ struct TestFSInfo {
 
 struct TestFSSuperOperations;
 
-impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
-    const VTABLE: SuperOperationsVtable<TestFSInfo> =
-        SuperOperationsVtable::new<TestFSInfo, Self>();
+impl SuperOperations for TestFSSuperOperations {
+    type I = TestFSInfo;
     
-    fn put_super(sb: &mut SuperBlock<TestFSInfo>) {
+    fn put_super(sb: &mut SuperBlock<Self::I>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
@@ -28,6 +27,9 @@ impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
         sb.set_fs_info(None);
     }
 }
+
+const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<TestFSInfo> =
+    SuperOperationsVtable::new::<TestFSSuperOperations>();
 
 struct TestFS;
 
@@ -39,7 +41,7 @@ impl FileSystem for TestFS {
 
     // TODO: Enforce setting of sb.s_op. Make him return a InitializedSuperBlock?
     fn fill_super(
-        sb: &mut SuperBlock<I>,
+        sb: &mut SuperBlock<Self::I>,
         _data: *mut c_types::c_void,
         _silent: c_types::c_int,
     ) -> KernelResult<()> {
@@ -60,19 +62,19 @@ impl FileSystem for TestFS {
         let fs_info: &mut TestFSInfo = sb.fs_info_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
-        sb.set_op(&TestFSSuperOperations::VTABLE);
+        sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
 
         Ok(())
     }
 }
 
 struct TestFSModule {
-    _fs_registration: filesystem::Registration<TestFS>,
+    _fs_registration: Registration<TestFS>,
 }
 
 impl linux_kernel_module::KernelModule for TestFSModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
-        let fs_registration = filesystem::register::<TestFS>()?;
+        let fs_registration = register::<TestFS>()?;
         Ok(TestFSModule {
             _fs_registration: fs_registration,
         })
