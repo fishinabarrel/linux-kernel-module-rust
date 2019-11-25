@@ -32,6 +32,8 @@ impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
 struct TestFS;
 
 impl FileSystem for TestFS {
+    type I = TestFSInfo;
+
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
 
