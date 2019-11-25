@@ -20,10 +20,9 @@ struct TestFSInfo {
 
 struct TestFSSuperOperations {}
 
-impl SuperOperations for TestFSSuperOperations {
-    type SuperBlockInfo = TestFSInfo;
+impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
 
-    fn put_super(sb: &mut SuperBlock<Self::SuperBlockInfo>) {
+    fn put_super(sb: &mut SuperBlock<TestFSInfo>) {
         assert!(sb.fs_info_as_ref().unwrap().magic == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
@@ -31,15 +30,12 @@ impl SuperOperations for TestFSSuperOperations {
         // callback.
         sb.assign_fs_info(None);
     }
+
 }
 
 impl FileSystem for TestFS {
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
-
-    type SuperOperations = TestFSSuperOperations;
-
-    // TODO: Overwrite mount. Disallow mount_nodev with FS_REQUIRES_DEV?
 
     fn fill_super(
         sb: &mut SuperBlock<TestFSInfo>,
@@ -63,7 +59,7 @@ impl FileSystem for TestFS {
         let fs_info: &mut TestFSInfo = sb.fs_info_as_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
-
+        // sb.set_op<TestFSSuperOperations>()
 
         Ok(())
     }
