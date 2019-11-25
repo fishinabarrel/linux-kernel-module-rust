@@ -11,28 +11,33 @@ use crate::error;
 use crate::types::CStr;
 use crate::error::{KernelResult};
 
-pub struct SuperOperationsVtable(bindings::super_operations);
+pub trait SuperOperations<I>: Sync + Sized {
+    fn put_super(sb: &mut SuperBlock<I>);
+}
+
+unsafe extern "C" fn put_super_callback<T: SuperOperations<I>>(
+    sb_raw: *mut bindings::super_block
+) {
+    let mut sb = SuperBlock {
+        sb: sb_raw.as_mut().unwrap(),
+        _phantom_fs_info: marker::PhantomData,
+    };
+    T::put_super(&mut sb);
+}
+
+pub struct SuperOperationsVtable<I> {
+    op: bindings::super_operations,
+    _phantom_sb_fs_info: marker::PhantomData<I>,
+};
 
 impl SuperOperationsVtable {
     pub const fn new<T: SuperOperations<I>>() -> SuperOperationsVtable {
-        unsafe extern "C" fn put_super_callback<T>(sb_raw: *mut bindings::super_block) {
-            let mut sb = SuperBlock {
-                sb: sb_raw.as_mut().unwrap(),
-                _phantom_fs_info: marker::PhantomData,
-            };
-            T::put_super(&mut sb);
-        }
-
         SuperOperationsVtable(bindings::super_operations {
             put_super: Some(put_super_callback::<T>),
 
             ..Default::default()
         })
     }
-}
-
-pub trait SuperOperations<I>: Sync + Sized {
-    fn put_super(sb: &mut SuperBlock<I>);
 }
 
 pub struct SuperBlock<'a, I> {
@@ -57,15 +62,15 @@ impl<I> SuperBlock<'_, I> {
         old_val
     }
 
-    pub fn fs_info_as_ref(&self) -> Option<&I> {
+    pub fn fs_info_ref(&self) -> Option<&I> {
         unsafe { (self.sb.s_fs_info as *mut I).as_ref()}
     }
 
-    pub fn fs_info_as_mut(&mut self) -> Option<&mut I> {
+    pub fn fs_info_mut(&mut self) -> Option<&mut I> {
         unsafe { (self.sb.s_fs_info as *mut I).as_mut() }
     }
 
-    pub fn set_op<T: SuperOperations<I>>() {
+    pub fn set_op(&mut self, op: &SuperOperationsVtable<I>) {
 
     }
 

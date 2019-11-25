@@ -15,13 +15,16 @@ struct TestFSInfo {
 struct TestFSSuperOperations;
 
 impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
+    const VTABLE: SuperOperationsVtable<TestFSInfo> =
+        SuperOperationsVtable::new<Self>();
+    
     fn put_super(sb: &mut SuperBlock<TestFSInfo>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
         // ownership of it. This would normally happen in the put_super
         // callback.
-        sb.assign_fs_info(None);
+        sb.set_fs_info(None);
     }
 }
 
@@ -31,6 +34,7 @@ impl FileSystem for TestFS {
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
 
+    // TODO: Enforce setting of sb.s_op. Make him return a InitializedSuperBlock?
     fn fill_super(
         sb: &mut SuperBlock<TestFSInfo>,
         _data: *mut c_types::c_void,
@@ -41,7 +45,7 @@ impl FileSystem for TestFS {
         assert!(sb.fs_info_ref().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
-        sb.assign_fs_info(Some(Box::new(TestFSInfo {
+        sb.set_fs_info(Some(Box::new(TestFSInfo {
             magic: 42,
         })));
 
@@ -50,10 +54,10 @@ impl FileSystem for TestFS {
 
         // And also mutable references if we have a mutable reference to the
         // super block:
-        let fs_info: &mut TestFSInfo = sb.fs_info_mut_ref().unwrap();
+        let fs_info: &mut TestFSInfo = sb.fs_info_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
-        sb.set_op<TestFSSuperOperations>();
+        sb.set_op(&TestFSSuperOperations::VTABLE);
 
         Ok(())
     }
