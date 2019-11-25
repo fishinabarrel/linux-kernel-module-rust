@@ -48,37 +48,37 @@ impl<J> SuperOperationsVtable<J> {
                 destroy_inode: None,
                 real_loop: None,
 
-		        dirty_inode: None,
-		        write_inode: None,
-		        drop_inode: None,
-		        evict_inode: None,
+                dirty_inode: None,
+                write_inode: None,
+                drop_inode: None,
+                evict_inode: None,
                 put_super: Some(put_super_callback::<T>),
-		        sync_fs: None,
+                sync_fs: None,
                 freeze_super: None,
-		        freeze_fs: None,
+                freeze_fs: None,
                 thaw_super: None,
-		        unfreeze_fs: None,
-		        statfs: None,
-		        remount_fs: None,
-		        umount_begin: None,
+                unfreeze_fs: None,
+                statfs: None,
+                remount_fs: None,
+                umount_begin: None,
 
-		        show_options: None,
+                show_options: None,
                 show_devname: None,
-	            show_path: None,
-	            show_stats: None,
+                show_path: None,
+                show_stats: None,
                 // TODO #ifdef CONFIG_QUOTA
                 // Use #[cfg(not(kernel_4_20_0_or_greater))] or similar?
-		        quota_read: None,
-		        quota_write: None,
+                quota_read: None,
+                quota_write: None,
                 get_dquots: None,
                 // TODO #endif
                 bdev_try_to_free_page: None,
                 nr_cached_objects: None,
                 // free_cached_objects is optional, but any filesystem
                 // implementing this method needs to
-	            // also implement nr_cached_objects for it to be called
-	            // correctly.
-		        free_cached_objects: None,
+                // also implement nr_cached_objects for it to be called
+                // correctly.
+                free_cached_objects: None,
             },
             _phantom_sb_fs_info: marker::PhantomData,
         }
