@@ -15,7 +15,7 @@ pub trait SuperOperations<I>: Sync + Sized {
     fn put_super(sb: &mut SuperBlock<I>);
 }
 
-unsafe extern "C" fn put_super_callback<T: SuperOperations<I>>(
+unsafe extern "C" fn put_super_callback<I, T: SuperOperations<I>>(
     sb_raw: *mut bindings::super_block
 ) {
     let mut sb = SuperBlock {
@@ -25,18 +25,65 @@ unsafe extern "C" fn put_super_callback<T: SuperOperations<I>>(
     T::put_super(&mut sb);
 }
 
+unsafe extern "C" fn dirty_inode_callback<I, T: SuperOperations<I>>(
+    inode: *mut bindings::inode,
+    flags: c_int,
+) {
+    unimplemented!();
+}
+
 pub struct SuperOperationsVtable<I> {
     op: bindings::super_operations,
+    // TODO: If we allow dropping of vtables we should include the whole
+    // virtually owned type here (e.g. functions that takes a super block
+    // containing I as argument) to communicate to the compiler that this
+    // type will be dropped if the vtable is dropped. For now only include I to
+    // silence the unused parameter warning.
     _phantom_sb_fs_info: marker::PhantomData<I>,
-};
+}
 
-impl SuperOperationsVtable {
-    pub const fn new<T: SuperOperations<I>>() -> SuperOperationsVtable {
-        SuperOperationsVtable(bindings::super_operations {
-            put_super: Some(put_super_callback::<T>),
+impl<I> SuperOperationsVtable<I> {
+    pub const fn new<J, T: SuperOperations<J>>() -> SuperOperationsVtable<J> {
+        SuperOperationsVtable {
+            op: bindings::super_operations {
+                alloc_inode: None,
+                // destroy_inode is only required if alloc_inode was defined.
+                destroy_inode: None,
+                real_loop: None, // TODO: What's that?
 
-            ..Default::default()
-        })
+		        dirty_inode: Some(dirty_inode_callback::<J, T>),
+		        write_inode: Some(write_inode_callback::<J, T>),
+		        drop_inode: None,
+		        evict_inode: Some(evict_inode_callback::<J, T>),
+                put_super: Some(put_super_callback::<J, T>),
+		        sync_fs: None,
+                freeze_super: Some(freeze_super_callback::<J, T>),
+		        freeze_fs: Some(freeze_fs_callback::<J, T>),
+                thaw_super: Some(thaw_super_callback::<J, T>),
+		        unfreeze_fs: Some(unfreeze_fs_callback::<J, T>),
+		        statfs: Some(statfs_callback::<J, T>),
+		        remount_fs: Some(remount_fs_callback::<J, T>),
+		        umount_begin: Some(umount_begin_callback::<J, T>),
+
+		        show_options: Some(show_options_callback::<J, T>),
+                show_devname: Some(show_devname_callback::<J, T>),
+	            show_path: Some(show_path_callback::<J, T>),
+	            show_stats: Some(show_stats_callback::<J, T>),
+                // TODO #ifdef CONFIG_QUOTA
+		        quota_read: Some(quota_read_callback::<J, T>),
+		        quota_write: Some(quota_write_callback::<J, T>),
+                get_dquots: Some(get_dquots_callback::<J, T>),
+                // TODO #endif
+                bdev_try_to_free_page: Some(bdev_try_to_free_page_callback::<J, T>),
+                nr_cached_objects: None,
+                // free_cached_objects is optional, but any filesystem
+                // implementing this method needs to
+	            // also implement nr_cached_objects for it to be called
+	            // correctly.
+		        free_cached_objects: None,
+            },
+            _phantom_sb_fs_info: marker::PhantomData,
+        }
     }
 }
 
@@ -70,8 +117,8 @@ impl<I> SuperBlock<'_, I> {
         unsafe { (self.sb.s_fs_info as *mut I).as_mut() }
     }
 
-    pub fn set_op(&mut self, op: &SuperOperationsVtable<I>) {
-
+    pub fn set_op(&mut self, op: &'static SuperOperationsVtable<I>) {
+        self.sb.s_op = &op.op;
     }
 
 }
@@ -90,13 +137,14 @@ impl<T: FileSystem> Drop for Registration<T> {
     }
 }
 
-// TODO: Use generic or associate typ for Info.
 pub trait FileSystem: Sync {
+    type I;
+
     const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
 
     fn fill_super(
-        sb: &mut SuperBlock<>,
+        sb: &mut SuperBlock<Self::I>,
         data: *mut c_void,
         silent: c_int,
     ) -> KernelResult<()>;
