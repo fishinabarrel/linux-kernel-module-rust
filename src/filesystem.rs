@@ -11,6 +11,66 @@ use crate::error;
 use crate::types::CStr;
 use crate::error::{KernelResult};
 
+pub struct SuperOperationsVtable(bindings::super_operations);
+
+impl SuperOperationsVtable {
+    pub const fn new<T: SuperOperations<I>>() -> SuperOperationsVtable {
+        unsafe extern "C" fn put_super_callback<T>(sb_raw: *mut bindings::super_block) {
+            let mut sb = SuperBlock {
+                sb: sb_raw.as_mut().unwrap(),
+                _phantom_fs_info: marker::PhantomData,
+            };
+            T::put_super(&mut sb);
+        }
+
+        SuperOperationsVtable(bindings::super_operations {
+            put_super: Some(put_super_callback::<T>),
+
+            ..Default::default()
+        })
+    }
+}
+
+pub trait SuperOperations<I>: Sync + Sized {
+    fn put_super(sb: &mut SuperBlock<I>);
+}
+
+pub struct SuperBlock<'a, I> {
+    sb: &'a mut bindings::super_block,
+    _phantom_fs_info: marker::PhantomData<Option<Box<I>>>,
+}
+
+impl<I> SuperBlock<'_, I> {
+
+    // Ideally we should only require fs_info to be something than can be
+    // converted to a raw pointer and back again safely (if we don't mess with
+    // the value while we keep it). I don't think there exists such a
+    // trait. Therefore just require that fs_info is on the heap (i.e. a Box).
+    pub fn set_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
+        let old_val = ptr::NonNull::new(self.sb.s_fs_info as *mut I).map(
+            |nn| unsafe { Box::from_raw(nn.as_ptr()) }
+        );
+        self.sb.s_fs_info = match new_val {
+            None => ptr::null() as *const c_void as *mut c_void,
+            Some(b) => Box::into_raw(b) as *mut c_void,
+        };
+        old_val
+    }
+
+    pub fn fs_info_as_ref(&self) -> Option<&I> {
+        unsafe { (self.sb.s_fs_info as *mut I).as_ref()}
+    }
+
+    pub fn fs_info_as_mut(&mut self) -> Option<&mut I> {
+        unsafe { (self.sb.s_fs_info as *mut I).as_mut() }
+    }
+
+    pub fn set_op<T: SuperOperations<I>>() {
+
+    }
+
+}
+
 pub struct Registration<T: FileSystem> {
     _phantom: marker::PhantomData<T>,
     ptr: Box<bindings::file_system_type>,
@@ -25,15 +85,13 @@ impl<T: FileSystem> Drop for Registration<T> {
     }
 }
 
+// TODO: Use generic or associate typ for Info.
 pub trait FileSystem: Sync {
     const NAME: &'static CStr;
     const FLAGS: FileSystemFlags;
 
-    type SuperOperations: SuperOperations;
-
     fn fill_super(
-        sb: &mut SuperBlock<'_, <<Self as FileSystem>::SuperOperations
-                                 as SuperOperations>::SuperBlockInfo>,
+        sb: &mut SuperBlock<>,
         data: *mut c_void,
         silent: c_int,
     ) -> KernelResult<()>;
@@ -60,38 +118,6 @@ extern "C" fn fill_super_callback<T: FileSystem>(
         Ok(()) => 0,
         Err(e) => e.to_kernel_errno(),
     }
-}
-
-pub struct SuperBlock<'a, I> {
-    sb: &'a mut bindings::super_block,
-    _phantom_fs_info: marker::PhantomData<Option<Box<I>>>,
-}
-
-impl<I> SuperBlock<'_, I> {
-
-    // Ideally we should only require fs_info to be something than can be
-    // converted to a raw pointer and back again safely (if we don't mess with
-    // the value while we keep it). I don't think there exists such a
-    // trait. Therefore just require that fs_info is on the heap (i.e. a Box).
-    pub fn assign_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
-        let old_val = ptr::NonNull::new(self.sb.s_fs_info as *mut I).map(
-            |nn| unsafe { Box::from_raw(nn.as_ptr()) }
-        );
-        self.sb.s_fs_info = match new_val {
-            None => ptr::null() as *const c_void as *mut c_void,
-            Some(b) => Box::into_raw(b) as *mut c_void,
-        };
-        old_val
-    }
-
-    pub fn fs_info_as_ref(&self) -> Option<&I> {
-        unsafe { (self.sb.s_fs_info as *mut I).as_ref()}
-    }
-
-    pub fn fs_info_as_mut(&mut self) -> Option<&mut I> {
-        unsafe { (self.sb.s_fs_info as *mut I).as_mut() }
-    }
-
 }
 
 bitflags::bitflags! {
@@ -138,34 +164,4 @@ pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
     }
 
     Ok(fs_registration)
-}
-
-pub struct SuperOperationsVtable(bindings::super_operations);
-
-impl SuperOperationsVtable {
-    pub fn new<T: SuperOperations>() -> SuperOperationsVtable {
-        SuperOperationsVtable(bindings::super_operations {
-            put_super: Some(put_super_callback::<T>),
-
-            ..Default::default()
-        })
-    }
-}
-
-pub trait SuperOperations: Sync + Sized {
-    const VTABLE: SuperOperationsVtable;
-
-    type SuperBlockInfo;
-
-    fn put_super(sb: &mut SuperBlock<Self::SuperBlockInfo>);
-}
-
-unsafe extern "C" fn put_super_callback<T: SuperOperations>(
-    sb_raw: *mut bindings::super_block,
-) {
-    let mut sb = SuperBlock {
-        sb: sb_raw.as_mut().unwrap(),
-        _phantom_fs_info: marker::PhantomData,
-    };
-    T::put_super(&mut sb);
 }

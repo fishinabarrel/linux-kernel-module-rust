@@ -8,30 +8,24 @@ use linux_kernel_module::println;
 use linux_kernel_module::KernelResult;
 use alloc::boxed::Box;
 
-struct TestFSModule {
-    _fs_registration: filesystem::Registration<TestFS>,
-}
-
-struct TestFS {}
-
 struct TestFSInfo {
     magic: u32,
 }
 
-struct TestFSSuperOperations {}
+struct TestFSSuperOperations;
 
 impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
-
     fn put_super(sb: &mut SuperBlock<TestFSInfo>) {
-        assert!(sb.fs_info_as_ref().unwrap().magic == 0xbadf00d);
+        assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
         // ownership of it. This would normally happen in the put_super
         // callback.
         sb.assign_fs_info(None);
     }
-
 }
+
+struct TestFS;
 
 impl FileSystem for TestFS {
     const NAME: &'static CStr = cstr!("testfs");
@@ -44,7 +38,7 @@ impl FileSystem for TestFS {
     ) -> KernelResult<()> {
 
         // The kernel initializes fs_info to NULL.
-        assert!(sb.fs_info_as_ref().is_none());
+        assert!(sb.fs_info_ref().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
         sb.assign_fs_info(Some(Box::new(TestFSInfo {
@@ -52,18 +46,21 @@ impl FileSystem for TestFS {
         })));
 
         // We can obtain references to it while SuperBlock owns it:
-        assert!(sb.fs_info_as_ref().unwrap().magic == 42);
+        assert!(sb.fs_info_ref().unwrap().magic == 42);
 
         // And also mutable references if we have a mutable reference to the
         // super block:
-        let fs_info: &mut TestFSInfo = sb.fs_info_as_mut().unwrap();
+        let fs_info: &mut TestFSInfo = sb.fs_info_mut_ref().unwrap();
         fs_info.magic = 0xbadf00d;
 
-        // sb.set_op<TestFSSuperOperations>()
+        sb.set_op<TestFSSuperOperations>();
 
         Ok(())
     }
+}
 
+struct TestFSModule {
+    _fs_registration: filesystem::Registration<TestFS>,
 }
 
 impl linux_kernel_module::KernelModule for TestFSModule {
