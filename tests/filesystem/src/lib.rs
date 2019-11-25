@@ -17,7 +17,7 @@ struct TestFSSuperOperations;
 
 impl SuperOperations<TestFSInfo> for TestFSSuperOperations {
     const VTABLE: SuperOperationsVtable<TestFSInfo> =
-        SuperOperationsVtable::new<Self>();
+        SuperOperationsVtable::new<TestFSInfo, Self>();
     
     fn put_super(sb: &mut SuperBlock<TestFSInfo>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
@@ -39,7 +39,7 @@ impl FileSystem for TestFS {
 
     // TODO: Enforce setting of sb.s_op. Make him return a InitializedSuperBlock?
     fn fill_super(
-        sb: &mut SuperBlock<TestFSInfo>,
+        sb: &mut SuperBlock<I>,
         _data: *mut c_types::c_void,
         _silent: c_types::c_int,
     ) -> KernelResult<()> {
