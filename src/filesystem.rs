@@ -11,14 +11,15 @@ use crate::error;
 use crate::types::CStr;
 use crate::error::{KernelResult};
 
-pub trait SuperOperations<I>: Sync + Sized {
-    fn put_super(sb: &mut SuperBlock<I>);
+pub trait SuperOperations: Sync + Sized {
+    type I;
+    fn put_super(sb: &mut SuperBlock<Self::I>);
     // TODO: How can we cause SuperOperationsVtable::new to insert a None for a
     // optional method (thereby causing the kernel to choose some default
     // implementation at runtime) when we don't want to define it?
 }
 
-unsafe extern "C" fn put_super_callback<I, T: SuperOperations<I>>(
+unsafe extern "C" fn put_super_callback<T: SuperOperations>(
     sb_raw: *mut bindings::super_block
 ) {
     let mut sb = SuperBlock {
@@ -26,13 +27,6 @@ unsafe extern "C" fn put_super_callback<I, T: SuperOperations<I>>(
         _phantom_fs_info: marker::PhantomData,
     };
     T::put_super(&mut sb);
-}
-
-unsafe extern "C" fn dirty_inode_callback<I, T: SuperOperations<I>>(
-    inode: *mut bindings::inode,
-    flags: c_int,
-) {
-    unimplemented!();
 }
 
 pub struct SuperOperationsVtable<I> {
@@ -45,39 +39,40 @@ pub struct SuperOperationsVtable<I> {
     _phantom_sb_fs_info: marker::PhantomData<I>,
 }
 
-impl<I> SuperOperationsVtable<I> {
-    pub const fn new<J, T: SuperOperations<J>>() -> SuperOperationsVtable<J> {
+impl<J> SuperOperationsVtable<J> {
+    pub const fn new<T: SuperOperations>() -> SuperOperationsVtable<T::I> {
         SuperOperationsVtable {
             op: bindings::super_operations {
                 alloc_inode: None,
-                // destroy_inode is only required if alloc_inode was defined.
+                // destroy_inode is only required if alloc_inode is defined.
                 destroy_inode: None,
-                real_loop: None, // TODO: What's that?
+                real_loop: None,
 
-		        dirty_inode: Some(dirty_inode_callback::<J, T>),
-		        write_inode: Some(write_inode_callback::<J, T>),
+		        dirty_inode: None,
+		        write_inode: None,
 		        drop_inode: None,
-		        evict_inode: Some(evict_inode_callback::<J, T>),
-                put_super: Some(put_super_callback::<J, T>),
+		        evict_inode: None,
+                put_super: Some(put_super_callback::<T>),
 		        sync_fs: None,
-                freeze_super: Some(freeze_super_callback::<J, T>),
-		        freeze_fs: Some(freeze_fs_callback::<J, T>),
-                thaw_super: Some(thaw_super_callback::<J, T>),
-		        unfreeze_fs: Some(unfreeze_fs_callback::<J, T>),
-		        statfs: Some(statfs_callback::<J, T>),
-		        remount_fs: Some(remount_fs_callback::<J, T>),
-		        umount_begin: Some(umount_begin_callback::<J, T>),
+                freeze_super: None,
+		        freeze_fs: None,
+                thaw_super: None,
+		        unfreeze_fs: None,
+		        statfs: None,
+		        remount_fs: None,
+		        umount_begin: None,
 
-		        show_options: Some(show_options_callback::<J, T>),
-                show_devname: Some(show_devname_callback::<J, T>),
-	            show_path: Some(show_path_callback::<J, T>),
-	            show_stats: Some(show_stats_callback::<J, T>),
+		        show_options: None,
+                show_devname: None,
+	            show_path: None,
+	            show_stats: None,
                 // TODO #ifdef CONFIG_QUOTA
-		        quota_read: Some(quota_read_callback::<J, T>),
-		        quota_write: Some(quota_write_callback::<J, T>),
-                get_dquots: Some(get_dquots_callback::<J, T>),
+                // Use #[cfg(not(kernel_4_20_0_or_greater))] or similar?
+		        quota_read: None,
+		        quota_write: None,
+                get_dquots: None,
                 // TODO #endif
-                bdev_try_to_free_page: Some(bdev_try_to_free_page_callback::<J, T>),
+                bdev_try_to_free_page: None,
                 nr_cached_objects: None,
                 // free_cached_objects is optional, but any filesystem
                 // implementing this method needs to
