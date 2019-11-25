@@ -13,6 +13,9 @@ use crate::error::{KernelResult};
 
 pub trait SuperOperations<I>: Sync + Sized {
     fn put_super(sb: &mut SuperBlock<I>);
+    // TODO: How can we cause SuperOperationsVtable::new to insert a None for a
+    // optional method (thereby causing the kernel to choose some default
+    // implementation at runtime) when we don't want to define it?
 }
 
 unsafe extern "C" fn put_super_callback<I, T: SuperOperations<I>>(
