@@ -66,12 +66,11 @@ impl<J> SuperOperationsVtable<J> {
                 show_devname: None,
                 show_path: None,
                 show_stats: None,
-                // TODO #ifdef CONFIG_QUOTA
-                // Use #[cfg(not(kernel_4_20_0_or_greater))] or similar?
+                // TODO: #ifdef CONFIG_QUOTA
                 quota_read: None,
                 quota_write: None,
                 get_dquots: None,
-                // TODO #endif
+                // TODO: #endif
                 bdev_try_to_free_page: None,
                 nr_cached_objects: None,
                 // free_cached_objects is optional, but any filesystem
