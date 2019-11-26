@@ -115,7 +115,7 @@ impl<I> SuperBlock<'_, I> {
     }
 
     pub fn set_op(&mut self, op: &'static SuperOperationsVtable<I>) {
-        self.sb.s_op = op.op;
+        self.sb.s_op = &op.op;
     }
 
 }
