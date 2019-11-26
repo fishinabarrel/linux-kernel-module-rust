@@ -6,10 +6,11 @@ use core::ptr;
 use bitflags;
 
 use crate::bindings;
-use crate::c_types::{c_void, c_int, c_char};
+use crate::c_types::{c_void, c_int, c_char, c_ulong};
+use crate::c_types::{NonZeroCInt};
 use crate::error;
 use crate::types::CStr;
-use crate::error::{KernelResult};
+use crate::error::{KernelResult, Error};
 
 pub trait SuperOperations: Sync + Sized {
     type I;
@@ -116,6 +117,19 @@ impl<I> SuperBlock<'_, I> {
 
     pub fn set_op(&mut self, op: &'static SuperOperationsVtable<I>) {
         self.sb.s_op = &op.op;
+    }
+
+    pub fn set_magic(&mut self, magic: c_ulong) {
+        self.sb.s_magic = magic;
+    }
+
+    /// Size must be a power of two, between 512 and PAGE_SIZE, and cannot be
+    /// smaller than the size supported by the device.
+    pub fn set_blocksize(&mut self, size: c_int) -> KernelResult<NonZeroCInt> {
+        // TODO:
+        // - Add blocksize type?
+        let success = unsafe { bindings::sb_set_blocksize(self.sb, size) };
+        NonZeroCInt::new(success).ok_or(Error::EINVAL)
     }
 
 }

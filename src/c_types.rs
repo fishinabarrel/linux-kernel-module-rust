@@ -3,6 +3,7 @@
 #[cfg(target_arch = "x86_64")]
 mod c {
     use core::ffi;
+    use core::num::NonZeroI32;
 
     pub type c_int = i32;
     pub type c_char = i8;
@@ -18,6 +19,8 @@ mod c {
     pub type c_size_t = usize;
     pub type c_ssize_t = isize;
     pub type c_void = ffi::c_void;
+
+    pub type NonZeroCInt = NonZeroI32;
 }
 
 pub use c::*;
