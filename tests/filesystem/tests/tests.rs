@@ -32,21 +32,23 @@ struct ImageFile {
 
 impl ImageFile {
     fn new(path: PathBuf) -> ImageFile {
-        Command::new("touch")
+        let status = Command::new("touch")
             .arg(path.to_str().unwrap())
             .status()
             .unwrap();
+        assert!(status.success());
         ImageFile { path }
     }
 
     fn zero_init(&mut self) {
-        Command::new("dd")
+        let status = Command::new("dd")
             .arg("bs=4096")
             .arg("count=1024")
             .arg("if=/dev/zero")
             .arg(format!("of={}", self.path.to_str().unwrap()))
             .status()
             .unwrap();
+        assert!(status.success());
     }
 }
 
@@ -67,11 +69,12 @@ struct LoopDev {
 impl LoopDev {
     fn new(img: ImageFile) -> LoopDev {
         // -f finds first available loop device.
-        Command::new("sudo").arg("losetup")
+        let status = Command::new("sudo").arg("losetup")
             .arg("-f")
             .arg(img.path.to_str().unwrap())
             .status()
             .unwrap();
+        assert!(status.success());
 
         // Get the name of the loop device that was availble.
         let output = String::from_utf8(
@@ -106,10 +109,11 @@ struct Mountpoint {
 
 impl Mountpoint {
     fn new(path: PathBuf) -> Mountpoint {
-        Command::new("mkdir")
+        let status = Command::new("mkdir")
             .arg(path.to_str().unwrap())
             .status()
             .unwrap();
+        assert!(status.success());
         Mountpoint { path }
     }
 }
@@ -131,13 +135,14 @@ struct Mount {
 
 impl Mount {
     fn new(dev: LoopDev, mp: Mountpoint) -> Mount {
-        Command::new("sudo").arg("mount")
+        let status = Command::new("sudo").arg("mount")
             .arg("-o").arg("loop")
             .arg("-t").arg("testfs")
             .arg(&dev.path)
             .arg(mp.path.to_str().unwrap())
             .status()
             .unwrap();
+        assert!(status.success());
         Mount {
             mp: mp,
             _dev: dev,
