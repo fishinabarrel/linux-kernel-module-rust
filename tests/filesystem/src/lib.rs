@@ -32,6 +32,7 @@ impl SuperOperations for TestFSSuperOperations {
 
 const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<TestFSInfo> =
     SuperOperationsVtable::<TestFSInfo>::new::<TestFSSuperOperations>();
+const TESTFS_SB_MAGIC: c_types::c_ulong = 0xdeadc0de;
 
 struct TestFS;
 
@@ -65,6 +66,8 @@ impl FileSystem for TestFS {
         fs_info.magic = 0xbadf00d;
 
         sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
+        sb.set_magic(TESTFS_SB_MAGIC);
+        sb.set_blocksize(512)?;
 
         println!("TestFS fill_super executed.");
 
