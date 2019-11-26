@@ -20,24 +20,17 @@ fn test_proc_filesystems() {
     assert!(!filesystems.contains("testfs"));
 }
 
-fn temporary_file_path(name: &str) -> PathBuf {
-    let mut p = TempDir::new().unwrap().into_path();
-    p.push(name);
-    return p;
-}
-
 struct ImageFile {
     pub path: PathBuf,
+    tmpdir: TempDir,
 }
 
 impl ImageFile {
     fn new(path: PathBuf) -> ImageFile {
-        let status = Command::new("touch")
-            .arg(path.to_str().unwrap())
-            .status()
-            .unwrap();
-        assert!(status.success());
-        ImageFile { path }
+        let tmpdir = TempDir::new("testfs-image").unwrap();
+        let file_path = tmp_dir.path().join("image");
+        let file = File::create(file_path).unwrap();
+        ImageFile { file_path, tmpdir }
     }
 
     fn zero_init(&mut self) {
@@ -49,15 +42,6 @@ impl ImageFile {
             .status()
             .unwrap();
         assert!(status.success());
-    }
-}
-
-impl Drop for ImageFile {
-    fn drop(&mut self) {
-        Command::new("rm")
-            .arg(self.path.to_str().unwrap())
-            .status()
-            .unwrap();
     }
 }
 
@@ -104,27 +88,13 @@ impl Drop for LoopDev {
 }
 
 struct Mountpoint {
-    pub path: PathBuf,
+    pub tmpdir: TmpDir,
 }
 
 impl Mountpoint {
     fn new(path: PathBuf) -> Mountpoint {
-        let status = Command::new("mkdir")
-            .arg(path.to_str().unwrap())
-            .status()
-            .unwrap();
-        assert!(status.success());
-        Mountpoint { path }
-    }
-}
-
-impl Drop for Mountpoint {
-    fn drop(&mut self) {
-        Command::new("rm")
-            .arg("-rfd")
-            .arg(self.path.to_str().unwrap())
-            .status()
-            .unwrap();
+        let tmpdir = TempDir::new("testfs-image").unwrap();
+        Mountpoint { tmpdir }
     }
 }
 
@@ -139,7 +109,7 @@ impl Mount {
             .arg("-o").arg("loop")
             .arg("-t").arg("testfs")
             .arg(&dev.path)
-            .arg(mp.path.to_str().unwrap())
+            .arg(mp.tmpdir.path().to_str().unwrap())
             .status()
             .unwrap();
         assert!(status.success());
@@ -154,7 +124,7 @@ impl Drop for Mount {
     fn drop(&mut self) {
         Command::new("sudo")
             .arg("umount")
-            .arg(self.mp.path.to_str().unwrap())
+            .arg(self.mp.tmpdir.path().to_str().unwrap())
             .status()
             .unwrap();
     }
@@ -163,7 +133,7 @@ impl Drop for Mount {
 #[test]
 fn test_fill_super() {
     with_kernel_module(|| {
-        let mut img = ImageFile::new(temporary_file_path("testfs_image"));
+        let mut img = ImageFile::new();
         img.zero_init();
         let dev = LoopDev::new(img);
         let mp = Mountpoint::new(temporary_file_path("testfs_mountpoint"));
