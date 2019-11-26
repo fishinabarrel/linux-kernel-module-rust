@@ -25,6 +25,8 @@ impl SuperOperations for TestFSSuperOperations {
         // ownership of it. This would normally happen in the put_super
         // callback.
         sb.set_fs_info(None);
+
+        println!("TestFS put_super executed.");
     }
 }
 
@@ -63,6 +65,8 @@ impl FileSystem for TestFS {
         fs_info.magic = 0xbadf00d;
 
         sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
+
+        println!("TestFS fill_super executed.");
 
         Ok(())
     }

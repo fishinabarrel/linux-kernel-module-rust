@@ -39,8 +39,10 @@ pub struct SuperOperationsVtable<I> {
     _phantom_sb_fs_info: marker::PhantomData<I>,
 }
 
-impl<J> SuperOperationsVtable<J> {
-    pub const fn new<T: SuperOperations>() -> SuperOperationsVtable<T::I> {
+impl<I> SuperOperationsVtable<I> {
+    pub const fn new<T: SuperOperations>() ->
+        SuperOperationsVtable<<T as SuperOperations>::I>
+    {
         SuperOperationsVtable {
             op: bindings::super_operations {
                 alloc_inode: None,
