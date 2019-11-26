@@ -31,7 +31,7 @@ impl SuperOperations for TestFSSuperOperations {
 }
 
 const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<TestFSInfo> =
-    SuperOperationsVtable::new::<TestFSSuperOperations>();
+    SuperOperationsVtable::<TestFSInfo>::new::<TestFSSuperOperations>();
 
 struct TestFS;
 

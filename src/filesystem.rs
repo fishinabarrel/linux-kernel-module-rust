@@ -40,9 +40,7 @@ pub struct SuperOperationsVtable<I> {
 }
 
 impl<I> SuperOperationsVtable<I> {
-    pub const fn new<T: SuperOperations>() ->
-        SuperOperationsVtable<<T as SuperOperations>::I>
-    {
+    pub const fn new<T: SuperOperations>() -> SuperOperationsVtable<T::I> {
         SuperOperationsVtable {
             op: bindings::super_operations {
                 alloc_inode: None,
@@ -117,7 +115,7 @@ impl<I> SuperBlock<'_, I> {
     }
 
     pub fn set_op(&mut self, op: &'static SuperOperationsVtable<I>) {
-        self.sb.s_op = &op.op;
+        self.sb.s_op = op.op;
     }
 
 }
