@@ -14,7 +14,7 @@ use crate::error::{KernelResult, Error};
 
 pub trait SuperOperations: Sync + Sized {
     type I;
-    fn put_super(sb: &mut SuperBlock<Self::I>);
+    fn put_super(ptr: &mut SuperBlock<Self::I>);
     // TODO: How can we cause SuperOperationsVtable::new to insert a None for a
     // optional method (thereby causing the kernel to choose some default
     // implementation at runtime) when we don't want to define it?
@@ -23,11 +23,11 @@ pub trait SuperOperations: Sync + Sized {
 unsafe extern "C" fn put_super_callback<T: SuperOperations>(
     sb_raw: *mut bindings::super_block
 ) {
-    let mut sb = SuperBlock {
-        sb: sb_raw.as_mut().unwrap(),
+    let mut ptr = SuperBlock {
+        ptr: sb_raw.as_mut().unwrap(),
         _phantom_fs_info: marker::PhantomData,
     };
-    T::put_super(&mut sb);
+    T::put_super(&mut ptr);
 }
 
 pub struct SuperOperationsVtable<I> {
@@ -86,7 +86,7 @@ impl<I> SuperOperationsVtable<I> {
 }
 
 pub struct SuperBlock<'a, I> {
-    sb: &'a mut bindings::super_block,
+    pub ptr: &'a mut bindings::super_block,
     _phantom_fs_info: marker::PhantomData<Option<Box<I>>>,
 }
 
@@ -97,10 +97,10 @@ impl<I> SuperBlock<'_, I> {
     // the value while we keep it). I don't think there exists such a
     // trait. Therefore just require that fs_info is on the heap (i.e. a Box).
     pub fn set_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
-        let old_val = ptr::NonNull::new(self.sb.s_fs_info as *mut I).map(
+        let old_val = ptr::NonNull::new(self.ptr.s_fs_info as *mut I).map(
             |nn| unsafe { Box::from_raw(nn.as_ptr()) }
         );
-        self.sb.s_fs_info = match new_val {
+        self.ptr.s_fs_info = match new_val {
             None => ptr::null() as *const c_void as *mut c_void,
             Some(b) => Box::into_raw(b) as *mut c_void,
         };
@@ -108,19 +108,19 @@ impl<I> SuperBlock<'_, I> {
     }
 
     pub fn fs_info_ref(&self) -> Option<&I> {
-        unsafe { (self.sb.s_fs_info as *mut I).as_ref()}
+        unsafe { (self.ptr.s_fs_info as *mut I).as_ref()}
     }
 
     pub fn fs_info_mut(&mut self) -> Option<&mut I> {
-        unsafe { (self.sb.s_fs_info as *mut I).as_mut() }
+        unsafe { (self.ptr.s_fs_info as *mut I).as_mut() }
     }
 
     pub fn set_op(&mut self, op: &'static SuperOperationsVtable<I>) {
-        self.sb.s_op = &op.op;
+        self.ptr.s_op = &op.op;
     }
 
     pub fn set_magic(&mut self, magic: c_ulong) {
-        self.sb.s_magic = magic;
+        self.ptr.s_magic = magic;
     }
 
     /// Size must be a power of two, between 512 and PAGE_SIZE, and cannot be
@@ -128,7 +128,7 @@ impl<I> SuperBlock<'_, I> {
     pub fn set_blocksize(&mut self, size: c_int) -> KernelResult<NonZeroCInt> {
         // TODO:
         // - Add blocksize type?
-        let success = unsafe { bindings::sb_set_blocksize(self.sb, size) };
+        let success = unsafe { bindings::sb_set_blocksize(self.ptr, size) };
         NonZeroCInt::new(success).ok_or(Error::EINVAL)
     }
 
@@ -164,7 +164,7 @@ pub trait FileSystem: Sync {
     const FLAGS: FileSystemFlags;
 
     fn fill_super(
-        sb: &mut SuperBlock<Self::I>,
+        ptr: &mut SuperBlock<Self::I>,
         data: *mut c_void,
         silent: c_int,
     ) -> KernelResult<()>;
@@ -175,19 +175,19 @@ fn _fill_super_callback<T: FileSystem>(
     data: *mut c_void,
     silent: c_int,
 ) -> KernelResult<()> {
-    let mut sb = SuperBlock {
-        sb: unsafe { sb_raw.as_mut() }.unwrap(),
+    let mut ptr = SuperBlock {
+        ptr: unsafe { sb_raw.as_mut() }.unwrap(),
         _phantom_fs_info: marker::PhantomData,
     };
-    T::fill_super(&mut sb, data, silent)
+    T::fill_super(&mut ptr, data, silent)
 }
 
 extern "C" fn fill_super_callback<T: FileSystem>(
-    sb: *mut bindings::super_block,
+    ptr: *mut bindings::super_block,
     data: *mut c_void,
     silent: c_int,
 ) -> c_int {
-    match _fill_super_callback::<T>(sb, data, silent) {
+    match _fill_super_callback::<T>(ptr, data, silent) {
         Ok(()) => 0,
         Err(e) => e.to_kernel_errno(),
     }
@@ -204,9 +204,9 @@ bitflags::bitflags! {
 }
 
 extern "C" fn kill_sb_callback<T: FileSystem>(
-    sb: *mut bindings::super_block,
+    ptr: *mut bindings::super_block,
 ) {
-    unsafe { bindings::kill_block_super(sb) }
+    unsafe { bindings::kill_block_super(ptr) }
 }
 
 extern "C" fn mount_callback<T: FileSystem>(

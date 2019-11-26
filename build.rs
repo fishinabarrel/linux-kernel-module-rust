@@ -21,6 +21,8 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "kill_block_super",
     "kill_litter_super",
     "sb_set_blocksize",
+    "new_inode",
+    "d_make_root",
     "register_sysctl",
     "unregister_sysctl_table",
     "access_ok",

@@ -6,6 +6,7 @@ use linux_kernel_module::filesystem::*;
 use linux_kernel_module::{self, cstr, CStr, c_types};
 use linux_kernel_module::println;
 use linux_kernel_module::KernelResult;
+use linux_kernel_module::bindings;
 use alloc::boxed::Box;
 
 struct TestFSInfo {
@@ -67,6 +68,35 @@ impl FileSystem for TestFS {
         sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
         sb.set_magic(TESTFS_SB_MAGIC);
         sb.set_blocksize(512)?;
+
+        // TODO: Use safe API when available.
+        unsafe {
+            const TESTFS_ROOT_BNO: u64 = 1;
+            let root = bindings::new_inode(sb.ptr);
+	        // TODO:
+            // if (IS_ERR(root)) {
+		    //     if (!silent)
+			//         pr_err("Root getting failed.\n");
+		    //     err = PTR_ERR(root);
+		    //     goto release_sbi;
+	        // }
+
+            (*root).i_sb = sb.ptr;
+            (*root).i_ino = TESTFS_ROOT_BNO;
+
+	        sb.ptr.s_root = bindings::d_make_root(root);
+	        // TODO:
+            // if (!sb->s_root) {
+		    //     if (!silent)
+			//         pr_err("Root creation failed.\n");
+		    //     err = -ENOMEM;
+		    //     goto release_root;
+	        // }
+            // release_root:
+	        // if (err) {
+		    //     destroy_root_inode(root);
+	        // }
+        }
 
         println!("TestFS fill_super executed.");
 
