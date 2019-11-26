@@ -164,8 +164,10 @@ fn test_fill_super() {
         let mp = Mountpoint::new(temporary_file_path("testfs_mountpoint"));
         let mount = Mount::new(dev, mp);
 
-        assert_dmesg_contains(&[b"TestFS fill_super successfull."]);
+        assert_dmesg_contains(&[b"TestFS fill_super executed."]);
 
         drop(mount);
+
+        assert_dmesg_contains(&[b"TestFS put_super executed."]);
     });
 }
