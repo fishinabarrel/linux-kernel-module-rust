@@ -138,6 +138,15 @@ pub trait FileSystem: Sync {
     type I;
 
     const NAME: &'static CStr;
+
+    // TODO from linux/Documentation/filesystems/porting.rst:
+    //
+    // new file_system_type method - kill_sb(superblock).  If you are converting
+    // an existing filesystem, set it according to ->fs_flags::
+    //
+    // FS_REQUIRES_DEV		-	kill_block_super
+    // FS_LITTER		-	kill_litter_super
+    // neither			-	kill_anon_super
     const FLAGS: FileSystemFlags;
 
     fn fill_super(
@@ -183,7 +192,7 @@ bitflags::bitflags! {
 extern "C" fn kill_sb_callback<T: FileSystem>(
     sb: *mut bindings::super_block,
 ) {
-    unsafe { bindings::kill_litter_super(sb) }
+    unsafe { bindings::kill_block_super(sb) }
 }
 
 extern "C" fn mount_callback<T: FileSystem>(
