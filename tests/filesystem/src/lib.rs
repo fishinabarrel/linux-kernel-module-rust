@@ -10,14 +10,14 @@ use linux_kernel_module::KernelResult;
 use linux_kernel_module::bindings;
 use alloc::boxed::Box;
 
-struct TestFSInfo {
+struct RamfsInfo {
     magic: u32,
 }
 
-struct TestFSSuperOperations;
+struct RamfsSuperOperations;
 
-impl SuperOperations for TestFSSuperOperations {
-    type I = TestFSInfo;
+impl SuperOperations for RamfsSuperOperations {
+    type I = RamfsInfo;
     
     fn put_super(sb: &mut SuperBlock<Self::I>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
@@ -27,18 +27,18 @@ impl SuperOperations for TestFSSuperOperations {
         // callback.
         sb.set_fs_info(None);
 
-        println!("TestFS put_super executed.");
+        println!("Ramfs put_super executed.");
     }
 }
 
-const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<TestFSInfo> =
-    SuperOperationsVtable::<TestFSInfo>::new::<TestFSSuperOperations>();
+const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<RamfsInfo> =
+    SuperOperationsVtable::<RamfsInfo>::new::<RamfsSuperOperations>();
 const TESTFS_SB_MAGIC: c_types::c_ulong = 0xdeadc0de;
 
-struct TestFS;
+struct Ramfs;
 
-impl FileSystem for TestFS {
-    type I = TestFSInfo;
+impl FileSystem for Ramfs {
+    type I = RamfsInfo;
 
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
@@ -54,7 +54,7 @@ impl FileSystem for TestFS {
         assert!(sb.fs_info_ref().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
-        sb.set_fs_info(Some(Box::new(TestFSInfo {
+        sb.set_fs_info(Some(Box::new(RamfsInfo {
             magic: 42,
         })));
 
@@ -63,12 +63,11 @@ impl FileSystem for TestFS {
 
         // And also mutable references if we have a mutable reference to the
         // super block:
-        let fs_info: &mut TestFSInfo = sb.fs_info_mut().unwrap();
+        let fs_info: &mut RamfsInfo = sb.fs_info_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
         sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
         sb.set_magic(TESTFS_SB_MAGIC);
-        sb.set_blocksize(512)?;
 
         // TODO: Use safe API when available.
         unsafe {
@@ -99,27 +98,27 @@ impl FileSystem for TestFS {
 	        // }
         }
 
-        println!("TestFS fill_super executed.");
+        println!("Ramfs fill_super executed.");
 
         Ok(())
     }
 }
 
-struct TestFSModule {
-    _fs_registration: Registration<TestFS>,
+struct RamfsModule {
+    _fs_registration: Registration<Ramfs>,
 }
 
-impl linux_kernel_module::KernelModule for TestFSModule {
+impl linux_kernel_module::KernelModule for RamfsModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
-        let fs_registration = register::<TestFS>()?;
-        Ok(TestFSModule {
+        let fs_registration = register::<Ramfs>()?;
+        Ok(RamfsModule {
             _fs_registration: fs_registration,
         })
     }
 }
 
 linux_kernel_module::kernel_module!(
-    TestFSModule,
+    RamfsModule,
     author: "Fish in a Barrel Contributors",
     description: "A module for testing filesystem::register",
     license: "GPL"
