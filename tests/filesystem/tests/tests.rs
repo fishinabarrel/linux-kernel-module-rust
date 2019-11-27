@@ -105,6 +105,7 @@ fn test_fill_super() {
             .arg("count=1024")
             .arg("if=/dev/zero")
             .arg(format!("of={}", image.path().to_str().unwrap()))
+            .arg("status=none") // no spam
             .status().unwrap();
         assert!(status.success());
 
@@ -116,10 +117,10 @@ fn test_fill_super() {
 
         let mount = Mount::new(loop_dev, mountpoint);
 
-        assert_dmesg_contains(&[b"TestFS fill_super executed."]);
+        assert_dmesg_contains(&[b"testfs-fill_super-marker"]);
 
         drop(mount);
 
-        assert_dmesg_contains(&[b"TestFS put_super executed."]);
+        assert_dmesg_contains(&[b"testfs-put_super-marker"]);
     });
 }
