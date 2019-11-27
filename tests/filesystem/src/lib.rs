@@ -12,7 +12,7 @@ use linux_kernel_module::KernelResult;
 use linux_kernel_module::{self, c_types, cstr, CStr};
 
 struct TestfsInfo {
-    magic: u32,
+    dummy_data: u32,
 }
 
 struct TestfsSuperOperations;
@@ -23,7 +23,7 @@ impl SuperOperations for TestfsSuperOperations {
     const VTABLE: SuperOperationsVtable<Self::I> = SuperOperationsVtable::<Self::I>::new::<Self>();
 
     fn put_super(sb: &mut SuperBlock<Self::I>) {
-        assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
+        assert!(sb.fs_info_ref().unwrap().dummy_data == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
         // ownership of it. This would normally happen in the put_super
@@ -54,15 +54,15 @@ impl FileSystem for Testfs {
         assert!(sb.fs_info_ref().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
-        sb.set_fs_info(Some(Box::new(TestfsInfo { magic: 42 })));
+        sb.set_fs_info(Some(Box::new(TestfsInfo { dummy_data: 42 })));
 
         // We can obtain references to it while SuperBlock owns it:
-        assert!(sb.fs_info_ref().unwrap().magic == 42);
+        assert!(sb.fs_info_ref().unwrap().dummy_data == 42);
 
         // And also mutable references if we have a mutable reference to the
         // super block:
         let fs_info: &mut TestfsInfo = sb.fs_info_mut().unwrap();
-        fs_info.magic = 0xbadf00d;
+        fs_info.dummy_data = 0xbadf00d;
 
         sb.set_op(&TestfsSuperOperations::VTABLE);
         sb.set_magic(TESTFS_SB_MAGIC);
