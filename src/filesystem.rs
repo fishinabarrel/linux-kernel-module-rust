@@ -14,6 +14,14 @@ use crate::error::{KernelResult, Error};
 
 pub trait SuperOperations: Sync + Sized {
     type I;
+
+    /// A container for the actual `super_operations` value. This will always be:
+    /// ```
+    /// const VTABLE: linux_kernel_module::filesystem::SuperOperationsVtable<Self::I> =
+    ///     linux_kernel_module::filesystem::SuperOperationsVtable::<Self::I>::new::<Self>();
+    /// ```
+    const VTABLE: SuperOperationsVtable<Self::I>;
+
     fn put_super(ptr: &mut SuperBlock<Self::I>);
     // TODO: How can we cause SuperOperationsVtable::new to insert a None for a
     // optional method (thereby causing the kernel to choose some default

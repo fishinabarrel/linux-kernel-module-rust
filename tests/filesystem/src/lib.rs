@@ -20,6 +20,9 @@ struct TestfsSuperOperations;
 
 impl SuperOperations for TestfsSuperOperations {
     type I = TestfsInfo;
+
+    const VTABLE: SuperOperationsVtable<Self::I> =
+        SuperOperationsVtable::<Self::I>::new::<Self>();
     
     fn put_super(sb: &mut SuperBlock<Self::I>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
@@ -33,8 +36,6 @@ impl SuperOperations for TestfsSuperOperations {
     }
 }
 
-const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<TestfsInfo> =
-    SuperOperationsVtable::<TestfsInfo>::new::<TestfsSuperOperations>();
 const TESTFS_SB_MAGIC: c_types::c_ulong = 0xdeadc0de;
 
 struct Testfs;
@@ -68,7 +69,7 @@ impl FileSystem for Testfs {
         let fs_info: &mut TestfsInfo = sb.fs_info_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
-        sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
+        sb.set_op(&TestfsSuperOperations::VTABLE);
         sb.set_magic(TESTFS_SB_MAGIC);
 
         // TODO: Use safe API when available.
