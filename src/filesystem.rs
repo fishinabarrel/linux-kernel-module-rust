@@ -47,7 +47,7 @@ pub struct SuperOperationsVtable<I> {
 }
 
 impl<I> SuperOperationsVtable<I> {
-    pub const fn new<T: SuperOperations>() -> SuperOperationsVtable<T::I> {
+    pub const fn new<T: SuperOperations>() -> Self {
         SuperOperationsVtable {
             op: bindings::super_operations {
                 alloc_inode: None,
