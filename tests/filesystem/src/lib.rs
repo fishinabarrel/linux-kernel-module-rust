@@ -2,14 +2,14 @@
 
 extern crate alloc;
 
+use alloc::boxed::Box;
+use core::convert::TryInto;
+use core::ptr;
+use linux_kernel_module::bindings;
 use linux_kernel_module::filesystem::*;
-use linux_kernel_module::{self, cstr, CStr, c_types};
 use linux_kernel_module::println;
 use linux_kernel_module::KernelResult;
-use linux_kernel_module::bindings;
-use alloc::boxed::Box;
-use core::ptr;
-use core::convert::TryInto;
+use linux_kernel_module::{self, c_types, cstr, CStr};
 
 struct TestfsInfo {
     magic: u32,
@@ -20,9 +20,8 @@ struct TestfsSuperOperations;
 impl SuperOperations for TestfsSuperOperations {
     type I = TestfsInfo;
 
-    const VTABLE: SuperOperationsVtable<Self::I> =
-        SuperOperationsVtable::<Self::I>::new::<Self>();
-    
+    const VTABLE: SuperOperationsVtable<Self::I> = SuperOperationsVtable::<Self::I>::new::<Self>();
+
     fn put_super(sb: &mut SuperBlock<Self::I>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
 
@@ -51,14 +50,11 @@ impl FileSystem for Testfs {
         _data: *mut c_types::c_void,
         _silent: c_types::c_int,
     ) -> KernelResult<()> {
-
         // The kernel initializes fs_info to NULL.
         assert!(sb.fs_info_ref().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
-        sb.set_fs_info(Some(Box::new(TestfsInfo {
-            magic: 42,
-        })));
+        sb.set_fs_info(Some(Box::new(TestfsInfo { magic: 42 })));
 
         // We can obtain references to it while SuperBlock owns it:
         assert!(sb.fs_info_ref().unwrap().magic == 42);
@@ -90,8 +86,7 @@ impl FileSystem for Testfs {
             // otherwise mount(8) will fail with 'mount(2) system call failed:
             // Not a directory.' for the given mountpoint directory (even
             // thought the _supplied_ mountpoint is a directory).
-            bindings::inode_init_owner(root, ptr::null(),
-                                       bindings::S_IFDIR.try_into().unwrap());
+            bindings::inode_init_owner(root, ptr::null(), bindings::S_IFDIR.try_into().unwrap());
             // TODO: Handle error?
             let now = bindings::current_time(root);
             (*root).i_atime = now;

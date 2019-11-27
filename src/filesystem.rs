@@ -6,11 +6,11 @@ use core::ptr;
 use bitflags;
 
 use crate::bindings;
-use crate::c_types::{c_void, c_int, c_char, c_ulong};
-use crate::c_types::{NonZeroCInt};
+use crate::c_types::NonZeroCInt;
+use crate::c_types::{c_char, c_int, c_ulong, c_void};
 use crate::error;
+use crate::error::{Error, KernelResult};
 use crate::types::CStr;
-use crate::error::{KernelResult, Error};
 
 pub trait SuperOperations: Sync + Sized {
     type I;
@@ -28,9 +28,7 @@ pub trait SuperOperations: Sync + Sized {
     // implementation at runtime) when we don't want to define it?
 }
 
-unsafe extern "C" fn put_super_callback<T: SuperOperations>(
-    sb_raw: *mut bindings::super_block
-) {
+unsafe extern "C" fn put_super_callback<T: SuperOperations>(sb_raw: *mut bindings::super_block) {
     let mut ptr = SuperBlock {
         ptr: sb_raw.as_mut().unwrap(),
         _phantom_fs_info: marker::PhantomData,
@@ -99,15 +97,13 @@ pub struct SuperBlock<'a, I> {
 }
 
 impl<I> SuperBlock<'_, I> {
-
     // Ideally we should only require fs_info to be something than can be
     // converted to a raw pointer and back again safely (if we don't mess with
     // the value while we keep it). I don't think there exists such a
     // trait. Therefore just require that fs_info is on the heap (i.e. a Box).
     pub fn set_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
-        let old_val = ptr::NonNull::new(self.ptr.s_fs_info as *mut I).map(
-            |nn| unsafe { Box::from_raw(nn.as_ptr()) }
-        );
+        let old_val = ptr::NonNull::new(self.ptr.s_fs_info as *mut I)
+            .map(|nn| unsafe { Box::from_raw(nn.as_ptr()) });
         self.ptr.s_fs_info = match new_val {
             None => ptr::null() as *const c_void as *mut c_void,
             Some(b) => Box::into_raw(b) as *mut c_void,
@@ -116,7 +112,7 @@ impl<I> SuperBlock<'_, I> {
     }
 
     pub fn fs_info_ref(&self) -> Option<&I> {
-        unsafe { (self.ptr.s_fs_info as *mut I).as_ref()}
+        unsafe { (self.ptr.s_fs_info as *mut I).as_ref() }
     }
 
     pub fn fs_info_mut(&mut self) -> Option<&mut I> {
@@ -139,7 +135,6 @@ impl<I> SuperBlock<'_, I> {
         let success = unsafe { bindings::sb_set_blocksize(self.ptr, size) };
         NonZeroCInt::new(success).ok_or(Error::EINVAL)
     }
-
 }
 
 pub struct Registration<T: FileSystem> {
@@ -211,9 +206,7 @@ bitflags::bitflags! {
     }
 }
 
-extern "C" fn kill_sb_callback<T: FileSystem>(
-    ptr: *mut bindings::super_block,
-) {
+extern "C" fn kill_sb_callback<T: FileSystem>(ptr: *mut bindings::super_block) {
     unsafe { bindings::kill_block_super(ptr) }
 }
 
@@ -223,7 +216,15 @@ extern "C" fn mount_callback<T: FileSystem>(
     dev_name: *const c_char,
     data: *mut c_void,
 ) -> *mut bindings::dentry {
-    unsafe { bindings::mount_bdev(fs_type, flags, dev_name, data, Some(fill_super_callback::<T>)) }
+    unsafe {
+        bindings::mount_bdev(
+            fs_type,
+            flags,
+            dev_name,
+            data,
+            Some(fill_super_callback::<T>),
+        )
+    }
 }
 
 pub fn register<T: FileSystem>() -> error::KernelResult<Registration<T>> {
