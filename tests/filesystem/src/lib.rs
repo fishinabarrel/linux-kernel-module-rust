@@ -28,7 +28,7 @@ impl SuperOperations for TestfsSuperOperations {
         // callback.
         sb.set_fs_info(None);
 
-        println!("Testfs put_super executed.");
+        println!("testfs-put_super-marker");
     }
 }
 
@@ -84,6 +84,11 @@ impl FileSystem for Testfs {
 
             (*root).i_sb = sb.ptr;
             (*root).i_ino = TESTFS_ROOT_BNO;
+
+            // The inode passed to d_make_root must have the S_IFDIR flag set,
+            // otherwise mount(8) will fail with 'mount(2) system call failed:
+            // Not a directory.' for the given mountpoint directory (even
+            // thought the _supplied_ mountpoint is a directory).
             bindings::inode_init_owner(root, ptr::null(),
                                        bindings::S_IFDIR.try_into().unwrap());
             // TODO: Handle error?
@@ -106,7 +111,7 @@ impl FileSystem for Testfs {
 	        // }
         }
 
-        println!("Testfs fill_super executed.");
+        println!("testfs-fill_super-marker");
 
         Ok(())
     }
