@@ -19,80 +19,36 @@ fn test_proc_filesystems() {
     assert!(!filesystems.contains("testfs"));
 }
 
-struct LoopDev {
-    pub path: String,
+struct Mount {
+    mountpoint: tempfile::TempDir,
     _image: tempfile::NamedTempFile,
 }
 
-impl LoopDev {
-    fn new(image: tempfile::NamedTempFile) -> LoopDev {
-        let image_path = image.path().to_str().unwrap();
-
-        let status = Command::new("sudo")
-            .arg("losetup")
-            .arg("--find") // ... first available loop device.
-            .arg(image_path)
-            .status()
-            .unwrap();
-        assert!(status.success());
-
-        // Get the name of the loop device that was availble:
-        let result = Command::new("sudo")
-            .arg("losetup")
-            .arg("--associated")
-            .arg(image_path)
-            .arg("--noheadings")
-            .arg("--output")
-            .arg("NAME")
-            .output()
-            .unwrap();
-        let output = String::from_utf8(result.stdout).unwrap();
-
-        LoopDev {
-            path: String::from(output.as_str().trim()),
-            _image: image,
-        }
-    }
-}
-
-impl Drop for LoopDev {
-    fn drop(&mut self) {
-        Command::new("sudo")
-            .arg("losetup")
-            .arg("--detach")
-            .arg(&self.path)
-            .status()
-            .unwrap();
-    }
-}
-
-struct Mount {
-    mountpoint: tempfile::TempDir,
-    _dev: LoopDev,
-}
-
 impl Mount {
-    fn new(dev: LoopDev, mountpoint: tempfile::TempDir) -> Mount {
+    fn new(image: tempfile::NamedTempFile, mountpoint: tempfile::TempDir) -> Mount {
         let status = Command::new("sudo")
             .arg("mount")
-            .arg("--options")
-            .arg("loop")
+            .arg(image.path().to_str().unwrap())
+            .arg(mountpoint.path().to_str().unwrap())
             .arg("--types")
             .arg("testfs")
-            .arg(&dev.path)
-            .arg(mountpoint.path().to_str().unwrap())
+            .arg("--options")
+            .arg("loop")
             .status()
             .unwrap();
         assert!(status.success());
         Mount {
             mountpoint: mountpoint,
-            _dev: dev,
+            _image: image,
         }
     }
 }
 
 impl Drop for Mount {
     fn drop(&mut self) {
+        // $ man 8 mount: Since Linux 2.6.25 auto-destruction of loop devices is
+        // supported, meaning that any loop device allocated by mount will be
+        // freed by umount independently of /etc/mtab.
         Command::new("sudo")
             .arg("umount")
             .arg(self.mountpoint.path().to_str().unwrap())
@@ -108,7 +64,7 @@ fn test_fill_super() {
             .prefix("testfs-image-")
             .tempfile()
             .unwrap();
-        let status = Command::new("dd")
+        let dd_status = Command::new("dd")
             .arg("bs=4096")
             .arg("count=1024")
             .arg("if=/dev/zero")
@@ -116,15 +72,12 @@ fn test_fill_super() {
             .arg("status=none") // no spam
             .status()
             .unwrap();
-        assert!(status.success());
-
-        let loop_dev = LoopDev::new(image);
+        assert!(dd_status.success());
         let mountpoint = tempfile::Builder::new()
             .prefix("testfs-mountpoint-")
             .tempdir()
             .unwrap();
-
-        let mount = Mount::new(loop_dev, mountpoint);
+        let mount = Mount::new(image, mountpoint);
 
         assert_dmesg_contains(&[b"testfs-fill_super-marker"]);
 
