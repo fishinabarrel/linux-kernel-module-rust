@@ -3,7 +3,7 @@ use std::process::Command;
 
 use tempfile;
 
-use kernel_module_testlib::{with_kernel_module, assert_dmesg_contains};
+use kernel_module_testlib::{assert_dmesg_contains, with_kernel_module};
 
 #[test]
 fn test_proc_filesystems() {
@@ -29,7 +29,8 @@ impl LoopDev {
         let image_path = image.path().to_str().unwrap();
 
         // -f finds first available loop device.
-        let status = Command::new("sudo").arg("losetup")
+        let status = Command::new("sudo")
+            .arg("losetup")
             .arg("-f")
             .arg(image_path)
             .status()
@@ -37,10 +38,13 @@ impl LoopDev {
         assert!(status.success());
 
         // Get the name of the loop device that was availble.
-        let result = Command::new("sudo").arg("losetup")
-            .arg("--associated").arg(image_path)
+        let result = Command::new("sudo")
+            .arg("losetup")
+            .arg("--associated")
+            .arg(image_path)
             .arg("--noheadings")
-            .arg("--output").arg("NAME")
+            .arg("--output")
+            .arg("NAME")
             .output()
             .unwrap();
         let output = String::from_utf8(result.stdout).unwrap();
@@ -54,8 +58,10 @@ impl LoopDev {
 
 impl Drop for LoopDev {
     fn drop(&mut self) {
-        Command::new("sudo").arg("losetup")
-            .arg("-d").arg(&self.path)
+        Command::new("sudo")
+            .arg("losetup")
+            .arg("-d")
+            .arg(&self.path)
             .status()
             .unwrap();
     }
@@ -68,9 +74,12 @@ struct Mount {
 
 impl Mount {
     fn new(dev: LoopDev, mountpoint: tempfile::TempDir) -> Mount {
-        let status = Command::new("sudo").arg("mount")
-            .arg("-o").arg("loop")
-            .arg("-t").arg("testfs")
+        let status = Command::new("sudo")
+            .arg("mount")
+            .arg("-o")
+            .arg("loop")
+            .arg("-t")
+            .arg("testfs")
             .arg(&dev.path)
             .arg(mountpoint.path().to_str().unwrap())
             .status()
@@ -85,7 +94,8 @@ impl Mount {
 
 impl Drop for Mount {
     fn drop(&mut self) {
-        Command::new("sudo").arg("umount")
+        Command::new("sudo")
+            .arg("umount")
             .arg(self.mountpoint.path().to_str().unwrap())
             .status()
             .unwrap();
@@ -105,7 +115,8 @@ fn test_fill_super() {
             .arg("if=/dev/zero")
             .arg(format!("of={}", image.path().to_str().unwrap()))
             .arg("status=none") // no spam
-            .status().unwrap();
+            .status()
+            .unwrap();
         assert!(status.success());
 
         let loop_dev = LoopDev::new(image);
