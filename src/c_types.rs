@@ -18,6 +18,7 @@ mod c {
     pub type c_schar = i8;
     pub type c_size_t = usize;
     pub type c_ssize_t = isize;
+    pub type c_bool = bool;
     pub type c_void = ffi::c_void;
 
     pub type NonZeroCInt = NonZeroI32;

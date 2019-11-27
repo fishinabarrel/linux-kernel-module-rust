@@ -3,13 +3,18 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
-use core::convert::TryInto;
+use core::convert::{TryFrom, TryInto};
 use core::ptr;
 use linux_kernel_module::bindings;
 use linux_kernel_module::filesystem::*;
 use linux_kernel_module::println;
-use linux_kernel_module::KernelResult;
 use linux_kernel_module::{self, c_types, cstr, CStr};
+use linux_kernel_module::{Error, KernelResult};
+
+extern "C" {
+    fn PTR_ERR_helper(ptr: *const c_types::c_void) -> c_types::c_long;
+    fn IS_ERR_helper(ptr: *const c_types::c_void) -> c_types::c_bool;
+}
 
 struct TestfsInfo {
     dummy_data: u32,
@@ -48,7 +53,7 @@ impl FileSystem for Testfs {
     fn fill_super(
         sb: &mut SuperBlock<Self::I>,
         _data: *mut c_types::c_void,
-        _silent: c_types::c_int,
+        silent: c_types::c_int,
     ) -> KernelResult<()> {
         // The kernel initializes fs_info to NULL.
         assert!(sb.fs_info_ref().is_none());
@@ -72,13 +77,15 @@ impl FileSystem for Testfs {
         unsafe {
             const TESTFS_ROOT_BNO: u64 = 1;
             let root = bindings::new_inode(sb.ptr);
-            // TODO:
-            // if (IS_ERR(root)) {
-            //     if (!silent)
-            //         pr_err("Root getting failed.\n");
-            //     err = PTR_ERR(root);
-            //     goto release_sbi;
-            // }
+            if IS_ERR_helper(root as *const c_types::c_void) {
+                if silent == 0 {
+                    println!("Failed to create testfs root inode.");
+                }
+                let errno: i32 =
+                    i32::try_from(PTR_ERR_helper(root as *const c_types::c_void)).unwrap();
+                sb.set_fs_info(None);
+                return Err(Error::from_kernel_errno(errno));
+            }
 
             (*root).i_sb = sb.ptr;
             (*root).i_ino = TESTFS_ROOT_BNO;
