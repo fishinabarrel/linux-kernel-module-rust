@@ -64,6 +64,7 @@ impl FileSystem for Testfs {
         let fs_info: &mut TestfsInfo = sb.fs_info_mut().unwrap();
         fs_info.dummy_data = 0xbadf00d;
 
+        // TODO: Do something similar to filesystem::register here?
         sb.set_op(&TestfsSuperOperations::VTABLE);
         sb.set_magic(TESTFS_SB_MAGIC);
 
