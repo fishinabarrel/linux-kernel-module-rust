@@ -28,16 +28,15 @@ impl LoopDev {
     fn new(image: tempfile::NamedTempFile) -> LoopDev {
         let image_path = image.path().to_str().unwrap();
 
-        // -f finds first available loop device.
         let status = Command::new("sudo")
             .arg("losetup")
-            .arg("-f")
+            .arg("--find") // ... first available loop device.
             .arg(image_path)
             .status()
             .unwrap();
         assert!(status.success());
 
-        // Get the name of the loop device that was availble.
+        // Get the name of the loop device that was availble:
         let result = Command::new("sudo")
             .arg("losetup")
             .arg("--associated")
@@ -60,7 +59,7 @@ impl Drop for LoopDev {
     fn drop(&mut self) {
         Command::new("sudo")
             .arg("losetup")
-            .arg("-d")
+            .arg("--detach")
             .arg(&self.path)
             .status()
             .unwrap();
@@ -76,9 +75,9 @@ impl Mount {
     fn new(dev: LoopDev, mountpoint: tempfile::TempDir) -> Mount {
         let status = Command::new("sudo")
             .arg("mount")
-            .arg("-o")
+            .arg("--options")
             .arg("loop")
-            .arg("-t")
+            .arg("--types")
             .arg("testfs")
             .arg(&dev.path)
             .arg(mountpoint.path().to_str().unwrap())
