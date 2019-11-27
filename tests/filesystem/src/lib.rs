@@ -75,13 +75,13 @@ impl FileSystem for Testfs {
         unsafe {
             const TESTFS_ROOT_BNO: u64 = 1;
             let root = bindings::new_inode(sb.ptr);
-	        // TODO:
+            // TODO:
             // if (IS_ERR(root)) {
-		    //     if (!silent)
-			//         pr_err("Root getting failed.\n");
-		    //     err = PTR_ERR(root);
-		    //     goto release_sbi;
-	        // }
+            //     if (!silent)
+            //         pr_err("Root getting failed.\n");
+            //     err = PTR_ERR(root);
+            //     goto release_sbi;
+            // }
 
             (*root).i_sb = sb.ptr;
             (*root).i_ino = TESTFS_ROOT_BNO;
@@ -98,18 +98,18 @@ impl FileSystem for Testfs {
             (*root).i_mtime = now;
             (*root).i_ctime = now;
 
-	        sb.ptr.s_root = bindings::d_make_root(root);
-	        // TODO:
+            sb.ptr.s_root = bindings::d_make_root(root);
+            // TODO:
             // if (!sb->s_root) {
-		    //     if (!silent)
-			//         pr_err("Root creation failed.\n");
-		    //     err = -ENOMEM;
-		    //     goto release_root;
-	        // }
+            //     if (!silent)
+            //         pr_err("Root creation failed.\n");
+            //     err = -ENOMEM;
+            //     goto release_root;
+            // }
             // release_root:
-	        // if (err) {
-		    //     destroy_root_inode(root);
-	        // }
+            // if (err) {
+            //     destroy_root_inode(root);
+            // }
         }
 
         println!("testfs-fill_super-marker");
