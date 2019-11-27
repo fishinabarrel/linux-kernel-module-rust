@@ -58,7 +58,7 @@ impl Drop for Mount {
 }
 
 #[test]
-fn test_fill_super() {
+fn test_mount() {
     with_kernel_module(|| {
         let image = tempfile::Builder::new()
             .prefix("testfs-image-")
