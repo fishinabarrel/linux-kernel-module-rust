@@ -64,10 +64,11 @@ fn test_mount() {
             .prefix("testfs-image-")
             .tempfile()
             .unwrap();
+        // Fill file with 4MiB of random bytes:
         let dd_status = Command::new("dd")
             .arg("bs=4096")
             .arg("count=1024")
-            .arg("if=/dev/zero")
+            .arg("if=/dev/urandom")
             .arg(format!("of={}", image.path().to_str().unwrap()))
             .arg("status=none") // no spam
             .status()
