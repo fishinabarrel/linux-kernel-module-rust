@@ -31,8 +31,7 @@ impl SuperOperations for TestfsSuperOperations {
         assert!(sb.fs_info_ref().unwrap().dummy_data == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
-        // ownership of it. This would normally happen in the put_super
-        // callback.
+        // ownership of it.
         sb.set_fs_info(None);
 
         println!("testfs-put_super-marker");
