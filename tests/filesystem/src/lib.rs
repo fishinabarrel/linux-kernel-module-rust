@@ -8,15 +8,17 @@ use linux_kernel_module::println;
 use linux_kernel_module::KernelResult;
 use linux_kernel_module::bindings;
 use alloc::boxed::Box;
+use core::ptr;
+use core::convert::TryInto;
 
-struct RamfsInfo {
+struct TestfsInfo {
     magic: u32,
 }
 
-struct RamfsSuperOperations;
+struct TestfsSuperOperations;
 
-impl SuperOperations for RamfsSuperOperations {
-    type I = RamfsInfo;
+impl SuperOperations for TestfsSuperOperations {
+    type I = TestfsInfo;
     
     fn put_super(sb: &mut SuperBlock<Self::I>) {
         assert!(sb.fs_info_ref().unwrap().magic == 0xbadf00d);
@@ -26,18 +28,18 @@ impl SuperOperations for RamfsSuperOperations {
         // callback.
         sb.set_fs_info(None);
 
-        println!("Ramfs put_super executed.");
+        println!("Testfs put_super executed.");
     }
 }
 
-const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<RamfsInfo> =
-    SuperOperationsVtable::<RamfsInfo>::new::<RamfsSuperOperations>();
+const TESTFS_SUPER_OPERATIONS_VTABLE: SuperOperationsVtable<TestfsInfo> =
+    SuperOperationsVtable::<TestfsInfo>::new::<TestfsSuperOperations>();
 const TESTFS_SB_MAGIC: c_types::c_ulong = 0xdeadc0de;
 
-struct Ramfs;
+struct Testfs;
 
-impl FileSystem for Ramfs {
-    type I = RamfsInfo;
+impl FileSystem for Testfs {
+    type I = TestfsInfo;
 
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
@@ -53,7 +55,7 @@ impl FileSystem for Ramfs {
         assert!(sb.fs_info_ref().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
-        sb.set_fs_info(Some(Box::new(RamfsInfo {
+        sb.set_fs_info(Some(Box::new(TestfsInfo {
             magic: 42,
         })));
 
@@ -62,7 +64,7 @@ impl FileSystem for Ramfs {
 
         // And also mutable references if we have a mutable reference to the
         // super block:
-        let fs_info: &mut RamfsInfo = sb.fs_info_mut().unwrap();
+        let fs_info: &mut TestfsInfo = sb.fs_info_mut().unwrap();
         fs_info.magic = 0xbadf00d;
 
         sb.set_op(&TESTFS_SUPER_OPERATIONS_VTABLE);
@@ -82,6 +84,13 @@ impl FileSystem for Ramfs {
 
             (*root).i_sb = sb.ptr;
             (*root).i_ino = TESTFS_ROOT_BNO;
+            bindings::inode_init_owner(root, ptr::null(),
+                                       bindings::S_IFDIR.try_into().unwrap());
+            // TODO: Handle error?
+            let now = bindings::current_time(root);
+            (*root).i_atime = now;
+            (*root).i_mtime = now;
+            (*root).i_ctime = now;
 
 	        sb.ptr.s_root = bindings::d_make_root(root);
 	        // TODO:
@@ -97,27 +106,27 @@ impl FileSystem for Ramfs {
 	        // }
         }
 
-        println!("Ramfs fill_super executed.");
+        println!("Testfs fill_super executed.");
 
         Ok(())
     }
 }
 
-struct RamfsModule {
-    _fs_registration: Registration<Ramfs>,
+struct TestfsModule {
+    _fs_registration: Registration<Testfs>,
 }
 
-impl linux_kernel_module::KernelModule for RamfsModule {
+impl linux_kernel_module::KernelModule for TestfsModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
-        let fs_registration = register::<Ramfs>()?;
-        Ok(RamfsModule {
+        let fs_registration = register::<Testfs>()?;
+        Ok(TestfsModule {
             _fs_registration: fs_registration,
         })
     }
 }
 
 linux_kernel_module::kernel_module!(
-    RamfsModule,
+    TestfsModule,
     author: "Fish in a Barrel Contributors",
     description: "A module for testing filesystem::register",
     license: "GPL"

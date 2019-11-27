@@ -39,8 +39,8 @@ impl LoopDev {
 
         // Get the name of the loop device that was availble.
         let result = Command::new("sudo").arg("losetup")
-                .arg("--associated").arg(image_path)
-                .arg("--noheadings")
+            .arg("--associated").arg(image_path)
+            .arg("--noheadings")
             .arg("--output").arg("NAME")
             .output()
             .unwrap();
@@ -114,10 +114,6 @@ fn test_fill_super() {
             .tempdir()
             .unwrap();
 
-        Command::new("ls")
-            .arg("-al")
-            .arg("/tmp/")
-            .status().unwrap();
         let mount = Mount::new(loop_dev, mountpoint);
 
         assert_dmesg_contains(&[b"TestFS fill_super executed."]);
