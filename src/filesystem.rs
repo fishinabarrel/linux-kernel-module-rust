@@ -31,7 +31,7 @@ pub trait SuperOperations: Sync + Sized {
 unsafe extern "C" fn put_super_callback<T: SuperOperations>(sb_ptr: *mut bindings::super_block) {
     let mut sb = SuperBlock::from_ptr(sb_ptr);
     T::put_super(&mut sb);
-    assert!(sb.get_fs_info.is_none());
+    assert!(sb.get_fs_info().is_none());
 }
 
 pub struct SuperOperationsVtable<I> {
