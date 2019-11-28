@@ -51,7 +51,6 @@ impl<I> SuperOperationsVtable<I> {
                 // destroy_inode is only required if alloc_inode is defined.
                 destroy_inode: None,
                 real_loop: None,
-
                 dirty_inode: None,
                 write_inode: None,
                 drop_inode: None,
@@ -65,21 +64,17 @@ impl<I> SuperOperationsVtable<I> {
                 statfs: None,
                 remount_fs: None,
                 umount_begin: None,
-
                 show_options: None,
                 show_devname: None,
                 show_path: None,
                 show_stats: None,
-
-                // Add '#ifdef CONFIG_QUOTA' here when CONFIG variables are available.
+                // Add '#ifdef CONFIG_QUOTA' around quota_read, quota_write and
+                // get_dquots here when CONFIG variables are available.
                 quota_read: None,
                 quota_write: None,
                 get_dquots: None,
-                // '#endif' for CONFIG_QUOTA.
-
                 bdev_try_to_free_page: None,
                 nr_cached_objects: None,
-
                 // free_cached_objects is optional, but any filesystem
                 // implementing this method needs to
                 // also implement nr_cached_objects for it to be called
