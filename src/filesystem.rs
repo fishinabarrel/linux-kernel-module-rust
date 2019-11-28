@@ -28,12 +28,9 @@ pub trait SuperOperations: Sync + Sized {
     // implementation at runtime) when we don't want to define it?
 }
 
-unsafe extern "C" fn put_super_callback<T: SuperOperations>(sb_raw: *mut bindings::super_block) {
-    let mut ptr = SuperBlock {
-        ptr: sb_raw.as_mut().unwrap(),
-        _phantom_fs_info: marker::PhantomData,
-    };
-    T::put_super(&mut ptr);
+unsafe extern "C" fn put_super_callback<T: SuperOperations>(sb_ptr: *mut bindings::super_block) {
+    let mut sb = SuperBlock::from_ptr(sb_ptr);
+    T::put_super(&mut sb);
 }
 
 pub struct SuperOperationsVtable<I> {
@@ -95,16 +92,33 @@ impl<I> SuperOperationsVtable<I> {
 }
 
 pub struct SuperBlock<'a, I> {
-    pub ptr: &'a mut bindings::super_block,
+    ptr: &'a mut bindings::super_block,
     _phantom_fs_info: marker::PhantomData<Option<Box<I>>>,
 }
 
 impl<I> SuperBlock<'_, I> {
+    /// The supplied pointer must not be null, otherwise this function will
+    /// panic.
+    unsafe fn from_ptr(ptr: *mut bindings::super_block) -> Self {
+        SuperBlock {
+            ptr: ptr.as_mut().unwrap(),
+            _phantom_fs_info: marker::PhantomData,
+        }
+    }
+
+    pub fn get(&self) -> &bindings::super_block {
+        self.ptr
+    }
+
+    pub fn get_mut(&mut self) -> &mut bindings::super_block {
+        self.ptr
+    }
+
     // Ideally we should only require fs_info to be something than can be
     // converted to a raw pointer and back again safely (if we don't mess with
     // the value while we keep it). I don't think there exists such a
     // trait. Therefore just require that fs_info is on the heap (i.e. a Box).
-    pub fn set_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
+    pub fn replace_fs_info(&mut self, new_val: Option<Box<I>>) -> Option<Box<I>> {
         let old_val = ptr::NonNull::new(self.ptr.s_fs_info as *mut I)
             .map(|nn| unsafe { Box::from_raw(nn.as_ptr()) });
         self.ptr.s_fs_info = match new_val {
@@ -114,11 +128,11 @@ impl<I> SuperBlock<'_, I> {
         old_val
     }
 
-    pub fn fs_info_ref(&self) -> Option<&I> {
+    pub fn get_fs_info(&self) -> Option<&I> {
         unsafe { (self.ptr.s_fs_info as *mut I).as_ref() }
     }
 
-    pub fn fs_info_mut(&mut self) -> Option<&mut I> {
+    pub fn get_mut_fs_info(&mut self) -> Option<&mut I> {
         unsafe { (self.ptr.s_fs_info as *mut I).as_mut() }
     }
 
@@ -165,19 +179,16 @@ pub trait FileSystem: Sync {
     ) -> KernelResult<()>;
 }
 
-fn _fill_super_callback<T: FileSystem>(
-    sb_raw: *mut bindings::super_block,
+unsafe fn _fill_super_callback<T: FileSystem>(
+    sb_ptr: *mut bindings::super_block,
     data: *mut c_void,
     silent: c_int,
 ) -> KernelResult<()> {
-    let mut ptr = SuperBlock {
-        ptr: unsafe { sb_raw.as_mut() }.unwrap(),
-        _phantom_fs_info: marker::PhantomData,
-    };
-    T::fill_super(&mut ptr, data, silent)
+    let mut sb = SuperBlock::from_ptr(sb_ptr);
+    T::fill_super(&mut sb, data, silent)
 }
 
-extern "C" fn fill_super_callback<T: FileSystem>(
+unsafe extern "C" fn fill_super_callback<T: FileSystem>(
     ptr: *mut bindings::super_block,
     data: *mut c_void,
     silent: c_int,

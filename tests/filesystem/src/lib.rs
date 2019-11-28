@@ -28,11 +28,11 @@ impl SuperOperations for TestfsSuperOperations {
     const VTABLE: SuperOperationsVtable<Self::I> = SuperOperationsVtable::<Self::I>::new::<Self>();
 
     fn put_super(sb: &mut SuperBlock<Self::I>) {
-        assert!(sb.fs_info_ref().unwrap().dummy_data == 0xbadf00d);
+        assert!(sb.get_fs_info().unwrap().dummy_data == 0xbadf00d);
 
         // This returns the old value therefore dropping it if we don't take
         // ownership of it.
-        sb.set_fs_info(None);
+        sb.replace_fs_info(None);
 
         println!("testfs-put_super-marker");
     }
@@ -55,17 +55,17 @@ impl FileSystem for Testfs {
         silent: c_types::c_int,
     ) -> KernelResult<()> {
         // The kernel initializes fs_info to NULL.
-        assert!(sb.fs_info_ref().is_none());
+        assert!(sb.get_fs_info().is_none());
 
         // Replace NULL with our data. SuperBlock takes ownership of it.
-        sb.set_fs_info(Some(Box::new(TestfsInfo { dummy_data: 42 })));
+        sb.replace_fs_info(Some(Box::new(TestfsInfo { dummy_data: 42 })));
 
         // We can obtain references to it while SuperBlock owns it:
-        assert!(sb.fs_info_ref().unwrap().dummy_data == 42);
+        assert!(sb.get_fs_info().unwrap().dummy_data == 42);
 
         // And also mutable references if we have a mutable reference to the
         // super block:
-        let fs_info: &mut TestfsInfo = sb.fs_info_mut().unwrap();
+        let fs_info: &mut TestfsInfo = sb.get_mut_fs_info().unwrap();
         fs_info.dummy_data = 0xbadf00d;
 
         // TODO: Do something similar to filesystem::register here?
@@ -75,18 +75,18 @@ impl FileSystem for Testfs {
         // TODO: Use safe API when available.
         unsafe {
             const TESTFS_ROOT_BNO: u64 = 1;
-            let root = bindings::new_inode(sb.ptr);
+            let root = bindings::new_inode(sb.get_mut());
             if IS_ERR_helper(root as *const c_types::c_void) {
                 if silent == 0 {
                     println!("Failed to create testfs root inode.");
                 }
                 let errno: i32 =
                     i32::try_from(PTR_ERR_helper(root as *const c_types::c_void)).unwrap();
-                sb.set_fs_info(None);
+                sb.replace_fs_info(None);
                 return Err(Error::from_kernel_errno(errno));
             }
 
-            (*root).i_sb = sb.ptr;
+            (*root).i_sb = sb.get_mut();
             (*root).i_ino = TESTFS_ROOT_BNO;
 
             // The inode passed to d_make_root must have the S_IFDIR flag set,
@@ -94,24 +94,20 @@ impl FileSystem for Testfs {
             // Not a directory.' for the given mountpoint directory (even
             // thought the _supplied_ mountpoint is a directory).
             bindings::inode_init_owner(root, ptr::null(), bindings::S_IFDIR.try_into().unwrap());
-            // TODO: Handle error?
+
             let now = bindings::current_time(root);
             (*root).i_atime = now;
             (*root).i_mtime = now;
             (*root).i_ctime = now;
 
-            sb.ptr.s_root = bindings::d_make_root(root);
-            // TODO:
-            // if (!sb->s_root) {
-            //     if (!silent)
-            //         pr_err("Root creation failed.\n");
-            //     err = -ENOMEM;
-            //     goto release_root;
-            // }
-            // release_root:
-            // if (err) {
-            //     destroy_root_inode(root);
-            // }
+            sb.get_mut().s_root = bindings::d_make_root(root);
+            if sb.get_mut().s_root.is_null() {
+                if silent == 0 {
+                    println!("Testfs d_make_root failed.");
+                }
+                sb.replace_fs_info(None);
+                return Err(Error::ENOMEM);
+            }
         }
 
         println!("testfs-fill_super-marker");
