@@ -22,3 +22,13 @@ int access_ok_helper(const void __user *addr, unsigned long n)
     return access_ok(0, addr, n);
 #endif
 }
+
+long __must_check PTR_ERR_helper(__force const void *ptr)
+{
+    return PTR_ERR(ptr);
+}
+
+bool __must_check IS_ERR_helper(__force const void *ptr)
+{
+	return IS_ERR(ptr);
+}
