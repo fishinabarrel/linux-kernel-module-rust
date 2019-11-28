@@ -9,7 +9,7 @@ use crate::bindings;
 use crate::c_types::NonZeroCInt;
 use crate::c_types::{c_char, c_int, c_ulong, c_void};
 use crate::error;
-use crate::error::{Error, KernelResult};
+use crate::error::KernelResult;
 use crate::types::CStr;
 
 pub trait SuperOperations: Sync + Sized {
@@ -129,11 +129,9 @@ impl<I> SuperBlock<'_, I> {
 
     /// Size must be a power of two, between 512 and PAGE_SIZE, and cannot be
     /// smaller than the size supported by the device.
-    pub fn set_blocksize(&mut self, size: c_int) -> KernelResult<NonZeroCInt> {
-        // TODO:
-        // - Add blocksize type?
+    pub fn set_blocksize(&mut self, size: c_int) -> Result<NonZeroCInt, ()> {
         let success = unsafe { bindings::sb_set_blocksize(self.ptr, size) };
-        NonZeroCInt::new(success).ok_or(Error::EINVAL)
+        NonZeroCInt::new(success).ok_or(())
     }
 }
 
