@@ -48,7 +48,6 @@ impl FileSystem for Testfs {
     const NAME: &'static CStr = cstr!("testfs");
     const FLAGS: FileSystemFlags = FileSystemFlags::FS_REQUIRES_DEV;
 
-    // TODO: Enforce setting of sb.s_op. Make him return a InitializedSuperBlock?
     fn fill_super(
         sb: &mut SuperBlock<Self::I>,
         _data: *mut c_types::c_void,
@@ -68,7 +67,6 @@ impl FileSystem for Testfs {
         let fs_info: &mut TestfsInfo = sb.get_mut_fs_info().unwrap();
         fs_info.dummy_data = 0xbadf00d;
 
-        // TODO: Do something similar to filesystem::register here?
         sb.set_op(&TestfsSuperOperations::VTABLE);
         sb.set_magic(TESTFS_SB_MAGIC);
 

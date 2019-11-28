@@ -181,7 +181,9 @@ unsafe fn _fill_super_callback<T: FileSystem>(
     silent: c_int,
 ) -> KernelResult<()> {
     let mut sb = SuperBlock::from_ptr(sb_ptr);
-    T::fill_super(&mut sb, data, silent)
+    T::fill_super(&mut sb, data, silent)?;
+    assert!(!sb.get().s_op.is_null());
+    Ok(())
 }
 
 unsafe extern "C" fn fill_super_callback<T: FileSystem>(
