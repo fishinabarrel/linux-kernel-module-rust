@@ -38,10 +38,10 @@ unsafe extern "C" fn put_super_callback<T: SuperOperations>(sb_raw: *mut binding
 
 pub struct SuperOperationsVtable<I> {
     op: bindings::super_operations,
-    // TODO: If we allow dropping of vtables we should include the whole
+    // When we intend to support non-static vtables we should include the whole
     // virtually owned type here (e.g. functions that takes a super block
-    // containing I as argument) to communicate to the compiler that this
-    // type will be dropped if the vtable is dropped. For now only include I to
+    // containing I as argument) to communicate to the compiler that this type
+    // will be dropped if the vtable is dropped. For now only include 'I' to
     // silence the unused parameter warning.
     _phantom_sb_fs_info: marker::PhantomData<I>,
 }
@@ -73,13 +73,16 @@ impl<I> SuperOperationsVtable<I> {
                 show_devname: None,
                 show_path: None,
                 show_stats: None,
-                // TODO: #ifdef CONFIG_QUOTA
+
+                // Add '#ifdef CONFIG_QUOTA' here when CONFIG variables are available.
                 quota_read: None,
                 quota_write: None,
                 get_dquots: None,
-                // TODO: #endif
+                // '#endif' for CONFIG_QUOTA.
+
                 bdev_try_to_free_page: None,
                 nr_cached_objects: None,
+
                 // free_cached_objects is optional, but any filesystem
                 // implementing this method needs to
                 // also implement nr_cached_objects for it to be called
