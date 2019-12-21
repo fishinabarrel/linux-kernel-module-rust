@@ -4,9 +4,9 @@ use linux_kernel_module::{self, cstr};
 
 struct CycleFile;
 
-impl linux_kernel_module::chrdev::FileOperations for CycleFile {
-    const VTABLE: linux_kernel_module::chrdev::FileOperationsVtable =
-        linux_kernel_module::chrdev::FileOperationsVtable::new::<Self>();
+impl linux_kernel_module::file_operations::FileOperations for CycleFile {
+    const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
+        linux_kernel_module::file_operations::FileOperationsVtable::new::<Self>();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
         return Ok(CycleFile);
@@ -31,9 +31,9 @@ impl linux_kernel_module::chrdev::FileOperations for CycleFile {
 
 struct SeekFile;
 
-impl linux_kernel_module::chrdev::FileOperations for SeekFile {
-    const VTABLE: linux_kernel_module::chrdev::FileOperationsVtable =
-        linux_kernel_module::chrdev::FileOperationsVtable::new::<Self>();
+impl linux_kernel_module::file_operations::FileOperations for SeekFile {
+    const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
+        linux_kernel_module::file_operations::FileOperationsVtable::new::<Self>();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
         return Ok(SeekFile);
@@ -41,8 +41,8 @@ impl linux_kernel_module::chrdev::FileOperations for SeekFile {
 
     fn seek(
         &self,
-        _file: &linux_kernel_module::chrdev::File,
-        _offset: linux_kernel_module::chrdev::SeekFrom,
+        _file: &linux_kernel_module::file_operations::File,
+        _offset: linux_kernel_module::file_operations::SeekFrom,
     ) -> linux_kernel_module::KernelResult<u64> {
         return Ok(1234);
     }

@@ -10,6 +10,7 @@ pub mod bindings;
 pub mod c_types;
 pub mod chrdev;
 mod error;
+pub mod file_operations;
 pub mod filesystem;
 pub mod printk;
 pub mod sysctl;
