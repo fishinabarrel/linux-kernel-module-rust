@@ -36,12 +36,16 @@ struct SeekFile;
 
 impl linux_kernel_module::file_operations::FileOperations for SeekFile {
     const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>().build();
+        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
+            .seek()
+            .build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
         return Ok(SeekFile);
     }
+}
 
+impl linux_kernel_module::file_operations::Seek for SeekFile {
     fn seek(
         &self,
         _file: &linux_kernel_module::file_operations::File,
