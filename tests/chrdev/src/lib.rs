@@ -6,12 +6,15 @@ struct CycleFile;
 
 impl linux_kernel_module::file_operations::FileOperations for CycleFile {
     const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>().build();
+        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>()
+            .read()
+            .build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
         return Ok(CycleFile);
     }
-
+}
+impl linux_kernel_module::file_operations::Read for CycleFile {
     fn read(
         &self,
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
