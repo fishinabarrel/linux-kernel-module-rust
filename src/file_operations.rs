@@ -1,5 +1,5 @@
 use core::convert::{TryFrom, TryInto};
-use core::{mem, ptr};
+use core::{marker, mem, ptr};
 
 use alloc::boxed::Box;
 
@@ -101,52 +101,63 @@ unsafe extern "C" fn llseek_callback<T: FileOperations>(
 }
 
 impl FileOperationsVtable {
-    pub const fn new<T: FileOperations>() -> FileOperationsVtable {
-        FileOperationsVtable(bindings::file_operations {
-            open: Some(open_callback::<T>),
-            read: Some(read_callback::<T>),
-            release: Some(release_callback::<T>),
-            llseek: Some(llseek_callback::<T>),
+    pub const fn builder<T: FileOperations>() -> FileOperationsVtableBuilder<T> {
+        FileOperationsVtableBuilder(
+            bindings::file_operations {
+                open: Some(open_callback::<T>),
+                read: Some(read_callback::<T>),
+                release: Some(release_callback::<T>),
+                llseek: Some(llseek_callback::<T>),
 
-            check_flags: None,
-            #[cfg(not(kernel_4_20_0_or_greater))]
-            clone_file_range: None,
-            compat_ioctl: None,
-            copy_file_range: None,
-            #[cfg(not(kernel_4_20_0_or_greater))]
-            dedupe_file_range: None,
-            fallocate: None,
-            #[cfg(kernel_4_19_0_or_greater)]
-            fadvise: None,
-            fasync: None,
-            flock: None,
-            flush: None,
-            fsync: None,
-            get_unmapped_area: None,
-            iterate: None,
-            iterate_shared: None,
-            #[cfg(kernel_5_1_0_or_greater)]
-            iopoll: None,
-            lock: None,
-            mmap: None,
-            #[cfg(kernel_4_15_0_or_greater)]
-            mmap_supported_flags: 0,
-            owner: ptr::null_mut(),
-            poll: None,
-            read_iter: None,
-            #[cfg(kernel_4_20_0_or_greater)]
-            remap_file_range: None,
-            sendpage: None,
-            #[cfg(kernel_aufs_setfl)]
-            setfl: None,
-            setlease: None,
-            show_fdinfo: None,
-            splice_read: None,
-            splice_write: None,
-            unlocked_ioctl: None,
-            write: None,
-            write_iter: None,
-        })
+                check_flags: None,
+                #[cfg(not(kernel_4_20_0_or_greater))]
+                clone_file_range: None,
+                compat_ioctl: None,
+                copy_file_range: None,
+                #[cfg(not(kernel_4_20_0_or_greater))]
+                dedupe_file_range: None,
+                fallocate: None,
+                #[cfg(kernel_4_19_0_or_greater)]
+                fadvise: None,
+                fasync: None,
+                flock: None,
+                flush: None,
+                fsync: None,
+                get_unmapped_area: None,
+                iterate: None,
+                iterate_shared: None,
+                #[cfg(kernel_5_1_0_or_greater)]
+                iopoll: None,
+                lock: None,
+                mmap: None,
+                #[cfg(kernel_4_15_0_or_greater)]
+                mmap_supported_flags: 0,
+                owner: ptr::null_mut(),
+                poll: None,
+                read_iter: None,
+                #[cfg(kernel_4_20_0_or_greater)]
+                remap_file_range: None,
+                sendpage: None,
+                #[cfg(kernel_aufs_setfl)]
+                setfl: None,
+                setlease: None,
+                show_fdinfo: None,
+                splice_read: None,
+                splice_write: None,
+                unlocked_ioctl: None,
+                write: None,
+                write_iter: None,
+            },
+            marker::PhantomData,
+        )
+    }
+}
+
+pub struct FileOperationsVtableBuilder<T>(bindings::file_operations, marker::PhantomData<T>);
+
+impl<T> FileOperationsVtableBuilder<T> {
+    pub const fn build(self) -> FileOperationsVtable {
+        FileOperationsVtable(self.0)
     }
 }
 
