@@ -79,7 +79,7 @@ unsafe extern "C" fn release_callback<T: FileOperations>(
     0
 }
 
-unsafe extern "C" fn llseek_callback<T: FileOperations>(
+unsafe extern "C" fn llseek_callback<T: Seek>(
     file: *mut bindings::file,
     offset: bindings::loff_t,
     whence: c_types::c_int,
@@ -106,7 +106,6 @@ impl FileOperationsVtable {
             bindings::file_operations {
                 open: Some(open_callback::<T>),
                 release: Some(release_callback::<T>),
-                llseek: Some(llseek_callback::<T>),
 
                 check_flags: None,
                 #[cfg(not(kernel_4_20_0_or_greater))]
@@ -127,6 +126,7 @@ impl FileOperationsVtable {
                 iterate_shared: None,
                 #[cfg(kernel_5_1_0_or_greater)]
                 iopoll: None,
+                llseek: None,
                 lock: None,
                 mmap: None,
                 #[cfg(kernel_4_15_0_or_greater)]
@@ -168,6 +168,13 @@ impl<T: Read> FileOperationsVtableBuilder<T> {
     }
 }
 
+impl<T: Seek> FileOperationsVtableBuilder<T> {
+    pub const fn seek(mut self) -> FileOperationsVtableBuilder<T> {
+        self.0.llseek = Some(llseek_callback::<T>);
+        self
+    }
+}
+
 /// `FileOperations` corresponds to the kernel's `struct file_operations`. You
 /// implement this trait whenever you'd create a `struct file_operations`, and
 /// also an additional trait for each function pointer in the
@@ -184,16 +191,16 @@ pub trait FileOperations: Sync + Sized {
     /// Creates a new instance of this file. Corresponds to the `open` function
     /// pointer in `struct file_operations`.
     fn open() -> KernelResult<Self>;
-
-    /// Changes the position of the file. Corresponds to the `llseek` function
-    /// pointer in `struct file_operations`.
-    fn seek(&self, _file: &File, _offset: SeekFrom) -> KernelResult<u64> {
-        Err(Error::ESPIPE)
-    }
 }
 
 pub trait Read {
     /// Reads data from this file to userspace. Corresponds to the `read`
     /// function pointer in `struct file_operations`.
     fn read(&self, buf: &mut UserSlicePtrWriter, offset: u64) -> KernelResult<()>;
+}
+
+pub trait Seek {
+    /// Changes the position of the file. Corresponds to the `llseek` function
+    /// pointer in `struct file_operations`.
+    fn seek(&self, file: &File, offset: SeekFrom) -> KernelResult<u64>;
 }
