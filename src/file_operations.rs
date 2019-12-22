@@ -43,7 +43,7 @@ unsafe extern "C" fn open_callback<T: FileOperations>(
     0
 }
 
-unsafe extern "C" fn read_callback<T: FileOperations>(
+unsafe extern "C" fn read_callback<T: Read>(
     file: *mut bindings::file,
     buf: *mut c_types::c_char,
     len: c_types::c_size_t,
@@ -105,7 +105,6 @@ impl FileOperationsVtable {
         FileOperationsVtableBuilder(
             bindings::file_operations {
                 open: Some(open_callback::<T>),
-                read: Some(read_callback::<T>),
                 release: Some(release_callback::<T>),
                 llseek: Some(llseek_callback::<T>),
 
@@ -134,6 +133,7 @@ impl FileOperationsVtable {
                 mmap_supported_flags: 0,
                 owner: ptr::null_mut(),
                 poll: None,
+                read: None,
                 read_iter: None,
                 #[cfg(kernel_4_20_0_or_greater)]
                 remap_file_range: None,
@@ -161,10 +161,18 @@ impl<T> FileOperationsVtableBuilder<T> {
     }
 }
 
+impl<T: Read> FileOperationsVtableBuilder<T> {
+    pub const fn read(mut self) -> FileOperationsVtableBuilder<T> {
+        self.0.read = Some(read_callback::<T>);
+        self
+    }
+}
+
 /// `FileOperations` corresponds to the kernel's `struct file_operations`. You
-/// implement this trait whenever you'd create a `struct file_operations`. File
-/// descriptors may be used from multiple threads (or processes) concurrently,
-/// so your type must be `Sync`.
+/// implement this trait whenever you'd create a `struct file_operations`, and
+/// also an additional trait for each function pointer in the
+/// `struct file_operations`. File descriptors may be used from multiple threads
+/// (or processes) concurrently, so your type must be `Sync`.
 pub trait FileOperations: Sync + Sized {
     /// A container for the actual `file_operations` value. This will always be:
     /// ```
@@ -177,15 +185,15 @@ pub trait FileOperations: Sync + Sized {
     /// pointer in `struct file_operations`.
     fn open() -> KernelResult<Self>;
 
-    /// Reads data from this file to userspace. Corresponds to the `read`
-    /// function pointer in `struct file_operations`.
-    fn read(&self, _buf: &mut UserSlicePtrWriter, _offset: u64) -> KernelResult<()> {
-        Err(Error::EINVAL)
-    }
-
     /// Changes the position of the file. Corresponds to the `llseek` function
     /// pointer in `struct file_operations`.
     fn seek(&self, _file: &File, _offset: SeekFrom) -> KernelResult<u64> {
         Err(Error::ESPIPE)
     }
+}
+
+pub trait Read {
+    /// Reads data from this file to userspace. Corresponds to the `read`
+    /// function pointer in `struct file_operations`.
+    fn read(&self, buf: &mut UserSlicePtrWriter, offset: u64) -> KernelResult<()>;
 }
