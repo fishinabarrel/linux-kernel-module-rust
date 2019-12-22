@@ -6,7 +6,7 @@ struct CycleFile;
 
 impl linux_kernel_module::file_operations::FileOperations for CycleFile {
     const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::new::<Self>();
+        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>().build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
         return Ok(CycleFile);
@@ -33,7 +33,7 @@ struct SeekFile;
 
 impl linux_kernel_module::file_operations::FileOperations for SeekFile {
     const VTABLE: linux_kernel_module::file_operations::FileOperationsVtable =
-        linux_kernel_module::file_operations::FileOperationsVtable::new::<Self>();
+        linux_kernel_module::file_operations::FileOperationsVtable::builder::<Self>().build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
         return Ok(SeekFile);
