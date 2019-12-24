@@ -13,6 +13,7 @@ mod error;
 pub mod file_operations;
 pub mod filesystem;
 pub mod printk;
+pub mod random;
 pub mod sysctl;
 mod types;
 pub mod user_ptr;
