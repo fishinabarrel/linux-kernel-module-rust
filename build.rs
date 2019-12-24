@@ -25,12 +25,16 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "_copy_from_user",
     "alloc_chrdev_region",
     "unregister_chrdev_region",
+    "wait_for_random_bytes",
+    "get_random_bytes",
+    "rng_is_initialized",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
     "ENOMEM",
     "ESPIPE",
     "EFAULT",
+    "EAGAIN",
     "__this_module",
     "FS_REQUIRES_DEV",
     "FS_BINARY_MOUNTDATA",
