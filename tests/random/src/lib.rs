@@ -15,12 +15,10 @@ impl SysctlStorage for EntropySource {
     fn read_value(
         &self,
         data: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
-    ) -> (usize, linux_kernel_module::KernelResult<()>) {
+    ) -> linux_kernel_module::KernelResult<()> {
         let mut storage = vec![0; data.len()];
-        if let Err(e) = random::getrandom(&mut storage) {
-            return (0, Err(e));
-        }
-        (storage.len(), data.write(&storage))
+        random::getrandom(&mut storage)?;
+        data.write(&storage)
     }
 }
 
