@@ -12,7 +12,7 @@ use crate::user_ptr::{UserSlicePtr, UserSlicePtrWriter};
 
 pub trait SysctlStorage: Sync {
     fn store_value(&self, data: &[u8]) -> (usize, error::KernelResult<()>);
-    fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>);
+    fn read_value(&self, data: &mut UserSlicePtrWriter) -> error::KernelResult<()>;
 }
 
 fn trim_whitespace(mut data: &[u8]) -> &[u8] {
@@ -37,7 +37,7 @@ where
         (*self).store_value(data)
     }
 
-    fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>) {
+    fn read_value(&self, data: &mut UserSlicePtrWriter) -> error::KernelResult<()> {
         (*self).read_value(data)
     }
 }
@@ -58,13 +58,13 @@ impl SysctlStorage for atomic::AtomicBool {
         (data.len(), result)
     }
 
-    fn read_value(&self, data: &mut UserSlicePtrWriter) -> (usize, error::KernelResult<()>) {
+    fn read_value(&self, data: &mut UserSlicePtrWriter) -> error::KernelResult<()> {
         let value = if self.load(atomic::Ordering::Relaxed) {
             b"1\n"
         } else {
             b"0\n"
         };
-        (value.len(), data.write(value))
+        data.write(value)
     }
 }
 
@@ -106,7 +106,9 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         storage.store_value(&data)
     } else {
         let mut writer = data.writer();
-        storage.read_value(&mut writer)
+        let starting_len = writer.len();
+        let res = storage.read_value(&mut writer);
+        (starting_len - writer.len(), res)
     };
     *len = bytes_processed;
     *ppos += *len as bindings::loff_t;
