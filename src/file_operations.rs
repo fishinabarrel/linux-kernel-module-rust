@@ -8,6 +8,12 @@ use crate::c_types;
 use crate::error::{Error, KernelResult};
 use crate::user_ptr::{UserSlicePtr, UserSlicePtrReader, UserSlicePtrWriter};
 
+bitflags::bitflags! {
+    pub struct FileFlags: c_types::c_uint {
+        const NONBLOCK = bindings::O_NONBLOCK;
+    }
+}
+
 pub struct File {
     ptr: *const bindings::file,
 }
@@ -19,6 +25,10 @@ impl File {
 
     pub fn pos(&self) -> u64 {
         unsafe { (*self.ptr).f_pos as u64 }
+    }
+
+    pub fn flags(&self) -> FileFlags {
+        FileFlags::from_bits_truncate(unsafe { (*self.ptr).f_flags })
     }
 }
 
@@ -60,7 +70,7 @@ unsafe extern "C" fn read_callback<T: Read>(
         Ok(v) => v,
         Err(_) => return Error::EINVAL.to_kernel_errno().try_into().unwrap(),
     };
-    match f.read(&mut data, positive_offset) {
+    match f.read(&File::from_ptr(file), &mut data, positive_offset) {
         Ok(()) => {
             let written = len - data.len();
             (*offset) += bindings::loff_t::try_from(written).unwrap();
@@ -230,7 +240,7 @@ pub trait FileOperations: Sync + Sized {
 pub trait Read {
     /// Reads data from this file to userspace. Corresponds to the `read`
     /// function pointer in `struct file_operations`.
-    fn read(&self, buf: &mut UserSlicePtrWriter, offset: u64) -> KernelResult<()>;
+    fn read(&self, file: &File, buf: &mut UserSlicePtrWriter, offset: u64) -> KernelResult<()>;
 }
 
 pub trait Write {
