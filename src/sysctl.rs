@@ -1,5 +1,6 @@
 use alloc::boxed::Box;
 use alloc::vec;
+use core::convert::TryInto;
 use core::mem;
 use core::ptr;
 use core::sync::atomic;
@@ -83,7 +84,7 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
     ctl: *mut bindings::ctl_table,
     write: c_types::c_int,
     buffer: *mut c_types::c_void,
-    len: *mut usize,
+    len: *mut c_types::c_ulonglong,
     ppos: *mut bindings::loff_t,
 ) -> c_types::c_int {
     // If we're reading from some offset other than the beginning of the file,
@@ -93,7 +94,7 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         return 0;
     }
 
-    let data = match UserSlicePtr::new(buffer, *len) {
+    let data = match UserSlicePtr::new(buffer, (*len).try_into().unwrap()) {
         Ok(ptr) => ptr,
         Err(e) => return e.to_kernel_errno(),
     };
@@ -108,7 +109,7 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
         let mut writer = data.writer();
         storage.read_value(&mut writer)
     };
-    *len = bytes_processed;
+    *len = bytes_processed.try_into().unwrap();
     *ppos += *len as bindings::loff_t;
     match result {
         Ok(()) => 0,

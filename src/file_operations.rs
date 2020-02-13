@@ -46,10 +46,10 @@ unsafe extern "C" fn open_callback<T: FileOperations>(
 unsafe extern "C" fn read_callback<T: Read>(
     file: *mut bindings::file,
     buf: *mut c_types::c_char,
-    len: c_types::c_size_t,
+    len: c_types::c_ulonglong,
     offset: *mut bindings::loff_t,
-) -> c_types::c_ssize_t {
-    let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len) {
+) -> c_types::c_longlong {
+    let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len.try_into().unwrap()) {
         Ok(ptr) => ptr.writer(),
         Err(e) => return e.to_kernel_errno().try_into().unwrap(),
     };
@@ -62,7 +62,7 @@ unsafe extern "C" fn read_callback<T: Read>(
     };
     match f.read(&mut data, positive_offset) {
         Ok(()) => {
-            let written = len - data.len();
+            let written = len - (data.len() as u64);
             (*offset) += bindings::loff_t::try_from(written).unwrap();
             written.try_into().unwrap()
         }
@@ -73,10 +73,10 @@ unsafe extern "C" fn read_callback<T: Read>(
 unsafe extern "C" fn write_callback<T: Write>(
     file: *mut bindings::file,
     buf: *const c_types::c_char,
-    len: c_types::c_size_t,
+    len: c_types::c_ulonglong,
     offset: *mut bindings::loff_t,
-) -> c_types::c_ssize_t {
-    let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len) {
+) -> c_types::c_longlong {
+    let mut data = match UserSlicePtr::new(buf as *mut c_types::c_void, len.try_into().unwrap()) {
         Ok(ptr) => ptr.reader(),
         Err(e) => return e.to_kernel_errno().try_into().unwrap(),
     };
@@ -89,7 +89,7 @@ unsafe extern "C" fn write_callback<T: Write>(
     };
     match f.write(&mut data, positive_offset) {
         Ok(()) => {
-            let read = len - data.len();
+            let read = len - (data.len() as u64);
             (*offset) += bindings::loff_t::try_from(read).unwrap();
             read.try_into().unwrap()
         }
