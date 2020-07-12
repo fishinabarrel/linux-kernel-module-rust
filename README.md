@@ -18,7 +18,7 @@ various other examples in the tests/ directory.
 
 We run [bindgen](https://github.com/rust-lang/rust-bindgen) on the
 kernel headers to generate automatic Rust FFI bindings. bindgen is
-powered by [Clang](https://clang.llvm.org), so we use use the kernel's
+powered by [Clang](https://clang.llvm.org), so we use the kernel's
 own build system to determine the appropriate CFLAGS (see
 `kernel-cflags-finder`) and pass them to bindgen (see `build.rs`). Then we
 write safe bindings to these types (see the various files inside `src/`).
