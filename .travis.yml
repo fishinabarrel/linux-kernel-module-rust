@@ -4,7 +4,7 @@ matrix:
 
 language: rust
 rust:
-    - nightly-2019-09-25
+    - nightly-2020-07-12
 
 branches:
     only:
