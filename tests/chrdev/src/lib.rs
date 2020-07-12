@@ -22,6 +22,7 @@ impl linux_kernel_module::file_operations::FileOperations for CycleFile {
 impl linux_kernel_module::file_operations::Read for CycleFile {
     fn read(
         &self,
+        _file: &linux_kernel_module::file_operations::File,
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
         offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
@@ -81,6 +82,7 @@ impl linux_kernel_module::file_operations::FileOperations for WriteFile {
 impl linux_kernel_module::file_operations::Read for WriteFile {
     fn read(
         &self,
+        _file: &linux_kernel_module::file_operations::File,
         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
         _offset: u64,
     ) -> linux_kernel_module::KernelResult<()> {
