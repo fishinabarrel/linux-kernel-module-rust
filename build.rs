@@ -1,7 +1,3 @@
-use bindgen;
-use cc;
-use shlex;
-
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::Command;
@@ -67,8 +63,8 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     for line in f.lines() {
         let line = line.unwrap();
         if let Some(type_and_value) = line.split("pub const LINUX_VERSION_CODE").nth(1) {
-            if let Some(value) = type_and_value.split("=").nth(1) {
-                let raw_version = value.split(";").next().unwrap();
+            if let Some(value) = type_and_value.split('=').nth(1) {
+                let raw_version = value.split(';').next().unwrap();
                 version = Some(raw_version.trim().parse::<u64>().unwrap());
                 break;
             }
@@ -174,7 +170,7 @@ fn main() {
     handle_kernel_symbols_cfg(&PathBuf::from(&kdir).join("Module.symvers"));
 
     let mut builder = cc::Build::new();
-    builder.compiler(env::var("CLANG").unwrap_or("clang".to_string()));
+    builder.compiler(env::var("CLANG").unwrap_or_else(|_| "clang".to_string()));
     builder.target(&target);
     builder.warnings(false);
     builder.file("src/helpers.c");
