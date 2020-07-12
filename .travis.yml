@@ -1,6 +1,7 @@
 matrix:
     include:
         - dist: xenial
+        - dist: bionic
 
 language: rust
 rust:
@@ -11,7 +12,7 @@ branches:
         - master
 
 install:
-    - sudo apt-get install -y "linux-headers-$(uname -r)" realpath
+    - sudo apt-get install -y "linux-headers-$(uname -r)" coreutils
     - rustup component add rust-src rustfmt clippy
 
 script:
