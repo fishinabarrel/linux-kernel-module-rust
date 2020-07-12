@@ -1,6 +1,7 @@
 matrix:
     include:
         - dist: xenial
+        - dist: bionic
 
 language: rust
 rust:
