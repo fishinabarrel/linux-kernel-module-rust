@@ -1,6 +1,6 @@
 #![no_std]
 
-use alloc::vec;
+extern crate alloc;
 
 use linux_kernel_module::sysctl::{Sysctl, SysctlStorage};
 use linux_kernel_module::{self, cstr, random, Mode};
@@ -16,7 +16,7 @@ impl SysctlStorage for EntropySource {
         &self,
         data: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
     ) -> (usize, linux_kernel_module::KernelResult<()>) {
-        let mut storage = vec![0; data.len()];
+        let mut storage = alloc::vec![0; data.len()];
         if let Err(e) = random::getrandom(&mut storage) {
             return (0, Err(e));
         }

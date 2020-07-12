@@ -2,8 +2,6 @@ use alloc::boxed::Box;
 use core::default::Default;
 use core::marker;
 
-use bitflags;
-
 use crate::bindings;
 use crate::c_types;
 use crate::error;
