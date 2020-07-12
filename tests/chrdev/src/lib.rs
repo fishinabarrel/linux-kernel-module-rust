@@ -1,5 +1,7 @@
 #![no_std]
 
+extern crate alloc;
+
 use alloc::string::ToString;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
