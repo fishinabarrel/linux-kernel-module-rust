@@ -2,7 +2,6 @@ matrix:
     include:
         - dist: xenial
         - dist: bionic
-        - dist: focal
 
 language: rust
 rust:
