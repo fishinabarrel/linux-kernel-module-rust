@@ -5,7 +5,7 @@ use std::io::Read;
 use kernel_module_testlib::with_kernel_module;
 
 #[test]
-fn test_random_entropy() {
+fn test_random_entropy_read() {
     with_kernel_module(|| {
         let mut keys = HashSet::new();
         for _ in 0..1024 {
@@ -15,5 +15,12 @@ fn test_random_entropy() {
             keys.insert(key);
         }
         assert_eq!(keys.len(), 1024);
+    });
+}
+
+#[test]
+fn test_random_entropy_write() {
+    with_kernel_module(|| {
+        fs::write("/proc/sys/rust/random-tests/entropy", b"1234567890").unwrap();
     });
 }

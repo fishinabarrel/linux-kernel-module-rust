@@ -30,3 +30,14 @@ pub fn getrandom_nonblock(dest: &mut [u8]) -> error::KernelResult<()> {
     }
     getrandom(dest)
 }
+
+/// Contributes the contents of `data` to the kernel's entropy pool. Does _not_
+/// credit the kernel entropy counter though.
+pub fn add_randomness(data: &[u8]) {
+    unsafe {
+        bindings::add_device_randomness(
+            data.as_ptr() as *const c_types::c_void,
+            data.len().try_into().unwrap(),
+        );
+    }
+}

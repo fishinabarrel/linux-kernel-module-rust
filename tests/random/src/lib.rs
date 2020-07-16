@@ -8,8 +8,9 @@ use linux_kernel_module::{self, cstr, random, Mode};
 struct EntropySource;
 
 impl SysctlStorage for EntropySource {
-    fn store_value(&self, _data: &[u8]) -> (usize, linux_kernel_module::KernelResult<()>) {
-        (0, Err(linux_kernel_module::Error::EINVAL))
+    fn store_value(&self, data: &[u8]) -> (usize, linux_kernel_module::KernelResult<()>) {
+        random::add_randomness(data);
+        (data.len(), Ok(()))
     }
 
     fn read_value(
@@ -35,7 +36,7 @@ impl linux_kernel_module::KernelModule for RandomTestModule {
                 cstr!("rust/random-tests"),
                 cstr!("entropy"),
                 EntropySource,
-                Mode::from_int(0o444),
+                Mode::from_int(0o666),
             )?,
         })
     }
