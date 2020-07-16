@@ -24,6 +24,7 @@ const INCLUDED_FUNCTIONS: &[&str] = &[
     "wait_for_random_bytes",
     "get_random_bytes",
     "rng_is_initialized",
+    "add_device_randomness",
 ];
 const INCLUDED_VARS: &[&str] = &[
     "EINVAL",
