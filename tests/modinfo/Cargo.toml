@@ -1,0 +1,18 @@
+[package]
+name = "modinfo-tests"
+version = "0.1.0"
+authors = ["Alex Gaynor <alex.gaynor@gmail.com>", "Geoffrey Thomas <geofft@ldpreload.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["staticlib"]
+test = false
+
+[features]
+default = ["linux-kernel-module"]
+
+[dependencies]
+linux-kernel-module = { path = "../..", optional = true }
+
+[dev-dependencies]
+kernel-module-testlib = { path = "../../testlib" }

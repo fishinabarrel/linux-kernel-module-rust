@@ -27,7 +27,7 @@ impl linux_kernel_module::KernelModule for TestFSModule {
 
 linux_kernel_module::kernel_module!(
     TestFSModule,
-    author: "Fish in a Barrel Contributors",
-    description: "A module for testing filesystem::register",
-    license: "GPL"
+    author: b"Fish in a Barrel Contributors",
+    description: b"A module for testing filesystem::register",
+    license: b"GPL"
 );

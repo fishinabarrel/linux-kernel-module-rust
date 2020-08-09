@@ -44,7 +44,7 @@ impl linux_kernel_module::KernelModule for RandomTestModule {
 
 linux_kernel_module::kernel_module!(
     RandomTestModule,
-    author: "Fish in a Barrel Contributors",
-    description: "A module for testing the CSPRNG",
-    license: "GPL"
+    author: b"Fish in a Barrel Contributors",
+    description: b"A module for testing the CSPRNG",
+    license: b"GPL"
 );

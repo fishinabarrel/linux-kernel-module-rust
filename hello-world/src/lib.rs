@@ -30,7 +30,7 @@ impl Drop for HelloWorldModule {
 
 linux_kernel_module::kernel_module!(
     HelloWorldModule,
-    author: "Fish in a Barrel Contributors",
-    description: "An extremely simple kernel module",
-    license: "GPL"
+    author: b"Fish in a Barrel Contributors",
+    description: b"An extremely simple kernel module",
+    license: b"GPL"
 );
