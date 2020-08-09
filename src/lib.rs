@@ -36,9 +36,9 @@ pub use crate::types::{CStr, Mode};
 ///
 /// linux_kernel_module::kernel_module!(
 ///     MyKernelModule,
-///     author: "Fish in a Barrel Contributors",
-///     description: "My very own kernel module!",
-///     license: "GPL"
+///     author: b"Fish in a Barrel Contributors",
+///     description: b"My very own kernel module!",
+///     license: b"GPL"
 /// );
 #[macro_export]
 macro_rules! kernel_module {
@@ -72,13 +72,43 @@ macro_rules! kernel_module {
         )*
     };
 
-    (@attribute $name:ident, $value:expr) => {
+    // TODO: The modinfo attributes below depend on the compiler placing
+    // the variables in order in the .modinfo section, so that you end up
+    // with b"key=value\0" in order in the section. This is a reasonably
+    // standard trick in C, but I'm not sure that rustc guarantees it.
+    //
+    // Ideally we'd be able to use concat_bytes! + stringify_bytes! +
+    // some way of turning a string literal (or at least a string
+    // literal token) into a bytes literal, and get a single static
+    // [u8; * N] with the whole thing, but those don't really exist yet.
+    // Most of the alternatives (e.g. .as_bytes() as a const fn) give
+    // you a pointer, not an array, which isn't right.
+
+    (@attribute author, $value:expr) => {
         #[link_section = ".modinfo"]
-        #[allow(non_upper_case_globals)]
-        // TODO: Generate a name the same way the kernel's `__MODULE_INFO` does.
-        // TODO: This needs to be a `[u8; _]`, since the kernel defines this as a  `const char []`.
-        // See https://github.com/rust-lang/rfcs/pull/2545
-        pub static $name: &'static [u8] = concat!(stringify!($name), "=", $value, '\0').as_bytes();
+        pub static AUTHOR_KEY: [u8; 7] = *b"author=";
+        #[link_section = ".modinfo"]
+        pub static AUTHOR_VALUE: [u8; $value.len()] = *$value;
+        #[link_section = ".modinfo"]
+        pub static AUTHOR_NUL: [u8; 1] = *b"\0";
+    };
+
+    (@attribute description, $value:expr) => {
+        #[link_section = ".modinfo"]
+        pub static DESCRIPTION_KEY: [u8; 12] = *b"description=";
+        #[link_section = ".modinfo"]
+        pub static DESCRIPTION_VALUE: [u8; $value.len()] = *$value;
+        #[link_section = ".modinfo"]
+        pub static DESCRIPTION_NUL: [u8; 1] = *b"\0";
+    };
+
+    (@attribute license, $value:expr) => {
+        #[link_section = ".modinfo"]
+        pub static LICENSE_KEY: [u8; 8] = *b"license=";
+        #[link_section = ".modinfo"]
+        pub static LICENSE_VALUE: [u8; $value.len()] = *$value;
+        #[link_section = ".modinfo"]
+        pub static LICENSE_NUL: [u8; 1] = *b"\0";
     };
 }
 

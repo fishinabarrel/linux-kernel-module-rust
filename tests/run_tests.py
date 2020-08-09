@@ -18,7 +18,7 @@ def run(*args, **kwargs):
 
 
 def main(argv):
-    for path in os.listdir(BASE_DIR):
+    for path in argv[1:] or os.listdir(BASE_DIR):
         if (
             not os.path.isdir(os.path.join(BASE_DIR, path)) or
             not os.path.exists(os.path.join(BASE_DIR, path, "tests"))

@@ -33,7 +33,7 @@ impl linux_kernel_module::KernelModule for SysctlTestModule {
 
 linux_kernel_module::kernel_module!(
     SysctlTestModule,
-    author: "Fish in a Barrel Contributors",
-    description: "A module for testing sysctls",
-    license: "GPL"
+    author: b"Fish in a Barrel Contributors",
+    description: b"A module for testing sysctls",
+    license: b"GPL"
 );
