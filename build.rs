@@ -3,50 +3,6 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 
-const INCLUDED_TYPES: &[&str] = &["file_system_type", "mode_t", "umode_t", "ctl_table"];
-const INCLUDED_FUNCTIONS: &[&str] = &[
-    "cdev_add",
-    "cdev_init",
-    "cdev_del",
-    "register_filesystem",
-    "unregister_filesystem",
-    "krealloc",
-    "kfree",
-    "mount_nodev",
-    "kill_litter_super",
-    "register_sysctl",
-    "unregister_sysctl_table",
-    "access_ok",
-    "_copy_to_user",
-    "_copy_from_user",
-    "alloc_chrdev_region",
-    "unregister_chrdev_region",
-    "wait_for_random_bytes",
-    "get_random_bytes",
-    "rng_is_initialized",
-    "add_device_randomness",
-];
-const INCLUDED_VARS: &[&str] = &[
-    "EINVAL",
-    "ENOMEM",
-    "ESPIPE",
-    "EFAULT",
-    "EAGAIN",
-    "__this_module",
-    "FS_REQUIRES_DEV",
-    "FS_BINARY_MOUNTDATA",
-    "FS_HAS_SUBTYPE",
-    "FS_USERNS_MOUNT",
-    "FS_RENAME_DOES_D_MOVE",
-    "BINDINGS_GFP_KERNEL",
-    "KERN_INFO",
-    "VERIFY_WRITE",
-    "LINUX_VERSION_CODE",
-    "SEEK_SET",
-    "SEEK_CUR",
-    "SEEK_END",
-    "O_NONBLOCK",
-];
 const OPAQUE_TYPES: &[&str] = &[
     // These need to be opaque because they're both packed and aligned, which rustc
     // doesn't support yet. See https://github.com/rust-lang/rust/issues/59154
@@ -149,15 +105,6 @@ fn main() {
     println!("cargo:rerun-if-changed=src/bindings_helper.h");
     builder = builder.header("src/bindings_helper.h");
 
-    for t in INCLUDED_TYPES {
-        builder = builder.whitelist_type(t);
-    }
-    for f in INCLUDED_FUNCTIONS {
-        builder = builder.whitelist_function(f);
-    }
-    for v in INCLUDED_VARS {
-        builder = builder.whitelist_var(v);
-    }
     for t in OPAQUE_TYPES {
         builder = builder.opaque_type(t);
     }
