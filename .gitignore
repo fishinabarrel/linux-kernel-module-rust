@@ -9,4 +9,3 @@ Module.symvers
 *.mod.c
 *.o
 modules.order
-dummy.c
