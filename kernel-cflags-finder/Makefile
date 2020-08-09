@@ -1,7 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 obj-m += dummy.o
 clean-files := dummy.c
-ccflags-y += -Wno-unknown-warning-option
 
 # Some systems for installing kernel headers (e.g. Debian's) happen to
 # trigger the out-of-tree build code because the kernel headers directly
@@ -30,7 +29,7 @@ else
 KDIR ?= /lib/modules/$(shell uname -r)/build
 CLANG ?= clang
 all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) CC=$(CLANG)
+	$(MAKE) -C $(KDIR) M=$(CURDIR) CC=$(CLANG) CONFIG_CC_IS_CLANG=y
 clean:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
 endif
