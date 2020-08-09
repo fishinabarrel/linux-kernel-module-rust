@@ -139,6 +139,7 @@ fn main() {
         .use_core()
         .ctypes_prefix("c_types")
         .derive_default(true)
+        .size_t_is_usize(true)
         .rustfmt_bindings(true);
 
     builder = builder.clang_arg(format!("--target={}", target));
