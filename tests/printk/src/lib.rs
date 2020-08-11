@@ -1,4 +1,5 @@
 #![no_std]
+#![allow(clippy::print_literal)]
 
 use linux_kernel_module::{self, println};
 

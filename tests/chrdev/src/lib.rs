@@ -16,7 +16,7 @@ impl linux_kernel_module::file_operations::FileOperations for CycleFile {
             .build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
-        return Ok(CycleFile);
+        Ok(CycleFile)
     }
 }
 impl linux_kernel_module::file_operations::Read for CycleFile {
@@ -34,7 +34,7 @@ impl linux_kernel_module::file_operations::Read for CycleFile {
         {
             buf.write(&[*c])?;
         }
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -47,7 +47,7 @@ impl linux_kernel_module::file_operations::FileOperations for SeekFile {
             .build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
-        return Ok(SeekFile);
+        Ok(SeekFile)
     }
 }
 
@@ -57,7 +57,7 @@ impl linux_kernel_module::file_operations::Seek for SeekFile {
         _file: &linux_kernel_module::file_operations::File,
         _offset: linux_kernel_module::file_operations::SeekFrom,
     ) -> linux_kernel_module::KernelResult<u64> {
-        return Ok(1234);
+        Ok(1234)
     }
 }
 
@@ -73,9 +73,9 @@ impl linux_kernel_module::file_operations::FileOperations for WriteFile {
             .build();
 
     fn open() -> linux_kernel_module::KernelResult<Self> {
-        return Ok(WriteFile {
+        Ok(WriteFile {
             written: AtomicUsize::new(0),
-        });
+        })
     }
 }
 
@@ -88,7 +88,7 @@ impl linux_kernel_module::file_operations::Read for WriteFile {
     ) -> linux_kernel_module::KernelResult<()> {
         let val = self.written.load(Ordering::SeqCst).to_string();
         buf.write(val.as_bytes())?;
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -100,7 +100,7 @@ impl linux_kernel_module::file_operations::Write for WriteFile {
     ) -> linux_kernel_module::KernelResult<()> {
         let data = buf.read_all()?;
         self.written.fetch_add(data.len(), Ordering::SeqCst);
-        return Ok(());
+        Ok(())
     }
 }
 
