@@ -38,10 +38,14 @@ concurrently (such as by implementing locking).
 ## System requirements
 
 We're currently only running CI on Linux 4.15 (Ubuntu Xenial) on amd64,
-although we try to keep support for newer (and perhaps older) kernels
-working. Other architectures should work but are untested - see
-[#112](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/112)
-for expected status.
+although we intend to support kernels from 4.4 through the latest
+release. Please report a bug (or better yet, send in a patch!) if your
+kernel doesn't work.
+
+Other architectures aren't implemented yet, but should work as long as
+there's Rust and LLVM support - see [#112]
+(https://github.com/fishinabarrel/linux-kernel-module-rust/issues/112)
+for expected status. They'll need src/c_types.rs ported, too.
 
 You'll need to have [Rust](https://www.rust-lang.org) - in particular
 Rust nightly, as we use [some unstable
@@ -54,6 +58,9 @@ you're running kernel 5.0 or newer, [you'll need Clang
 (released September 2019), which adds support for `asm goto`.
 You may need to set the `CLANG` environment variable appropriately,
 e.g., `CLANG=clang-9`.
+
+Very recent kernels may require newer versions of Clang - try Clang 11
+if older versions don't work for you.
 
 ## Building hello-world
 

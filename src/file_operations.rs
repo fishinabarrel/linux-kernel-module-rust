@@ -144,12 +144,15 @@ impl FileOperationsVtable {
                 open: Some(open_callback::<T>),
                 release: Some(release_callback::<T>),
 
+                #[cfg(not(kernel_4_9_0_or_greater))]
+                aio_fsync: None,
                 check_flags: None,
-                #[cfg(not(kernel_4_20_0_or_greater))]
+                #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
                 clone_file_range: None,
                 compat_ioctl: None,
+                #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
                 copy_file_range: None,
-                #[cfg(not(kernel_4_20_0_or_greater))]
+                #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
                 dedupe_file_range: None,
                 fallocate: None,
                 #[cfg(kernel_4_19_0_or_greater)]
@@ -160,6 +163,7 @@ impl FileOperationsVtable {
                 fsync: None,
                 get_unmapped_area: None,
                 iterate: None,
+                #[cfg(kernel_4_7_0_or_greater)]
                 iterate_shared: None,
                 #[cfg(kernel_5_1_0_or_greater)]
                 iopoll: None,

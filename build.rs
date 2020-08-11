@@ -73,6 +73,18 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
         }
     }
     let version = version.expect("Couldn't find kernel version");
+    if version >= kernel_version_code(4, 5, 0) {
+        println!("cargo:rustc-cfg=kernel_4_5_0_or_greater")
+    }
+    if version >= kernel_version_code(4, 7, 0) {
+        println!("cargo:rustc-cfg=kernel_4_7_0_or_greater")
+    }
+    if version >= kernel_version_code(4, 9, 0) {
+        println!("cargo:rustc-cfg=kernel_4_9_0_or_greater")
+    }
+    if version >= kernel_version_code(4, 13, 0) {
+        println!("cargo:rustc-cfg=kernel_4_13_0_or_greater")
+    }
     if version >= kernel_version_code(4, 15, 0) {
         println!("cargo:rustc-cfg=kernel_4_15_0_or_greater")
     }
