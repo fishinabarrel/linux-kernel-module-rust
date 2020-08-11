@@ -1,6 +1,7 @@
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::path::{Path,PathBuf};
 use std::{env, fs};
+use std::ffi::OsStr;
 
 const INCLUDED_TYPES: &[&str] = &["file_system_type", "mode_t", "umode_t", "ctl_table"];
 const INCLUDED_FUNCTIONS: &[&str] = &[
@@ -111,9 +112,22 @@ fn handle_kernel_symbols_cfg(symvers_path: &PathBuf) {
     }
 }
 
+// Alist of plugin basename (without .so) to whether it leaves the ABI unchanged. See
+// https://github.com/fishinabarrel/linux-kernel-module-rust/issues/152#issuecomment-671219181
+const KNOWN_PLUGINS: &[(&str, bool)] = &[
+    ("cyc_complexity_plugin", true),
+    ("latent_entropy_plugin", true),
+    ("sancov_plugin", true),
+    ("structleak_plugin", true),
+    ("randomize_layout_plugin", false),
+    ("stackleak_plugin", true),
+    ("arm_ssp_per_task_plugin", true),
+];
+
 // Takes the CFLAGS from the kernel Makefile and changes all the include paths to be absolute
-// instead of relative.
-fn prepare_cflags(cflags: &str, kernel_dir: &str) -> Vec<String> {
+// instead of relative. Also, filter out arguments to load or configure plugins and throw an error
+// if the requested plugin would change the ABI.
+fn prepare_cflags(cflags: &str, kernel_dir: &str) -> Option<Vec<String>> {
     let cflag_parts = shlex::split(&cflags).unwrap();
     let mut cflag_iter = cflag_parts.iter();
     let mut kernel_args = vec![];
@@ -128,11 +142,34 @@ fn prepare_cflags(cflags: &str, kernel_dir: &str) -> Vec<String> {
             } else {
                 kernel_args.push(format!("{}/{}", kernel_dir, include_path));
             }
+        } else if arg.starts_with("-fplugin=") {
+continue;
+            let plugin_filename = arg.strip_prefix("-fplugin=").unwrap();
+            let plugin_basename = Path::new(&plugin_filename).file_stem().unwrap();
+            for (known_plugin, abi_safe) in KNOWN_PLUGINS {
+                if plugin_basename == OsStr::new(known_plugin) {
+                    if !abi_safe {
+                        eprintln!("Your kernel uses the {:?} plugin, which changes the ABI in a way we can't handle :(", plugin_basename);
+                        return None;
+                    }
+                    if known_plugin == &"stackleak_plugin" {
+                        println!("cargo:warning=Rust code will not call stackleak, potentially weakining stackleak's protection.");
+                    }
+                    continue;
+                }
+            }
+            eprintln!("Your kernel uses the {:?} plugin, which we don't know about.", plugin_basename);
+            eprintln!("Edit linux-kernel-module-rust/build.rs if it doesn't change the ABI.");
+            return None;
+        } else if arg.starts_with("-fplugin-arg-") {
+            continue;
         } else {
             kernel_args.push(arg.to_string());
         }
     }
-    kernel_args
+kernel_args.push("-USTRUCTLEAK_PLUGIN".to_owned());
+kernel_args.push("-DMODULE".to_owned());
+    Some(kernel_args)
 }
 
 fn main() {
@@ -143,7 +180,8 @@ fn main() {
     let kernel_dir = env::var("abs_srctree").expect("Must be invoked from kernel makefile");
     let kernel_cflags = env::var("c_flags").expect("Add 'export c_flags' to Kbuild");
 
-    let kernel_args = prepare_cflags(&kernel_cflags, &kernel_dir);
+    let kernel_args =
+        prepare_cflags(&kernel_cflags, &kernel_dir).unwrap_or_else(|| std::process::exit(1));
 
     let target = env::var("TARGET").unwrap();
 

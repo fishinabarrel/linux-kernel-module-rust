@@ -1,6 +1,8 @@
 obj-m := helloworld.o
 helloworld-objs := hello_world.rust.o
 
+c_flags := $(filter-out -fplugin-%,${c_flags})
+
 CARGO ?= cargo
 
 export c_flags
