@@ -1,6 +1,5 @@
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::process::Command;
 use std::{env, fs};
 
 const INCLUDED_TYPES: &[&str] = &["file_system_type", "mode_t", "umode_t", "ctl_table"];
@@ -112,38 +111,39 @@ fn handle_kernel_symbols_cfg(symvers_path: &PathBuf) {
     }
 }
 
-fn add_env_if_present(cmd: &mut Command, var: &str) {
-    if let Ok(val) = env::var(var) {
-        cmd.env(var, val);
+// Takes the CFLAGS from the kernel Makefile and changes all the include paths to be absolute
+// instead of relative.
+fn prepare_cflags(cflags: &str, kernel_dir: &str) -> Vec<String> {
+    let cflag_parts = shlex::split(&cflags).unwrap();
+    let mut cflag_iter = cflag_parts.iter();
+    let mut kernel_args = vec![];
+    while let Some(arg) = cflag_iter.next() {
+        if arg.starts_with("-I") && !arg.starts_with("-I/") {
+            kernel_args.push(format!("-I{}/{}", kernel_dir, &arg[2..]));
+        } else if arg == "-include" {
+            kernel_args.push(arg.to_string());
+            let include_path = cflag_iter.next().unwrap();
+            if include_path.starts_with('/') {
+                kernel_args.push(include_path.to_string());
+            } else {
+                kernel_args.push(format!("{}/{}", kernel_dir, include_path));
+            }
+        } else {
+            kernel_args.push(arg.to_string());
+        }
     }
+    kernel_args
 }
 
 fn main() {
-    println!("cargo:rerun-if-env-changed=KDIR");
-    let kdir = env::var("KDIR").unwrap_or(format!(
-        "/lib/modules/{}/build",
-        std::str::from_utf8(&(Command::new("uname").arg("-r").output().unwrap().stdout))
-            .unwrap()
-            .trim()
-    ));
+    println!("cargo:rerun-if-env-changed=CC");
+    println!("cargo:rerun-if-env-changed=abs_srctree");
+    println!("cargo:rerun-if-env-changed=c_flags");
 
-    println!("cargo:rerun-if-env-changed=CLANG");
-    println!("cargo:rerun-if-changed=kernel-cflags-finder/Makefile");
-    let mut cmd = Command::new("make");
-    cmd.arg("-C")
-        .arg("kernel-cflags-finder")
-        .arg("-s")
-        .env_clear();
-    add_env_if_present(&mut cmd, "KDIR");
-    add_env_if_present(&mut cmd, "CLANG");
-    add_env_if_present(&mut cmd, "PATH");
-    let output = cmd.output().unwrap();
-    if !output.status.success() {
-        eprintln!("kernel-cflags-finder did not succeed");
-        eprintln!("stdout: {}", std::str::from_utf8(&output.stdout).unwrap());
-        eprintln!("stderr: {}", std::str::from_utf8(&output.stderr).unwrap());
-        std::process::exit(1);
-    }
+    let kernel_dir = env::var("abs_srctree").expect("Must be invoked from kernel makefile");
+    let kernel_cflags = env::var("c_flags").expect("Add 'export c_flags' to Kbuild");
+
+    let kernel_args = prepare_cflags(&kernel_cflags, &kernel_dir);
 
     let target = env::var("TARGET").unwrap();
 
@@ -155,8 +155,8 @@ fn main() {
         .rustfmt_bindings(true);
 
     builder = builder.clang_arg(format!("--target={}", target));
-    for arg in shlex::split(std::str::from_utf8(&output.stdout).unwrap()).unwrap() {
-        builder = builder.clang_arg(arg.to_string());
+    for arg in kernel_args.iter() {
+        builder = builder.clang_arg(arg.clone());
     }
 
     println!("cargo:rerun-if-changed=src/bindings_helper.h");
@@ -182,14 +182,14 @@ fn main() {
         .expect("Couldn't write bindings!");
 
     handle_kernel_version_cfg(&out_path.join("bindings.rs"));
-    handle_kernel_symbols_cfg(&PathBuf::from(&kdir).join("Module.symvers"));
+    handle_kernel_symbols_cfg(&PathBuf::from(&kernel_dir).join("Module.symvers"));
 
     let mut builder = cc::Build::new();
-    builder.compiler(env::var("CLANG").unwrap_or_else(|_| "clang".to_string()));
+    builder.compiler(env::var("CC").unwrap_or_else(|_| "clang".to_string()));
     builder.target(&target);
     builder.warnings(false);
     builder.file("src/helpers.c");
-    for arg in shlex::split(std::str::from_utf8(&output.stdout).unwrap()).unwrap() {
+    for arg in kernel_args.iter() {
         builder.flag(&arg);
     }
     builder.compile("helpers");

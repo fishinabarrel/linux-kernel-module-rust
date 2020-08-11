@@ -3,6 +3,9 @@ helloworld-objs := hello_world.rust.o
 
 CARGO ?= cargo
 
+export c_flags
+export abs_srctree ?= ${CURDIR}
+
 $(src)/target/x86_64-linux-kernel/debug/libhello_world.a: $(src)/Cargo.toml $(wildcard $(src)/src/*.rs)
 	cd $(src); $(CARGO) build -Z build-std=core,alloc --target=x86_64-linux-kernel
 

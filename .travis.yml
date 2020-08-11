@@ -1,6 +1,5 @@
 matrix:
     include:
-        - dist: xenial
         - dist: bionic
 
 language: rust
@@ -13,10 +12,11 @@ branches:
 
 install:
     - sudo apt-get install -y "linux-headers-$(uname -r)" coreutils
+    - sudo apt-get install clang-9
     - rustup component add rust-src rustfmt clippy
 
 script:
-    - ./tests/run_tests.py
+    - CLANG=clang-9 ./tests/run_tests.py
     - |
       for p in . hello-world tests/*; do
         if [ -d "$p" ]; then
