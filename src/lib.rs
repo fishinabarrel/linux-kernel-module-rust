@@ -13,6 +13,7 @@ mod error;
 pub mod file_operations;
 pub mod filesystem;
 pub mod printk;
+#[cfg(kernel_4_13_0_or_greater)]
 pub mod random;
 pub mod sysctl;
 mod types;
