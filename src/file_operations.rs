@@ -150,7 +150,7 @@ impl FileOperationsVtable {
                 #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
                 clone_file_range: None,
                 compat_ioctl: None,
-                #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
+                #[cfg(kernel_4_5_0_or_greater)]
                 copy_file_range: None,
                 #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
                 dedupe_file_range: None,
