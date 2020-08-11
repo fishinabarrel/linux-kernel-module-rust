@@ -19,9 +19,8 @@ various other examples in the tests/ directory.
 We run [bindgen](https://github.com/rust-lang/rust-bindgen) on the
 kernel headers to generate automatic Rust FFI bindings. bindgen is
 powered by [Clang](https://clang.llvm.org), so we use the kernel's
-own build system to determine the appropriate CFLAGS (see
-`kernel-cflags-finder`) and pass them to bindgen (see `build.rs`). Then we
-write safe bindings to these types (see the various files inside `src/`).
+own build system to determine the appropriate CFLAGS. Then we write safe
+bindings to these types (see the various files inside `src/`).
 
 Each kernel module in Rust lives in a `staticlib` crate, which generates
 a `.a` file. We pass this object to the Linux kernel's own module build
@@ -50,14 +49,15 @@ for expected status. They'll need src/c_types.rs ported, too.
 You'll need to have [Rust](https://www.rust-lang.org) - in particular
 Rust nightly, as we use [some unstable
 features](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/41) -
-and [Clang](https://clang.llvm.org) installed. You need LLVM/Clang 3.9
-or higher [to bind constants
-properly](https://github.com/rust-lang/rust-bindgen/issues/1316). If
-you're running kernel 5.0 or newer, [you'll need Clang
-9](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/123)
-(released September 2019), which adds support for `asm goto`.
-You may need to set the `CLANG` environment variable appropriately,
-e.g., `CLANG=clang-9`.
+and [Clang](https://clang.llvm.org) installed. You need LLVM/Clang 9
+(released September 2019) or higher for multiple reasons, primarily
+[support for `asm goto`]
+(https://github.com/fishinabarrel/linux-kernel-module-rust/issues/123).
+If you're on Debian, Ubuntu, or a derivative, https://apt.llvm.org is
+great.
+
+If the binary named `clang` is too old, make sure to set the `CC` or
+`CLANG` environment variable appropriately, e.g., `CC=clang-9`.
 
 Very recent kernels may require newer versions of Clang - try Clang 11
 if older versions don't work for you.
