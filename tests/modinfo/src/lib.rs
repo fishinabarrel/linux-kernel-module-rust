@@ -1,7 +1,5 @@
 #![no_std]
 
-use linux_kernel_module;
-
 struct ModinfoTestModule;
 
 impl linux_kernel_module::KernelModule for ModinfoTestModule {

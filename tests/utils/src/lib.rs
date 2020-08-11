@@ -1,7 +1,5 @@
 #![no_std]
 
-use linux_kernel_module;
-
 struct UtilsTestModule;
 
 #[allow(dead_code)]
