@@ -137,10 +137,10 @@ fn prepare_cflags(cflags: &str, kernel_dir: &str) -> Vec<String> {
 
 fn main() {
     println!("cargo:rerun-if-env-changed=CC");
-    println!("cargo:rerun-if-env-changed=abs_srctree");
+    println!("cargo:rerun-if-env-changed=KDIR");
     println!("cargo:rerun-if-env-changed=c_flags");
 
-    let kernel_dir = env::var("abs_srctree").expect("Must be invoked from kernel makefile");
+    let kernel_dir = env::var("KDIR").expect("Must be invoked from kernel makefile");
     let kernel_cflags = env::var("c_flags").expect("Add 'export c_flags' to Kbuild");
 
     let kernel_args = prepare_cflags(&kernel_cflags, &kernel_dir);
