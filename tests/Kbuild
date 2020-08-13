@@ -4,7 +4,6 @@ testmodule-objs := $(TEST_NAME).rust.o
 CARGO ?= cargo
 
 export c_flags
-export abs_srctree ?= ${CURDIR}
 
 $(src)/target/x86_64-linux-kernel/debug/lib%.a: $(src)/$(TEST_PATH)/Cargo.toml $(wildcard $(src)/$(TEST_PATH)/src/*.rs)
 	cd $(src)/$(TEST_PATH); CARGO_TARGET_DIR=../target $(CARGO) build -Z build-std=core,alloc --target=x86_64-linux-kernel

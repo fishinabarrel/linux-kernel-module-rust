@@ -1,4 +1,4 @@
-KDIR ?= /lib/modules/$(shell uname -r)/build
+export KDIR ?= /lib/modules/$(shell uname -r)/build
 
 CLANG ?= clang
 ifeq ($(origin CC),default)
