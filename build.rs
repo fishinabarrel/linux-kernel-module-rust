@@ -142,8 +142,11 @@ fn main() {
 
     let kernel_dir = env::var("KDIR").expect("Must be invoked from kernel makefile");
     let kernel_cflags = env::var("c_flags").expect("Add 'export c_flags' to Kbuild");
+    let kbuild_cflags_module =
+        env::var("KBUILD_CFLAGS_MODULE").expect("Must be invoked from kernel makefile");
 
-    let kernel_args = prepare_cflags(&kernel_cflags, &kernel_dir);
+    let cflags = format!("{} {}", kernel_cflags, kbuild_cflags_module);
+    let kernel_args = prepare_cflags(&cflags, &kernel_dir);
 
     let target = env::var("TARGET").unwrap();
 
