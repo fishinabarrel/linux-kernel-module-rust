@@ -5,9 +5,11 @@ CARGO ?= cargo
 
 export c_flags
 
-$(src)/target/x86_64-linux-kernel/debug/lib%.a: $(src)/$(TEST_PATH)/Cargo.toml $(wildcard $(src)/$(TEST_PATH)/src/*.rs)
+$(src)/target/x86_64-linux-kernel/debug/lib%.a: cargo_will_determine_dependencies
 	cd $(src)/$(TEST_PATH); CARGO_TARGET_DIR=../target $(CARGO) build -Z build-std=core,alloc --target=x86_64-linux-kernel
 	cd $(src)/$(TEST_PATH); CARGO_TARGET_DIR=../target $(CARGO) clippy -Z build-std=core,alloc --target=x86_64-linux-kernel -- -Dwarnings
+
+.PHONY: cargo_will_determine_dependencies
 
 %.rust.o: target/x86_64-linux-kernel/debug/lib%.a
 	$(LD) -r -o $@ --whole-archive $<
