@@ -54,10 +54,6 @@ const OPAQUE_TYPES: &[&str] = &[
     "xregs_state",
 ];
 
-fn kernel_version_code(major: u8, minor: u8, patch: u8) -> u64 {
-    ((major as u64) << 16) | ((minor as u64) << 8) | (patch as u64)
-}
-
 fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     let f = BufReader::new(fs::File::open(bindings_path).unwrap());
     let mut version = None;
@@ -72,29 +68,26 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
         }
     }
     let version = version.expect("Couldn't find kernel version");
-    if version >= kernel_version_code(4, 5, 0) {
-        println!("cargo:rustc-cfg=kernel_4_5_0_or_greater")
+    let (major, minor) = match version.to_be_bytes() {
+        [0, 0, 0, 0, 0, major, minor, _patch] => (major, minor),
+        _ => panic!("unable to parse LINUX_VERSION_CODE {:x}", version),
+    };
+
+    if major >= 6 {
+        panic!("Please update build.rs with the last 5.x version");
+        // Change this block to major >= 7, copy the below block for
+        // major >= 6, fill in unimplemented!() for major >= 5
     }
-    if version >= kernel_version_code(4, 7, 0) {
-        println!("cargo:rustc-cfg=kernel_4_7_0_or_greater")
+    if major >= 5 {
+        for x in 0..=if major > 5 { unimplemented!() } else { minor } {
+            println!("cargo:rustc-cfg=kernel_5_{}_0_or_greater", x);
+        }
     }
-    if version >= kernel_version_code(4, 9, 0) {
-        println!("cargo:rustc-cfg=kernel_4_9_0_or_greater")
-    }
-    if version >= kernel_version_code(4, 13, 0) {
-        println!("cargo:rustc-cfg=kernel_4_13_0_or_greater")
-    }
-    if version >= kernel_version_code(4, 15, 0) {
-        println!("cargo:rustc-cfg=kernel_4_15_0_or_greater")
-    }
-    if version >= kernel_version_code(4, 19, 0) {
-        println!("cargo:rustc-cfg=kernel_4_19_0_or_greater")
-    }
-    if version >= kernel_version_code(4, 20, 0) {
-        println!("cargo:rustc-cfg=kernel_4_20_0_or_greater")
-    }
-    if version >= kernel_version_code(5, 1, 0) {
-        println!("cargo:rustc-cfg=kernel_5_1_0_or_greater")
+    if major >= 4 {
+        // We don't currently support anything older than 4.4
+        for x in 4..=if major > 4 { 20 } else { minor } {
+            println!("cargo:rustc-cfg=kernel_4_{}_0_or_greater", x);
+        }
     }
 }
 
