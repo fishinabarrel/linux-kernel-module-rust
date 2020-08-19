@@ -87,28 +87,37 @@ macro_rules! kernel_module {
 
     (@attribute author, $value:expr) => {
         #[link_section = ".modinfo"]
+        #[used]
         pub static AUTHOR_KEY: [u8; 7] = *b"author=";
         #[link_section = ".modinfo"]
+        #[used]
         pub static AUTHOR_VALUE: [u8; $value.len()] = *$value;
         #[link_section = ".modinfo"]
+        #[used]
         pub static AUTHOR_NUL: [u8; 1] = *b"\0";
     };
 
     (@attribute description, $value:expr) => {
         #[link_section = ".modinfo"]
+        #[used]
         pub static DESCRIPTION_KEY: [u8; 12] = *b"description=";
         #[link_section = ".modinfo"]
+        #[used]
         pub static DESCRIPTION_VALUE: [u8; $value.len()] = *$value;
         #[link_section = ".modinfo"]
+        #[used]
         pub static DESCRIPTION_NUL: [u8; 1] = *b"\0";
     };
 
     (@attribute license, $value:expr) => {
         #[link_section = ".modinfo"]
+        #[used]
         pub static LICENSE_KEY: [u8; 8] = *b"license=";
         #[link_section = ".modinfo"]
+        #[used]
         pub static LICENSE_VALUE: [u8; $value.len()] = *$value;
         #[link_section = ".modinfo"]
+        #[used]
         pub static LICENSE_NUL: [u8; 1] = *b"\0";
     };
 }
