@@ -1,60 +1,10 @@
 use std::fs;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::os::unix::prelude::FileExt;
-use std::path::PathBuf;
-use std::process::Command;
 
-use libc;
+use kernel_module_testlib::*;
 
-use tempfile::TempDir;
-
-use kernel_module_testlib::with_kernel_module;
-
-fn get_device_major_number() -> libc::dev_t {
-    let devices = fs::read_to_string("/proc/devices").unwrap();
-    let dev_no_line = devices
-        .lines()
-        .find(|l| l.ends_with("chrdev-tests"))
-        .unwrap();
-    let elements = dev_no_line.rsplitn(2, " ").collect::<Vec<_>>();
-    assert_eq!(elements.len(), 2);
-    assert_eq!(elements[0], "chrdev-tests");
-    return elements[1].trim().parse().unwrap();
-}
-
-fn temporary_file_path() -> PathBuf {
-    let mut p = TempDir::new().unwrap().into_path();
-    p.push("device");
-    return p;
-}
-
-struct UnlinkOnDrop<'a> {
-    path: &'a PathBuf,
-}
-
-impl Drop for UnlinkOnDrop<'_> {
-    fn drop(&mut self) {
-        Command::new("sudo")
-            .arg("rm")
-            .arg(self.path.to_str().unwrap())
-            .status()
-            .unwrap();
-    }
-}
-
-fn mknod(path: &PathBuf, major: libc::dev_t, minor: libc::dev_t) -> UnlinkOnDrop {
-    Command::new("sudo")
-        .arg("mknod")
-        .arg("--mode=a=rw")
-        .arg(path.to_str().unwrap())
-        .arg("c")
-        .arg(major.to_string())
-        .arg(minor.to_string())
-        .status()
-        .unwrap();
-    return UnlinkOnDrop { path };
-}
-
+const DEVICE_NAME: &'static str = "chrdev-tests";
 const READ_FILE_MINOR: libc::dev_t = 0;
 const SEEK_FILE_MINOR: libc::dev_t = 1;
 const WRITE_FILE_MINOR: libc::dev_t = 2;
@@ -62,7 +12,7 @@ const WRITE_FILE_MINOR: libc::dev_t = 2;
 #[test]
 fn test_mknod() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         mknod(&temporary_file_path(), device_number, READ_FILE_MINOR);
     });
 }
@@ -70,7 +20,7 @@ fn test_mknod() {
 #[test]
 fn test_read() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, READ_FILE_MINOR);
 
@@ -84,7 +34,7 @@ fn test_read() {
 #[test]
 fn test_read_offset() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, READ_FILE_MINOR);
 
@@ -100,7 +50,7 @@ fn test_read_offset() {
 #[test]
 fn test_read_at() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, READ_FILE_MINOR);
 
@@ -114,7 +64,7 @@ fn test_read_at() {
 #[test]
 fn test_read_unimplemented() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, SEEK_FILE_MINOR);
 
@@ -130,7 +80,7 @@ fn test_read_unimplemented() {
 #[test]
 fn test_lseek_unimplemented() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, READ_FILE_MINOR);
 
@@ -162,7 +112,7 @@ fn test_lseek_unimplemented() {
 #[test]
 fn test_lseek() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, SEEK_FILE_MINOR);
 
@@ -184,7 +134,7 @@ fn test_lseek() {
 #[test]
 fn test_write_unimplemented() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, READ_FILE_MINOR);
 
@@ -199,7 +149,7 @@ fn test_write_unimplemented() {
 #[test]
 fn test_write() {
     with_kernel_module(|| {
-        let device_number = get_device_major_number();
+        let device_number = get_device_major_number(DEVICE_NAME);
         let p = temporary_file_path();
         let _u = mknod(&p, device_number, WRITE_FILE_MINOR);
 
