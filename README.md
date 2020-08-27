@@ -42,8 +42,7 @@ release. Please report a bug (or better yet, send in a patch!) if your
 kernel doesn't work.
 
 Other architectures aren't implemented yet, but should work as long as
-there's Rust and LLVM support - see [#112]
-(https://github.com/fishinabarrel/linux-kernel-module-rust/issues/112)
+there's Rust and LLVM support - see [#112][]
 for expected status. They'll need src/c_types.rs ported, too.
 
 You'll need to have [Rust](https://www.rust-lang.org) - in particular
@@ -51,16 +50,17 @@ Rust nightly, as we use [some unstable
 features](https://github.com/fishinabarrel/linux-kernel-module-rust/issues/41) -
 and [Clang](https://clang.llvm.org) installed. You need LLVM/Clang 9
 (released September 2019) or higher for multiple reasons, primarily
-[support for `asm goto`]
-(https://github.com/fishinabarrel/linux-kernel-module-rust/issues/123).
-If you're on Debian, Ubuntu, or a derivative, https://apt.llvm.org is
-great.
+[support for `asm goto`][]. If you're on Debian, Ubuntu, or a derivative,
+https://apt.llvm.org is great.
 
 If the binary named `clang` is too old, make sure to set the `CC` or
 `CLANG` environment variable appropriately, e.g., `CC=clang-9`.
 
 Very recent kernels may require newer versions of Clang - try Clang 11
 if older versions don't work for you.
+
+[#112]: https://github.com/fishinabarrel/linux-kernel-module-rust/issues/112
+[support for `asm goto`]: https://github.com/fishinabarrel/linux-kernel-module-rust/issues/123
 
 ## Building hello-world
 
