@@ -12,3 +12,4 @@ $(src)/target/x86_64-linux-kernel/debug/libhello_world.a: cargo_will_determine_d
 
 %.rust.o: target/x86_64-linux-kernel/debug/lib%.a
 	$(LD) -r -o $@ --whole-archive $<
+	touch $(dir $@)/.$(notdir $@).cmd
