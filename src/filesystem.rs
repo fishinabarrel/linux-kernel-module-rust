@@ -28,11 +28,11 @@ pub trait FileSystem: Sync {
 
 bitflags::bitflags! {
     pub struct FileSystemFlags: c_types::c_int {
-        const FS_REQUIRES_DEV = bindings::FS_REQUIRES_DEV as c_types::c_int;
-        const FS_BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA as c_types::c_int;
-        const FS_HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE as c_types::c_int;
-        const FS_USERNS_MOUNT = bindings::FS_USERNS_MOUNT as c_types::c_int;
-        const FS_RENAME_DOES_D_MOVE = bindings::FS_RENAME_DOES_D_MOVE as c_types::c_int;
+        const REQUIRES_DEV = bindings::FS_REQUIRES_DEV as c_types::c_int;
+        const BINARY_MOUNTDATA = bindings::FS_BINARY_MOUNTDATA as c_types::c_int;
+        const HAS_SUBTYPE = bindings::FS_HAS_SUBTYPE as c_types::c_int;
+        const USERNS_MOUNT = bindings::FS_USERNS_MOUNT as c_types::c_int;
+        const RENAME_DOES_D_MOVE = bindings::FS_RENAME_DOES_D_MOVE as c_types::c_int;
     }
 }
 
