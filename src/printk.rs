@@ -1,18 +1,19 @@
 use core::cmp;
 use core::fmt;
 
+use crate::bindings;
 use crate::c_types::c_int;
-
-pub struct KernelConsole;
-
-extern "C" {
-    fn printk_helper(s: *const u8, len: c_int) -> c_int;
-}
 
 #[doc(hidden)]
 pub fn printk(s: &[u8]) {
+    // Don't copy the trailing NUL from `KERN_INFO`.
+    let mut fmt_str = [0; bindings::KERN_INFO.len() - 1 + b"%.*s\0".len()];
+    fmt_str[..bindings::KERN_INFO.len() - 1]
+        .copy_from_slice(&bindings::KERN_INFO[..bindings::KERN_INFO.len() - 1]);
+    fmt_str[bindings::KERN_INFO.len() - 1..].copy_from_slice(b"%.*s\0");
+
     // TODO: I believe printk never fails
-    unsafe { printk_helper(s.as_ptr(), s.len() as c_int) };
+    unsafe { bindings::printk(fmt_str.as_ptr() as _, s.len() as c_int, s.as_ptr()) };
 }
 
 // From kernel/print/printk.c

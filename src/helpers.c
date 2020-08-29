@@ -4,11 +4,6 @@
 #include <linux/version.h>
 
 
-int printk_helper(const unsigned char *s, int len)
-{
-    return printk(KERN_INFO "%.*s", len, (const char *)s);
-}
-
 void bug_helper(void)
 {
     BUG();
