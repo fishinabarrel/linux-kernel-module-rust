@@ -118,8 +118,8 @@ unsafe extern "C" fn proc_handler<T: SysctlStorage>(
 
 impl<T: SysctlStorage> Sysctl<T> {
     pub fn register(
-        path: &'static types::CStr,
-        name: &'static types::CStr,
+        path: types::CStr<'static>,
+        name: types::CStr<'static>,
         storage: T,
         mode: types::Mode,
     ) -> error::KernelResult<Sysctl<T>> {

@@ -22,7 +22,7 @@ impl<T: FileSystem> Drop for Registration<T> {
 }
 
 pub trait FileSystem: Sync {
-    const NAME: &'static CStr;
+    const NAME: CStr<'static>;
     const FLAGS: FileSystemFlags;
 }
 
