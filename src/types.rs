@@ -17,31 +17,31 @@ impl Mode {
 /// A string that is guaranteed to have exactly one NUL byte, which is at the
 /// end. Used for interoperability with kernel APIs that take C strings.
 #[repr(transparent)]
-pub struct CStr(str);
+pub struct CStr<'a>(&'a str);
 
-impl CStr {
+impl CStr<'_> {
     /// Creates a new CStr from a str without performing any additional checks.
     /// # Safety
     ///
     /// `data` _must_ end with a NUL byte, and should only have only a single
     /// NUL byte, or the string will be truncated.
-    pub const unsafe fn new_unchecked(data: &str) -> &CStr {
-        &*(data as *const str as *const CStr)
+    pub const unsafe fn new_unchecked(data: &str) -> CStr {
+        CStr(data)
     }
 }
 
-impl Deref for CStr {
+impl Deref for CStr<'_> {
     type Target = str;
 
     fn deref(&self) -> &str {
-        &self.0
+        self.0
     }
 }
 
 /// Creates a new `CStr` from a string literal. The string literal should not contain any NUL
 /// bytes. Example usage:
 /// ```
-/// const MY_CSTR: &CStr = cstr!("My awesome CStr!");
+/// const MY_CSTR: CStr<'static> = cstr!("My awesome CStr!");
 /// ```
 #[macro_export]
 macro_rules! cstr {

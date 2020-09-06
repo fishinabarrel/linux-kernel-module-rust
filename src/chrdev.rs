@@ -12,7 +12,7 @@ use crate::error::{Error, KernelResult};
 use crate::file_operations;
 use crate::types::CStr;
 
-pub fn builder(name: &'static CStr, minors: Range<u16>) -> KernelResult<Builder> {
+pub fn builder(name: CStr<'static>, minors: Range<u16>) -> KernelResult<Builder> {
     Ok(Builder {
         name,
         minors,
@@ -21,7 +21,7 @@ pub fn builder(name: &'static CStr, minors: Range<u16>) -> KernelResult<Builder>
 }
 
 pub struct Builder {
-    name: &'static CStr,
+    name: CStr<'static>,
     minors: Range<u16>,
     file_ops: Vec<&'static bindings::file_operations>,
 }

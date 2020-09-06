@@ -3,7 +3,7 @@
 struct UtilsTestModule;
 
 #[allow(dead_code)]
-const TEST_CSTR: &linux_kernel_module::CStr = linux_kernel_module::cstr!("abc");
+const TEST_CSTR: linux_kernel_module::CStr<'static> = linux_kernel_module::cstr!("abc");
 
 impl linux_kernel_module::KernelModule for UtilsTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {

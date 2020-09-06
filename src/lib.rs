@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(allocator_api, alloc_error_handler, const_raw_ptr_deref)]
+#![feature(allocator_api, alloc_error_handler)]
 
 extern crate alloc;
 
