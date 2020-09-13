@@ -43,7 +43,7 @@ kernel doesn't work.
 
 Other architectures aren't implemented yet, but should work as long as
 there's Rust and LLVM support - see [#112][]
-for expected status. They'll need src/c_types.rs ported, too.
+for expected status. They'll need `src/c_types.rs` ported, too.
 
 You'll need to have [Rust](https://www.rust-lang.org) - in particular
 Rust nightly, as we use [some unstable
