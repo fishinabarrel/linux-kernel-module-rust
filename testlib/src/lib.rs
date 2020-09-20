@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::str;
 
 use tempfile::TempDir;
 
@@ -10,7 +11,31 @@ struct LoadedModule {
 }
 
 impl LoadedModule {
+    fn get_kernel_release() -> String {
+        let output = Command::new("uname").arg("-r").output().unwrap();
+        assert!(output.status.success());
+        str::from_utf8(&output.stdout).unwrap().trim().to_string()
+    }
+
+    fn sign(name: &str, private_key: &str, public_key: &str) {
+        let release = LoadedModule::get_kernel_release();
+        let sign_file = format!("/usr/src/linux-headers-{}/scripts/sign-file", release);
+        let status = Command::new("sudo")
+            .arg(sign_file)
+            .arg("sha256")
+            .arg(private_key)
+            .arg(public_key)
+            .arg(&name)
+            .status()
+            .unwrap();
+        assert!(status.success());
+    }
+
     fn load(name: String) -> LoadedModule {
+        if let Ok(private_key) = env::var("MOK_PRIVATE_KEY") {
+            let public_key = env::var("MOK_PUBLIC_KEY").unwrap();
+            LoadedModule::sign(&name, &private_key, &public_key);
+        }
         let status = Command::new("sudo")
             .arg("insmod")
             .arg(&name)

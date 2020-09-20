@@ -92,3 +92,21 @@ sudo insmod helloworld.ko
 sudo rmmod helloworld
 dmesg | tail
 ```
+
+## Running Tests
+To run all tests, execute the python script in the `tests` folder:
+```
+python tests/run_tests.py
+```
+
+## UEFI Secure Boot and signing kernel modules
+If you see an error message `Required key not available` when trying to load
+a kernel module, you may have UEFI Secure Boot enabled with configs that
+required kernel modules to be signed. This is the default on more recent 
+versions of Ubuntu. [Here](https://askubuntu.com/a/769840) is a description
+of the steps needed to sign your kernel modules.
+
+Kernel modules are also created and loaded during testing, so you'll need
+to enable signing of the kernel modules when testing as well. To do this,
+set the environment variables `MOK_PRIVATE_KEY` and `MOK_PUBLIC_KEY` to the 
+paths of the private and public keys to use for signing.
