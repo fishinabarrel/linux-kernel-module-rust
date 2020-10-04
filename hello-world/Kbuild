@@ -4,6 +4,7 @@ helloworld-objs := hello_world.rust.o
 CARGO ?= cargo
 
 export c_flags
+export KDIR
 
 $(src)/target/x86_64-linux-kernel/debug/libhello_world.a: cargo_will_determine_dependencies
 	cd $(src); $(CARGO) build -Z build-std=core,alloc --target=x86_64-linux-kernel

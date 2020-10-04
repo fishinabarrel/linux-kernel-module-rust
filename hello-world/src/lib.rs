@@ -5,6 +5,7 @@ extern crate alloc;
 use alloc::borrow::ToOwned;
 use alloc::string::String;
 
+use linux_kernel_module::eprintln;
 use linux_kernel_module::println;
 
 struct HelloWorldModule {
@@ -24,6 +25,7 @@ impl Drop for HelloWorldModule {
     fn drop(&mut self) {
         println!("My message is {}", self.message);
         println!("Goodbye kernel module!");
+        eprintln!("Module unloaded");
     }
 }
 
