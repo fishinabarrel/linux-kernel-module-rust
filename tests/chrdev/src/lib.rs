@@ -3,7 +3,7 @@
 extern crate alloc;
 
 use alloc::string::ToString;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use linux_kernel_module::{self, cstr};
 
@@ -83,6 +83,59 @@ impl linux_kernel_module::file_operations::FileOperations for WriteFile {
     );
 }
 
+struct FSyncFile {
+    data_synced: AtomicBool,
+    meta_synced: AtomicBool,
+}
+
+impl linux_kernel_module::file_operations::FileOperations for FSyncFile {
+    fn open() -> linux_kernel_module::KernelResult<Self> {
+        Ok(FSyncFile {
+            data_synced: AtomicBool::new(true),
+            meta_synced: AtomicBool::new(true),
+        })
+    }
+
+    const READ: linux_kernel_module::file_operations::ReadFn<Self> = Some(
+        |this: &Self,
+         _file: &linux_kernel_module::file_operations::File,
+         buf: &mut linux_kernel_module::user_ptr::UserSlicePtrWriter,
+         _offset: u64|
+         -> linux_kernel_module::KernelResult<()> {
+            let data = (this.data_synced.load(Ordering::SeqCst) as i32).to_string();
+            let meta = (this.meta_synced.load(Ordering::SeqCst) as i32).to_string();
+            buf.write((data + &meta).as_bytes())?;
+            Ok(())
+        },
+    );
+
+    const WRITE: linux_kernel_module::file_operations::WriteFn<Self> = Some(
+        |this: &Self,
+         _buf: &mut linux_kernel_module::user_ptr::UserSlicePtrReader,
+         _offset: u64|
+         -> linux_kernel_module::KernelResult<()> {
+            this.data_synced.store(false, Ordering::SeqCst);
+            this.meta_synced.store(false, Ordering::SeqCst);
+            Ok(())
+        },
+    );
+
+    const FSYNC: linux_kernel_module::file_operations::FSync<Self> = Some(
+        |this: &Self,
+         _file: &linux_kernel_module::file_operations::File,
+         _start: u64,
+         _end: u64,
+         datasync: bool|
+         -> linux_kernel_module::KernelResult<u32> {
+            this.data_synced.store(true, Ordering::SeqCst);
+            if !datasync {
+                this.meta_synced.store(true, Ordering::SeqCst);
+            }
+            Ok(0)
+        },
+    );
+}
+
 struct ChrdevTestModule {
     _chrdev_registration: linux_kernel_module::chrdev::Registration,
 }
@@ -90,10 +143,11 @@ struct ChrdevTestModule {
 impl linux_kernel_module::KernelModule for ChrdevTestModule {
     fn init() -> linux_kernel_module::KernelResult<Self> {
         let chrdev_registration =
-            linux_kernel_module::chrdev::builder(cstr!("chrdev-tests"), 0..3)?
+            linux_kernel_module::chrdev::builder(cstr!("chrdev-tests"), 0..4)?
                 .register_device::<CycleFile>()
                 .register_device::<SeekFile>()
                 .register_device::<WriteFile>()
+                .register_device::<FSyncFile>()
                 .build()?;
         Ok(ChrdevTestModule {
             _chrdev_registration: chrdev_registration,

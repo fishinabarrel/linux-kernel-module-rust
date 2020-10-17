@@ -8,6 +8,7 @@ const DEVICE_NAME: &'static str = "chrdev-tests";
 const READ_FILE_MINOR: libc::dev_t = 0;
 const SEEK_FILE_MINOR: libc::dev_t = 1;
 const WRITE_FILE_MINOR: libc::dev_t = 2;
+const SYNC_FILE_MINOR: libc::dev_t = 3;
 
 #[test]
 fn test_mknod() {
@@ -169,5 +170,57 @@ fn test_write() {
         let mut buf = [0; 1];
         f.read_exact(&mut buf).unwrap();
         assert_eq!(&buf, b"8");
+    })
+}
+
+#[test]
+fn test_fsync_unimplemented() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number(DEVICE_NAME);
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, READ_FILE_MINOR);
+
+        let f = fs::OpenOptions::new().write(true).open(&p).unwrap();
+        assert_eq!(
+            f.sync_all().unwrap_err().raw_os_error().unwrap(),
+            libc::EINVAL
+        );
+    })
+}
+
+#[test]
+fn test_fsync() {
+    with_kernel_module(|| {
+        let device_number = get_device_major_number(DEVICE_NAME);
+        let p = temporary_file_path();
+        let _u = mknod(&p, device_number, SYNC_FILE_MINOR);
+
+        let mut f = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&p)
+            .unwrap();
+
+        let mut buf = [0; 2];
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"11");
+
+        f.write(&[1, 2]).unwrap();
+
+        let mut buf = [0; 2];
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"00");
+
+        f.sync_data().unwrap();
+
+        let mut buf = [0; 2];
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"10");
+
+        f.sync_all().unwrap();
+
+        let mut buf = [0; 2];
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"11");
     })
 }

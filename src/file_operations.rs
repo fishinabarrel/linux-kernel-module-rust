@@ -138,23 +138,46 @@ unsafe extern "C" fn llseek_callback<T: FileOperations>(
     }
 }
 
+unsafe extern "C" fn fsync_callback<T: FileOperations>(
+    file: *mut bindings::file,
+    start: bindings::loff_t,
+    end: bindings::loff_t,
+    datasync: c_types::c_int,
+) -> c_types::c_int {
+    let start = match start.try_into() {
+        Ok(v) => v,
+        Err(_) => return Error::EINVAL.to_kernel_errno(),
+    };
+    let end = match end.try_into() {
+        Ok(v) => v,
+        Err(_) => return Error::EINVAL.to_kernel_errno(),
+    };
+    let datasync = datasync != 0;
+    let fsync = T::FSYNC.unwrap();
+    let f = &*((*file).private_data as *const T);
+    match fsync(f, &File::from_ptr(file), start, end, datasync) {
+        Ok(result) => result as c_types::c_int,
+        Err(e) => e.to_kernel_errno(),
+    }
+}
+
 pub(crate) struct FileOperationsVtable<T>(marker::PhantomData<T>);
 
 impl<T: FileOperations> FileOperationsVtable<T> {
     pub(crate) const VTABLE: bindings::file_operations = bindings::file_operations {
         open: Some(open_callback::<T>),
         release: Some(release_callback::<T>),
-        read: if let Some(_) = T::READ {
+        read: if T::READ.is_some() {
             Some(read_callback::<T>)
         } else {
             None
         },
-        write: if let Some(_) = T::WRITE {
+        write: if T::WRITE.is_some() {
             Some(write_callback::<T>)
         } else {
             None
         },
-        llseek: if let Some(_) = T::SEEK {
+        llseek: if T::SEEK.is_some() {
             Some(llseek_callback::<T>)
         } else {
             None
@@ -176,7 +199,11 @@ impl<T: FileOperations> FileOperationsVtable<T> {
         fasync: None,
         flock: None,
         flush: None,
-        fsync: None,
+        fsync: if T::FSYNC.is_some() {
+            Some(fsync_callback::<T>)
+        } else {
+            None
+        },
         get_unmapped_area: None,
         iterate: None,
         #[cfg(kernel_4_7_0_or_greater)]
@@ -207,6 +234,7 @@ impl<T: FileOperations> FileOperationsVtable<T> {
 pub type ReadFn<T> = Option<fn(&T, &File, &mut UserSlicePtrWriter, u64) -> KernelResult<()>>;
 pub type WriteFn<T> = Option<fn(&T, &mut UserSlicePtrReader, u64) -> KernelResult<()>>;
 pub type SeekFn<T> = Option<fn(&T, &File, SeekFrom) -> KernelResult<u64>>;
+pub type FSync<T> = Option<fn(&T, &File, u64, u64, bool) -> KernelResult<u32>>;
 
 /// `FileOperations` corresponds to the kernel's `struct file_operations`. You
 /// implement this trait whenever you'd create a `struct file_operations`.
@@ -228,4 +256,6 @@ pub trait FileOperations: Sync + Sized {
     /// Changes the position of the file. Corresponds to the `llseek` function
     /// pointer in `struct file_operations`.
     const SEEK: SeekFn<Self> = None;
+
+    const FSYNC: FSync<Self> = None;
 }
