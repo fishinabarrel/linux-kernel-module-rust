@@ -8,6 +8,6 @@ edition = "2018"
 bitflags = "1"
 
 [build-dependencies]
-bindgen = "0.54"
+bindgen = "0.56"
 cc = "1.0"
 shlex = "0.1"

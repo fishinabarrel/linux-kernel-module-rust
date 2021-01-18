@@ -159,19 +159,24 @@ impl<T: FileOperations> FileOperationsVtable<T> {
         } else {
             None
         },
-
+        #[cfg(not(kernel_4_1_0_or_greater))]
+        aio_read: None,
+        #[cfg(not(kernel_4_1_0_or_greater))]
+        aio_write: None,
+        #[cfg(not(kernel_3_11_0_or_greater))]
+        readdir: None,
         #[cfg(not(kernel_4_9_0_or_greater))]
         aio_fsync: None,
         check_flags: None,
-        #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
+        #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater), not(os_centos)))]
         clone_file_range: None,
         compat_ioctl: None,
         #[cfg(kernel_4_5_0_or_greater)]
         copy_file_range: None,
-        #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater)))]
+        #[cfg(all(kernel_4_5_0_or_greater, not(kernel_4_20_0_or_greater), not(os_centos)))]
         dedupe_file_range: None,
         fallocate: None,
-        #[cfg(kernel_4_19_0_or_greater)]
+        #[cfg(any(kernel_4_19_0_or_greater, all(os_centos, kernel_4_18_0_or_greater)))]
         fadvise: None,
         fasync: None,
         flock: None,
@@ -181,7 +186,7 @@ impl<T: FileOperations> FileOperationsVtable<T> {
         iterate: None,
         #[cfg(kernel_4_7_0_or_greater)]
         iterate_shared: None,
-        #[cfg(kernel_5_1_0_or_greater)]
+        #[cfg(any(kernel_5_1_0_or_greater, all(os_centos, kernel_4_18_0_or_greater)))]
         iopoll: None,
         lock: None,
         mmap: None,
@@ -189,18 +194,32 @@ impl<T: FileOperations> FileOperationsVtable<T> {
         mmap_supported_flags: 0,
         owner: ptr::null_mut(),
         poll: None,
+        #[cfg(kernel_3_16_0_or_greater)]
         read_iter: None,
-        #[cfg(kernel_4_20_0_or_greater)]
+        #[cfg(any(kernel_4_20_0_or_greater, all(os_centos, kernel_4_18_0_or_greater)))]
         remap_file_range: None,
         sendpage: None,
         #[cfg(kernel_aufs_setfl)]
         setfl: None,
+        #[cfg(all(not(kernel_4_18_0_or_greater), os_centos))]
+        __bindgen_anon_1: bindings::file_operations__bindgen_ty_1 { setlease: None },
+        #[cfg(any(kernel_4_18_0_or_greater, not(os_centos)))]
         setlease: None,
         show_fdinfo: None,
         splice_read: None,
         splice_write: None,
         unlocked_ioctl: None,
+        #[cfg(kernel_3_16_0_or_greater)]
         write_iter: None,
+
+        #[cfg(all(os_centos, kernel_4_18_0_or_greater))]
+        rh_reserved1: 0,
+        #[cfg(all(os_centos, kernel_4_18_0_or_greater))]
+        rh_reserved2: 0,
+        #[cfg(all(os_centos, kernel_4_18_0_or_greater))]
+        rh_reserved3: 0,
+        #[cfg(all(os_centos, kernel_4_18_0_or_greater))]
+        rh_reserved4: 0,
     };
 }
 

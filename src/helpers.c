@@ -3,7 +3,6 @@
 #include <linux/uaccess.h>
 #include <linux/version.h>
 
-
 void bug_helper(void)
 {
     BUG();
@@ -11,7 +10,9 @@ void bug_helper(void)
 
 int access_ok_helper(const void __user *addr, unsigned long n)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) /* v5.0-rc1~46 */
+#if defined(OS_CENTOS) && LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
+    return access_ok(addr, n);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) /* v5.0-rc1~46 */
     return access_ok(addr, n);
 #else
     return access_ok(0, addr, n);
