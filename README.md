@@ -1,5 +1,7 @@
 # Linux kernel modules in safe Rust
 
+**For most purposes, if you're interested in writing Linux kernel modules in Rust, you should look at https://github.com/Rust-for-Linux/linux, which is an effort to contribute that process to the upstream kernel.**
+
 This is a framework for writing loadable Linux kernel modules in Rust,
 using safe abstractions around kernel interfaces and primitives.
 
