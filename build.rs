@@ -53,6 +53,14 @@ const OPAQUE_TYPES: &[&str] = &[
     // and https://github.com/rust-lang/rust-bindgen/issues/1538
     "desc_struct",
     "xregs_state",
+    "xsave_struct",
+];
+const CLANG_ARGS_BLACKLIST: [&'static str; 5] = [
+    "-maccumulate-outgoing-args",
+    "-mpreferred-stack-boundary=3",
+    "-mindirect-branch=thunk-extern",
+    "-mindirect-branch-register",
+    "-fconserve-stack",
 ];
 
 fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
@@ -86,8 +94,13 @@ fn handle_kernel_version_cfg(bindings_path: &PathBuf) {
     }
     if major >= 4 {
         // We don't currently support anything older than 4.4
-        for x in 4..=if major > 4 { 20 } else { minor } {
+        for x in 1..=if major > 4 { 20 } else { minor } {
             println!("cargo:rustc-cfg=kernel_4_{}_0_or_greater", x);
+        }
+    }
+    if major >= 3 {
+        for x in 1..=if major > 3 { 19 } else { minor } {
+            println!("cargo:rustc-cfg=kernel_3_{}_0_or_greater", x);
         }
     }
 }
@@ -153,6 +166,12 @@ fn main() {
 
     builder = builder.clang_arg(format!("--target={}", target));
     for arg in kernel_args.iter() {
+        if CLANG_ARGS_BLACKLIST.contains(&arg.as_str()) {
+            continue;
+        }
+        if arg.as_str() == "-DOS_CENTOS" {
+            println!("cargo:rustc-cfg=os_centos")
+        }
         builder = builder.clang_arg(arg.clone());
     }
 
@@ -182,13 +201,17 @@ fn main() {
     handle_kernel_symbols_cfg(&PathBuf::from(&kernel_dir).join("Module.symvers"));
 
     let mut builder = cc::Build::new();
-    builder.compiler(env::var("CC").unwrap_or_else(|_| "clang".to_string()));
+    let compiler = env::var("CC").unwrap_or_else(|_| "clang".to_string());
+    builder.compiler(&compiler);
     builder.target(&target);
     builder.warnings(false);
     println!("cargo:rerun-if-changed=src/helpers.c");
     builder.file("src/helpers.c");
     for arg in kernel_args.iter() {
         builder.flag(&arg);
+    }
+    if &compiler == "gcc" {
+        builder.flag("-fno-pie");
     }
     builder.compile("helpers");
 }

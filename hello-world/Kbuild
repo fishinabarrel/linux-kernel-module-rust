@@ -6,7 +6,7 @@ CARGO ?= cargo
 export c_flags
 
 $(src)/target/x86_64-linux-kernel/debug/libhello_world.a: cargo_will_determine_dependencies
-	cd $(src); $(CARGO) build -Z build-std=core,alloc --target=x86_64-linux-kernel
+	cd $(src); $(CARGO) +nightly build -Z build-std=core,alloc --target=x86_64-linux-kernel
 
 .PHONY: cargo_will_determine_dependencies
 
