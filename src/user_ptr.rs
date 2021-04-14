@@ -7,7 +7,8 @@ use crate::c_types;
 use crate::error;
 
 extern "C" {
-    fn access_ok_helper(addr: *const c_types::c_void, len: c_types::c_ulong) -> c_types::c_int;
+    #[link_name="access_ok_helper"]
+    fn access_ok(addr: *const c_types::c_void, len: c_types::c_ulong) -> c_types::c_int;
 }
 
 /// A reference to an area in userspace memory, which can be either
@@ -55,7 +56,7 @@ impl UserSlicePtr {
         ptr: *mut c_types::c_void,
         length: usize,
     ) -> error::KernelResult<UserSlicePtr> {
-        if access_ok_helper(ptr, length as c_types::c_ulong) == 0 {
+        if access_ok(ptr, length as c_types::c_ulong) == 0 {
             return Err(error::Error::EFAULT);
         }
         Ok(UserSlicePtr(ptr, length))

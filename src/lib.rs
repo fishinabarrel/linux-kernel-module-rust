@@ -133,13 +133,15 @@ pub trait KernelModule: Sized + Sync {
 }
 
 extern "C" {
-    fn bug_helper() -> !;
+    #[link_name="bug_helper"]
+    #[allow(improper_style)]
+    fn BUG() -> !;
 }
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     unsafe {
-        bug_helper();
+        BUG();
     }
 }
 
