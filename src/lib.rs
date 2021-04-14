@@ -15,6 +15,8 @@ pub mod filesystem;
 pub mod printk;
 #[cfg(kernel_4_13_0_or_greater)]
 pub mod random;
+pub mod rcu;
+pub mod sched;
 pub mod sysctl;
 mod types;
 pub mod user_ptr;

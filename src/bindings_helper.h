@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/module.h>
 #include <linux/random.h>
+#include <linux/sched/task.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
