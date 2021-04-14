@@ -1,6 +1,8 @@
 obj-m := helloworld.o
 helloworld-objs := hello_world.rust.o
 
+# Don't define these if the kernel we're compiling against already has them.
+ifndef CONFIG_RUST
 CARGO ?= cargo
 
 export c_flags
@@ -12,3 +14,4 @@ $(src)/target/x86_64-linux-kernel/debug/libhello_world.a: cargo_will_determine_d
 
 %.rust.o: target/x86_64-linux-kernel/debug/lib%.a
 	$(LD) -r -o $@ --whole-archive $<
+endif
